@@ -2,40 +2,86 @@ name: Build
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: lake build
+    name: lake build + gate de pureza
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # El lakefile declara las dependencias como rutas LOCALES `../X` (ADR-011),
+      # así que el proyecto se saca a un subdirectorio y las tres hermanas se
+      # clonan a su lado. Sin esto, `lake build` no encuentra nada.
+      - name: Checkout PeanoRF
         uses: actions/checkout@v4
+        with:
+          path: PeanoRF
+
+      - name: Checkout FOL
+        uses: actions/checkout@v4
+        with:
+          repository: julian1c2a/FOL
+          ref: master
+          path: FOL
+
+      # master, NO las ramas de trabajo: ROBINSON_PlusPlus desarrolla con el árbol
+      # en rojo de forma conocida y localizada, y eso no debe romper este build.
+      - name: Checkout ROBINSON_PlusPlus
+        uses: actions/checkout@v4
+        with:
+          repository: julian1c2a/ROBINSON_PlusPlus
+          ref: master
+          path: ROBINSON_PlusPlus
+
+      - name: Checkout Peano
+        uses: actions/checkout@v4
+        with:
+          repository: julian1c2a/Peano
+          ref: master
+          path: Peano
 
       - name: Install elan (Lean version manager)
         run: |
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --no-modify-path
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
+      # ⚠️ Escalar de bloque (`run: |`) a propósito: en una sola línea, el `-d:` de
+      # `cut` lleva dos puntos seguidos de espacio y YAML lo lee como un mapa
+      # («mapping values are not allowed here»). Ése era el fallo original.
       - name: Install Lean toolchain
-        run: elan toolchain install $(cat lean-toolchain | cut -d: -f2)
+        run: |
+          elan toolchain install $(cut -d: -f2 PeanoRF/lean-toolchain)
 
-      - name: Cache Lake packages
+      - name: Cache Lake builds
         uses: actions/cache@v4
         with:
           path: |
             ~/.elan
-            .lake/packages
-          key: ${{ runner.os }}-lake-${{ hashFiles('lean-toolchain', 'lakefile.lean') }}
+            FOL/.lake/build
+            ROBINSON_PlusPlus/.lake/build
+            Peano/.lake/build
+            PeanoRF/.lake
+          key: ${{ runner.os }}-lake-${{ hashFiles('PeanoRF/lean-toolchain', 'PeanoRF/lakefile.lean') }}
           restore-keys: |
             ${{ runner.os }}-lake-
 
+      # Incluye el gate de los tres ejes (`PeanoRF/Meta/AxiomCheck.lean`), que corre
+      # como parte de la compilación: si alguien introduce lógica clásica de nivel
+      # objeto, una ω-regla fuera de la capa declarada o un `Classical` propio, esto
+      # se pone en rojo.
       - name: Build
+        working-directory: PeanoRF
         run: lake build
 
+      # Bloqueante: la línea base del proyecto es 0 sorry.
       - name: Check for sorry
+        working-directory: PeanoRF
         run: bash check-sorry.bash
-        continue-on-error: true   # Warning only — change to false to make it blocking
+
+      # `--quick` porque el build ya se ha hecho arriba (AI-GUIDE §27).
+      - name: Doc sync
+        working-directory: PeanoRF
+        run: bash check-doc-sync.bash --quick

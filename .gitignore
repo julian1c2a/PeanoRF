@@ -1,0 +1,25 @@
+# Lean 4 / Lake build artifacts
+.lake/
+*.olean
+*.ilean
+*.trace
+*.log
+build/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.swp
+*~
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
+# Lock file temp
+locked_files.txt.tmp

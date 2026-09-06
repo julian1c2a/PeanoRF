@@ -1,9 +1,13 @@
 # PeanoRF
 
+[![Build](https://github.com/julian1c2a/PeanoRF/actions/workflows/build.yml/badge.svg)](https://github.com/julian1c2a/PeanoRF/actions/workflows/build.yml)
 [![Lean 4](https://img.shields.io/badge/Lean-v4.31.0-blue)](https://leanprover.github.io/)
-[![Build Status](https://img.shields.io/badge/build-22%20jobs%20passing-brightgreen)](CURRENT-STATUS-PROJECT.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Sorry](https://img.shields.io/badge/sorry-0-brightgreen)](CURRENT-STATUS-PROJECT.md)
+
+> La insignia de build es **en vivo**. Las anteriores («22 jobs», «0 sorry») estaban
+> escritas a mano y una de ellas ya mentía: decía 22 cuando el build iba por 25. El CI
+> comprueba las tres cosas —build con el gate de los tres ejes, `check-sorry` bloqueante
+> y `check-doc-sync`—, así que la insignia no puede desincronizarse.
 
 > **Estado**: alcance fijado, gate de tres ejes en producción, teoría propia por empezar.
 > Siguiente hito: **H2, el conjunto de axiomas de HA**. Ver

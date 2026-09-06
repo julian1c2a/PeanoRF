@@ -12,8 +12,9 @@
 Aritmética de Peano en Lean 4, construida sobre **ROBINSON_PlusPlus** (Q⁺⁺) y **FOL**
 (lógica de primer orden con igualdad), sin Mathlib.
 
-*(Directorio: `Peano-from-ROB-n-FOL`. El paquete y la librería se llaman `PeanoRF`
-porque los guiones no son identificadores Lean válidos — ADR-011.)*
+*(Directorio local: `Peano-from-ROB-n-FOL`. El paquete, la librería y el **repositorio**
+se llaman `PeanoRF` — los guiones no son identificadores Lean válidos, ADR-011.
+Remoto: [github.com/julian1c2a/PeanoRF](https://github.com/julian1c2a/PeanoRF).)*
 
 ## Descripción
 

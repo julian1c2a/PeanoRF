@@ -172,5 +172,5 @@ es el proyecto que fabricaría el ingrediente que falta — de ahí M-9.
 
 ## Links
 
-- [Repository](https://github.com/julian1c2a/Peano-from-ROB-n-FOL)
-- [Issues](https://github.com/julian1c2a/Peano-from-ROB-n-FOL/issues)
+- [Repository](https://github.com/julian1c2a/PeanoRF)
+- [Issues](https://github.com/julian1c2a/PeanoRF/issues)

@@ -142,7 +142,7 @@ make docsync
 git add PeanoRF/ModuleName.lean REFERENCE.md CHANGELOG.md
 
 git commit -m "feat(ModuleName): N definiciones y M teoremas"
-git push origin master
+git push origin main
 ```
 
 ---

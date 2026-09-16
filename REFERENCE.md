@@ -93,6 +93,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Omega/Basic.lean` | `PeanoRF.Omega` | `PeanoRF.Prelim` | ✅ Completo |
 | `Calculus/DerivesI.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim`, `FOL.Derives0` | ✅ Completo |
 | `Calculus/Eq.lean` | `PeanoRF.Calculus` | `PeanoRF.Calculus.DerivesI` | ✅ Completo |
+| `Calculus/Soundness.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Soundness0` | 🔄 In progress |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -286,6 +287,29 @@ Las tres primeras usan la misma táctica: un testigo `f` con `#0` y `liftTerm 0 
 
 ---
 
+### 3.3quater Calculus/Soundness.lean — H3, el teorema de transferencia
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Calculus.DerivesI`, `FOL.Soundness0`
+**Last updated**: 2026-09-16
+**Status**: 🔄 In progress (heredado; falta la versión constructiva)
+**@importance**: **foundational**
+
+| nombre | notación matemática | firma Lean 4 | footprint |
+|---|---|---|---|
+| `derivesI_soundness` | `Γ ⊢ᵢ f ⟹ Γ ⊨ f` | `(Γ ⊢ᵢ f) → satisfies Γ f` | `propext, Classical.choice, Quot.sound` |
+| `derivesI_consistent` | `[] ⊬ᵢ ⊥` | `([] ⊢ᵢ ⊥) → False` | idem |
+
+**Esto es el espejo hecho teorema**: de `HA ⊢ᵢ φ` se sigue que φ es verdadera en todo
+modelo, y en particular en el estándar. Es exactamente lo que `FOL.Derives` **no podía
+tener** (ADR-017).
+
+🔭 **Conjetura abierta** (ADR-019): el `Classical.choice` es probablemente el precio exacto
+de las tres reglas clásicas de `⊢₀`. Una inducción directa sobre los 18 constructores de
+`⊢ᵢ` debería dar footprint `⊆ {propext, Quot.sound}`.
+
+---
+
 ### 3.4 HA/Axioms.lean — el conjunto de axiomas de HA
 
 **Namespace**: `PeanoRF.HA`
@@ -429,6 +453,7 @@ eqI_refl  eqI_symm  eqI_trans  eqI_congr_succ  specI
 - `Prelim.lean` — proyectado (0 declaraciones propias)
 - `Calculus/DerivesI.lean` — proyectado 2026-09-16 (1 inductivo + 1 notación + 2 teoremas)
 - `Calculus/Eq.lean` — proyectado 2026-09-16 (5 teoremas)
+- `Calculus/Soundness.lean` — proyectado 2026-09-16 (2 teoremas)
 - `HA/Axioms.lean` — reproyectado 2026-09-16 tras la migración a `⊢ᵢ` (1 def + 1 structure + 9 teoremas)
 - `HA/Arith.lean` — reproyectado 2026-09-16 (2 defs + 2 teoremas)
 - `Omega/Basic.lean`, `Meta/AxiomCheck.lean` — proyectados

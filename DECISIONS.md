@@ -28,7 +28,7 @@ verifica** — una MANDATORY sin verificación mecánica es una intención, no u
 | **M-2** | **Las PRUEBAS EN LEAN son constructivas.** Footprint diana `#print axioms ⊆ {propext, Quot.sound}`. Prohibido `Classical.byContradiction`/`em`/`propDecidable`/`choice`/`choose`, `open Classical` y `native_decide`. Medidas de terminación **lexicográficas**, nunca aritméticas ponderadas. | [ADR-013](#adr-013) | gate, **eje meta** — error de build. La deuda HEREDADA de RPP se tolera con aviso y recuento, y solo si entra por una dependencia (procedencia, no nombre) |
 | **M-3** | **`ℕ₀` de peanolib siempre, nunca `Nat`** de Lean salvo kernel estrictamente inevitable (`sizeOf`, literales internos, `omega`), y nunca en enunciados. | [ADR-014](#adr-014) | revisión + `grep -n '\bNat\b'` |
 | **M-4** | **No redefinir lo que ya existe aguas arriba** (`ExistsUnique`, `∃!`/`∃¹`, `ℕ₀`, `Term`/`Formula`/`⊢`). Se importa, no se copia. | [ADR-010](#adr-010-no-se-redefine-infraestructura-que-ya-existe-aguas-arriba) | revisión + `grep` de las familias duplicadas |
-| **M-5** | **No importar barrels completos** de RPP ni de Peano. Y en particular: **PROHIBIDO importar `FOL.Semantics`, `FOL.Soundness`, `FOL.Completeness`, `FOL.Compacity`** — ahí vive todo lo clásico de FOL. | [ADR-012](#adr-012-se-importan-capas-concretas-no-barrels-completos), [ADR-013](#adr-013) | revisión de `import` + el gate (el uso, no el import, es lo que rompe) |
+| **M-5** | **No importar barrels completos** de RPP ni de Peano. Y en particular: **PROHIBIDO importar `FOL.Completeness` y `FOL.Compacity`.** `FOL.Semantics`/`Soundness0` SÍ se permiten desde 2026-09-16 (ADR-019: `satisfies` no tiene footprint; lo clásico está en la prueba, no en la semántica). | [ADR-012](#adr-012-se-importan-capas-concretas-no-barrels-completos), [ADR-013](#adr-013) | revisión de `import` + el gate (el uso, no el import, es lo que rompe) |
 | **M-6** | **Las cuatro librerías van en el mismo toolchain** (hoy `v4.31.0`). Un bump se hace en las cuatro a la vez, o no se hace. | [ADR-011](#adr-011-las-tres-dependencias-son-rutas-locales-no-from-git) | `cat ../{FOL,ROBINSON_PlusPlus,Peano}/lean-toolchain` |
 | **M-7** | **El NÚCLEO es FINITARIO**: `⊢` recursivamente enumerable. Prohibidas las cinco ω-reglas de FOL (`imp_intro`, `gen`, `raa`, `or_elim`, `ex_elim`) y los cuatro meta-axiomas de RPP que postulan `axioms ⊢ φ` para esquemas que Q⁺⁺ no demuestra. Permitidas **sólo** bajo `PeanoRF.Omega.*`. | [ADR-016](#adr-016) | gate, **eje finitario** — error de build fuera de la capa ω; recuento dentro. Probado con smoke test |
 | **M-8** | **La inducción entra en el CONJUNTO DE AXIOMAS**, nunca como `axiom : axioms ⊢ inductionFormula φ`. Contextos finitos `axioms ++ [inst₁…instₖ] ⊢ φ`. | [ADR-016](#adr-016) | gate (`ax_induction` está en la lista ω) + revisión |
@@ -578,15 +578,60 @@ ROBINSON_PlusPlus ya había nombrado la causa general en su regla **M-11**: «`#
 es CIEGO» a los habitantes de un inductivo, y por eso tiene `check-estratos.bash` **además
 de** `check-footprints.bash`. No son el mismo control y ninguno sustituye al otro.
 
+### ⚠️ Addendum (mismo día): el primer smoke test era INVÁLIDO, y el control estaba ciego
+
+Al estrenar el control se probó con `def smoke := @Derives₀.dne_rule` — y pasó. Pero el
+recorrido usaba `ConstantInfo.value?`, que en Lean 4.31 devuelve **`none` para TEOREMAS**.
+⇒ El walker veía sólo los TIPOS, no los términos de prueba, y por tanto **el control de
+constructores Y el de procedencia estaban ciegos para casi todo lo que vigilan**, porque
+casi todo son teoremas. El smoke test usaba un `def`, cuyo valor sí está, y lo enmascaró.
+
+Se destapó al escribir `derivesI_soundness`: el gate no reconocía su `Classical.choice`
+como heredado. Arreglado leyendo `.thmInfo v => v.value` explícitamente, y **re-probado con
+un TEOREMA**, que ahora sí se caza.
+
+🔑 **Lección, y es la generalización de ADR-015**: un smoke test tiene que usar la **misma
+clase de declaración** que el control vigila. Un control puede pasar su prueba y seguir
+siendo vacuo para el caso real.
+
 **Consecuencias**:
-- Probado con smoke test en los dos ejes (ADR-015): detecta `Derives₀.dne_rule` y
-  `Derives.gen_rule` donde el footprint no ve nada.
+- Probado con smoke test en los dos ejes (ADR-015) **y con las dos clases de declaración**:
+  detecta `Derives₀.dne_rule` y `Derives.gen_rule` donde el footprint no ve nada.
 - ⚠️ **Deuda declarada**: la lista es por NOMBRE. Un constructor nuevo aguas arriba no
   rompe nada aquí, simplemente **no se vigila**. Aguas arriba lo resuelven midiendo por el
   TIPO de cada axioma; aquí, de momento, no.
 - **Regla general**: cuando una dependencia cambia la naturaleza de un símbolo (axioma →
   constructor), los controles que lo vigilaban **caducan en silencio**. Revisarlos forma
   parte de ponerse al día, no es opcional.
+
+---
+
+## ADR-019: M-5 se enmienda con una medición — lo clásico no está en la semántica
+
+**Fecha**: 2026-09-16
+**Estado**: Aceptado
+
+**Decisión**: se permite importar `FOL.Semantics` y `FOL.Soundness0`. `FOL.Completeness` y
+`FOL.Compacity` siguen **prohibidas**.
+
+**Justificación**, medida (`sondeos/h3_probe.lean`):
+
+| símbolo | footprint |
+|---|---|
+| `FOL.Metamath.Semantics.satisfies` | **ninguno** |
+| `FOL.Metamath.Soundness0.derives0_soundness` | `propext, Classical.choice, Quot.sound` |
+
+M-5 se escribió el 2026-09-06 con la medición de entonces: la mitad modelo-teórica de FOL
+era clásica en bloque. La medición de hoy la matiza — **lo clásico no está en la semántica,
+está en la PRUEBA**. La definición `satisfies` es limpia; importarla no cuesta nada.
+
+**Consecuencias**:
+- El teorema de transferencia (`derivesI_soundness`) se puede escribir hoy.
+- Usarlo arrastra `Classical.choice` heredado, que el gate contabiliza por procedencia.
+- 🔭 **Conjetura abierta**: ese `Classical.choice` es probablemente el precio exacto de las
+  tres reglas clásicas de `⊢₀`. Una prueba directa por inducción sobre los 18 constructores
+  de `⊢ᵢ` debería ser **constructiva** — *la solidez de la lógica intuicionista demostrada
+  intuicionistamente*. Sería el resultado propio más limpio del proyecto. Sin probar.
 
 ---
 

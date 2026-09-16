@@ -14,7 +14,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **28 jobs · 7 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **31 jobs · 8 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 
 ---
 
@@ -22,13 +22,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 7 (`Prelim`, `Calculus/{DerivesI,Eq}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
-| Módulos con 0 `sorry` | 7 / 7 |
-| Teoremas propios | 16 |
+| Módulos propios | 8 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
+| Módulos con 0 `sorry` | 8 / 8 |
+| Teoremas propios | 18 |
 | Definiciones propias | 0 |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 28 jobs |
+| Build | ✅ 31 jobs |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |
@@ -46,6 +46,7 @@
 | `PeanoRF/HA/Arith.lean` | 2 | 2 | 0 | ✅ `zero_add` y `succ_add` sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
+| `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🔄 **H3**: transferencia heredada; falta la versión constructiva |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 
@@ -101,8 +102,11 @@ META heredada de la codificación `String` de RPP, no nuestra.
 ## Trabajo pendiente
 
 - [x] ~~**H2 completo**~~ → `⊢ᵢ`, `ctx`, `gen_closed`, `Closed`, `zero_add` y `succ_add`.
-- [ ] **H3**: la interpretación. Aguas arriba ya existe `derives0_soundness` **en el
-      build**, y `⊢ᵢ → ⊢₀` está probado ⇒ la solidez de `⊢ᵢ` sale casi gratis.
+- [x] ~~**H3 · transferencia**~~ → `derivesI_soundness` y `derivesI_consistent`, heredando
+      `derives0_soundness`. **El espejo ya es un teorema.**
+- [ ] **H3 · la versión CONSTRUCTIVA** (ADR-019 §conjetura): probar la solidez de `⊢ᵢ` por
+      inducción directa sobre sus 18 constructores. Si sale `⊆ {propext, Quot.sound}`, el
+      `Classical` de aguas arriba queda localizado en exactamente tres constructores.
 - [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.
 - [x] ~~Alcance del proyecto~~ → fijado (`PLANNING.md` §1).
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.

@@ -90,6 +90,7 @@ import Lean.Util.CollectAxioms
 import PeanoRF.Prelim
 import PeanoRF.Calculus.DerivesI
 import PeanoRF.Calculus.Eq
+import PeanoRF.Calculus.Soundness
 import PeanoRF.Omega.Basic
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Arith
@@ -230,9 +231,17 @@ private def directRefs (env : Environment) (n : Name) : Array Name :=
   | none      => #[]
   | some info =>
     let fromType := info.type.getUsedConstants
-    let fromVal  := match info.value? with
-                    | some v => v.getUsedConstants
-                    | none   => #[]
+    -- ⚠️⚠️ NO usar `info.value?`: para TEOREMAS devuelve `none` en Lean 4.31, así que el
+    -- recorrido veía sólo los TIPOS y no los términos de prueba. Eso dejaba ciegos a la vez
+    -- el control de procedencia y el de constructores — es decir, casi todo, porque casi
+    -- todo lo que se vigila son teoremas. Se destapó el 2026-09-16 al ver que
+    -- `derivesI_soundness` no reconocía su `Classical.choice` como heredado.
+    -- El smoke test de ADR-018 no lo cogió porque usaba `def`, cuyo valor SÍ está.
+    -- Lección: un smoke test tiene que usar la MISMA clase de declaración que se vigila.
+    let fromVal := match info with
+                   | .thmInfo v  => v.value.getUsedConstants
+                   | .defnInfo v => v.value.getUsedConstants
+                   | _           => #[]
     fromType ++ fromVal
 
 /-- FRONTERA de `n`: se camina hacia atrás **solo por declaraciones propias**, y se

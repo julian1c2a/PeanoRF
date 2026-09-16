@@ -11,6 +11,7 @@ License: MIT
 import PeanoRF.Prelim
 import PeanoRF.Calculus.DerivesI
 import PeanoRF.Calculus.Eq
+import PeanoRF.Calculus.Soundness
 import PeanoRF.HA.Arith
 import PeanoRF.HA.Axioms
 import PeanoRF.Meta.AxiomCheck

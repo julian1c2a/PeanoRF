@@ -3,7 +3,10 @@
 **Fecha:** 2026-09-16
 **Origen:** PeanoRF (`github.com/julian1c2a/PeanoRF`), hito H3
 **Para:** quien trabaje en `FOL`
-**Estado:** el arreglo está **aplicado y sin commitear** en `FOL/FOL/Semantics.lean`
+**Estado:** ✅ **ACEPTADO, verificado de forma independiente y commiteado en FOL**
+(`6d47e5b`). El agente de FOL lo **blindó** además metiendo cuatro de las declaraciones en
+su `check-footprints.bash` (69 → 73 titulares): si alguien reintroduce el `omega`, el
+control rompe. *Una mejora sin control es una mejora prestada.*
 
 ---
 
@@ -102,28 +105,36 @@ Con el arreglo puesto, **90 declaraciones** de FOL siguen con `Classical.choice`
 | `FOL.Enumeration` | 6 | ✅ probablemente |
 | `FOL.Soundness0` | 5 | ✅ **sí, y ahora es exacto**: las tres reglas clásicas |
 | `FOL.Henkin0` | 1 | ✅ sí |
-| **`FOL.Theorems.Eq`** | **3** | ⚠️ **SOSPECHOSO** |
-| **`FOL.Rename`** | **3** | ⚠️ parcialmente |
-| **`FOL.Tactics`** | **1** | ⚠️ **SOSPECHOSO** |
+| **`FOL.Theorems.Eq`** | **3** | ⛔ **causa NO localizada** — no es el patrón del `omega` (ver abajo) |
+| `FOL.Rename` | 3 | probablemente legítimo (`invOf` por elección) |
+| `FOL.Tactics` | 1 | ⬜ **sin medir** |
 
-**Los sospechosos, con nombre:**
+**Los sospechosos, con nombre — ⚠️ REVISADO 2026-09-16 tras la medición de FOL:**
 
-* `FOL.substTerm_subst_comm_succ`, `FOL.substTerms_subst_comm_succ`,
-  `FOL.subst_subst_comm_succ` — son lemas de **conmutación de sustituciones De Bruijn**,
-  puramente combinatorios: no hay razón para que necesiten lógica clásica. Muy probable
-  que sea el mismo patrón del `omega`.
-* `FOL.Tactics.tryMem` — una táctica de pertenencia; mismo comentario.
-* `FOL.Rename.invOf` / `invOf_spec` — aquí sí puede ser legítimo (un inverso construido por
-  elección); `derives0_rename_conservative` heredaría de ellos.
+| símbolo | veredicto |
+|---|---|
+| `FOL.substTerm_subst_comm_succ` · `substTerms_subst_comm_succ` · `subst_subst_comm_succ` | ⛔ **NO es el mismo patrón** — conjetura **refutada** |
+| `FOL.Rename.invOf` / `invOf_spec` | probablemente legítimo (inverso por elección); `derives0_rename_conservative` hereda |
+| `FOL.Tactics.tryMem` | ⬜ **sin medir** |
 
-⚠️ **No los he medido en detalle**: son candidatos para revisar con el mismo método
-(bisección por ramas + `#print axioms`), no diagnósticos cerrados.
+⛔ **Corrección.** Este informe afirmaba que los tres `subst_*_comm_succ` eran «muy probable
+que sea el mismo patrón». **Es falso, y está medido**: sus `omega` están todos dentro de
+`show ¬ k = j from by omega`, es decir **sobre metas aritméticas** — el lado **limpio** de
+la regla del §3. El agente de FOL midió además, en el entorno de imports de ese fichero:
 
-**Lo que ganaría FOL si los tres de `Theorems.Eq` son el mismo patrón**: la mitad
-demostrativa de FOL⁼ quedaría **constructiva de punta a punta**, y el `Classical` quedaría
-confinado exactamente donde debe estar — en la mitad modelo-teórica.
+| pieza | footprint |
+|---|---|
+| `Nat.lt_trichotomy` · `rcases` · `congr 1` | ningún axioma |
+| `by omega` sobre `¬ k = j` | `propext, Quot.sound` |
+| `simp [substTerm, show ¬ k = j from by omega]` | `propext, Quot.sound` |
 
----
+⬜ **La causa no está localizada.** Hace falta **bisección por ramas** (§6 paso 4). Y aplica
+el aviso de método de este mismo informe: *refutar con la cadena sucia es refutar ruido*,
+así que se declara **conjetura refutada**, no diagnóstico alternativo.
+
+🔑 **Lección para quien escriba el próximo informe de traspaso**: marcar como «muy probable»
+algo medido sólo por analogía es exactamente el error que este informe advierte en su §6.
+Un candidato sin medir se etiqueta ⬜ **sin medir**, no «probable».
 
 ## 6. Cómo se encontró (por si el método sirve)
 
@@ -142,3 +153,16 @@ confinado exactamente donde debe estar — en la mitad modelo-teórica.
 era falsa, porque la cadena seguía sucia. *Una medición de footprint sólo refuta una
 conjetura sobre lógica si el resto de la cadena está limpio.* Refutar con la cadena sucia es
 refutar ruido.
+
+---
+
+## 7. ⚠️ Nota de proceso — asumida
+
+El arreglo llegó **aplicado y sin commitear en el árbol compartido**. El agente de FOL hizo
+varios `git add -A` ese día: pudo colarse en un commit suyo con un mensaje que no lo
+menciona, y estuvo cerca.
+
+**Un cambio ajeno sin commitear en un árbol compartido es indistinguible de uno propio.**
+
+**Regla adoptada para la próxima vez**: parche (`git format-patch` / diff adjunto), rama
+propia, o avisar **antes** de tocar el árbol. Nunca dejarlo suelto.

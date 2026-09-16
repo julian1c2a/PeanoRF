@@ -628,10 +628,31 @@ está en la PRUEBA**. La definición `satisfies` es limpia; importarla no cuesta
 **Consecuencias**:
 - El teorema de transferencia (`derivesI_soundness`) se puede escribir hoy.
 - Usarlo arrastra `Classical.choice` heredado, que el gate contabiliza por procedencia.
-- 🔭 **Conjetura abierta**: ese `Classical.choice` es probablemente el precio exacto de las
-  tres reglas clásicas de `⊢₀`. Una prueba directa por inducción sobre los 18 constructores
-  de `⊢ᵢ` debería ser **constructiva** — *la solidez de la lógica intuicionista demostrada
-  intuicionistamente*. Sería el resultado propio más limpio del proyecto. Sin probar.
+### ⛔ La conjetura de este ADR era FALSA — corregido el mismo día
+
+Se conjeturó que el `Classical.choice` de `derives0_soundness` era **exactamente** el precio
+de las tres reglas clásicas de `⊢₀`, y que una inducción directa sobre los 18 constructores
+de `⊢ᵢ` saldría constructiva. **Se hizo la prueba directa y NO sale limpia.**
+
+La medición (`sondeos/h3b_probe.lean`) localiza el obstáculo real:
+
+| símbolo | footprint |
+|---|---|
+| `evalTerm`, `evalFormula`, `rule_soundness` | **ninguno** |
+| `replaceAt_soundness` | `propext` |
+| `contextSatisfies_lift_zero` · `eval_substFormula_zero` · `eval_liftFormula_zero` | **`Classical.choice`** |
+
+🔑 **El `Classical` viene de los tres lemas de levantamiento y sustitución de la semántica,
+no de las reglas clásicas.** Quitar `dne_rule` y compañía era **necesario pero no
+suficiente**.
+
+**Lo que sí se gana, y no es poco**: los tres culpables son hechos puramente combinatorios
+sobre De Bruijn; todo apunta a un `Classical` **oculto** (§27) y no esencial. La prueba
+directa es **constructive-ready** — saneados esos tres lemas, `derivesI_soundness` pasa a
+`⊆ {propext, Quot.sound}` sin tocar una línea. Y el obstáculo queda reducido de «toda la
+solidez de `⊢₀`» a **tres lemas con nombre**.
+
+⇒ **Siguiente paso concreto**: reprobar esos tres constructivamente, aquí o aguas arriba.
 
 ---
 

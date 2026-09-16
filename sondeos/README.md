@@ -1,6 +1,6 @@
 # `sondeos/` — mediciones fuera del build
 
-**Última actualización:** 2026-09-16
+**Última actualización:** 2026-09-16b
 
 Ficheros de medición y experimento. **No forman parte de la librería** (`lakefile.lean`
 no los incluye) y por tanto no rompen el build ni entran en el recuento de módulos.
@@ -183,3 +183,32 @@ compraba, y es el primer sitio donde la disciplina de ADR-016 cuesta algo de ver
 | `PeanoRF.HA.succ_add` (sobre `⊢ᵢ`) | `propext, Classical.choice, Quot.sound` |
 | `ROBINSON_PlusPlus.Full.succ_add_prim` (sobre `⊢`) | + **`MetaRules.imp_intro`, `ax_induction_prim`** |
 | `PeanoRF.Calculus.derivesI_to_derives0` | `propext` |
+
+
+---
+
+## Medición del 2026-09-16b — H3: dónde está de verdad el `Classical`
+
+Se conjeturó (ADR-019) que el `Classical.choice` de `derives0_soundness` era **exactamente**
+el precio de las tres reglas clásicas de `⊢₀`. Se hizo la prueba directa de
+`derivesI_soundness` por inducción sobre los 18 constructores no clásicos de `⊢ᵢ`, y
+**la conjetura se refuta**: sigue saliendo `Classical.choice`.
+
+`h3b_probe.lean` localiza el origen:
+
+| símbolo | footprint |
+|---|---|
+| `evalTerm` · `evalFormula` · `rule_soundness` | **ninguno** |
+| `replaceAt_soundness` | `propext` |
+| **`contextSatisfies_lift_zero`** | `propext, Classical.choice, Quot.sound` |
+| **`eval_substFormula_zero`** | `propext, Classical.choice, Quot.sound` |
+| **`eval_liftFormula_zero`** | `propext, Classical.choice, Quot.sound` |
+
+🔑 **El `Classical` viene de los tres lemas de levantamiento y sustitución de la semántica**,
+no de las reglas clásicas ni de la evaluación. Quitar `dne_rule` y compañía era **necesario
+pero no suficiente**.
+
+⇒ Los tres son hechos **puramente combinatorios** sobre índices de De Bruijn; casi seguro un
+`Classical` **oculto** (§27), no esencial. Saneados, `derivesI_soundness` pasa a
+`⊆ {propext, Quot.sound}` **sin tocar el fichero**. El obstáculo queda reducido de «toda la
+solidez de `⊢₀`» a **tres lemas con nombre**.

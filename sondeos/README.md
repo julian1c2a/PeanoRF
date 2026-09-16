@@ -216,7 +216,7 @@ solidez de `⊢₀`» a **tres lemas con nombre**.
 
 ---
 
-## Medición del 2026-09-16c — la caza del último `Classical`: resultado NEGATIVO
+## Medición del 2026-09-16c — la caza del último `Classical`: RESUELTA
 
 Localizado: **toda** la contaminación de la semántica entra por **un solo lema**,
 `FOL.Metamath.Semantics.shift_updateEnv_comm`. Aguas abajo todo hereda; aguas arriba
@@ -240,10 +240,37 @@ Localizado: **toda** la contaminación de la semántica entra por **un solo lema
 forma independiente —dicotomías constructivas + `simp`, y dicotomías + `rw [if_pos/if_neg]`
 puro— y **las dos siguen arrastrando `Classical.choice`**.
 
-⇒ La causa está en el **ensamblado**, no en ningún ingrediente, y **no se ha identificado**.
-El espacio de búsqueda queda reducido a un lema de 18 líneas. Siguiente intento razonable:
-`set_option pp.all` sobre la meta tras `dsimp` para ver qué instancia `Decidable` queda
-como metavariable, o construir el término a mano sin tácticas.
+### 🏁 Resuelto — estaba en UNA LÍNEA
 
-⚠️ La edición de prueba en `FOL/Semantics.lean` se **revirtió**: no lograba el objetivo y el
-árbol de FOL está en uso activo.
+`pp.explicit` sobre la meta tras el `dsimp` mostró que **todas** las instancias son reales
+(`n.decLt c`, `instDecidableEqNat`): ni rastro de `Classical.propDecidable`. Luego lo metía
+una táctica al cerrar. La bisección **por ramas** lo localizó:
+
+| rama | footprint |
+|---|---|
+| `n < c` | `propext, Quot.sound` |
+| `n = c` | `propext, Quot.sound` |
+| **`c < n`** | **+ `Classical.choice`** |
+
+Lo único propio de esa rama era el cierre del caso imposible:
+
+```lean
+| zero => omega                                                      -- ⛔ Classical.choice
+| zero => exact absurd (Nat.le_zero.mp (Nat.not_lt.mp h1)).symm h2   -- ✅ cero axiomas
+```
+
+🔑 **`omega` sobre metas ARITMÉTICAS es limpio; sobre metas fuera de su lenguaje —aquí, de
+tipo `D`— descargadas por contradicción, mete `Classical.choice`.** Medido:
+
+| | |
+|---|---|
+| `omega` con meta `(1:Nat) = 2` desde hipótesis contradictoria | `propext, Quot.sound` |
+| `omega` con meta `v 0 = d'` desde hipótesis contradictoria | **+ `Classical.choice`** |
+| `absurd h (Nat.not_lt_zero c)` | **ningún axioma** |
+
+**Resultado**: toda la semántica de fórmulas pasa a `[propext, Quot.sound]`, y con ella
+`derivesI_soundness` y `derivesI_consistent`.
+
+⚠️ **Por qué la primera conclusión fue errónea**: se midió la conjetura de ADR-019 sobre una
+cadena contaminada. *Una medición de footprint sólo refuta una conjetura sobre lógica si el
+resto de la cadena está limpio.*

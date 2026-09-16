@@ -7,6 +7,9 @@
 > PeanoRF vuelca Peano al lenguaje FOL⁼ + ROB++ de forma constructiva: un **espejo** donde
 > lo demostrado se conserva en Peano (`PLANNING.md` §1). El **núcleo es HA finitaria** y la
 > ω-lógica vive aislada y contada en `PeanoRF.Omega.*` (**ADR-016**).
+> 🏁 **H3: la solidez de `⊢ᵢ` es CONSTRUCTIVA** — `derivesI_soundness` mide
+> `[propext, Quot.sound]`. El espejo no sólo es un teorema: es un teorema intuicionista.
+>
 > **H2 CERRADO** (2026-09-16), y sobre un cálculo nuevo. Aguas arriba se demostró que
 > `FOL.Derives` **no puede tener solidez** (`inconsistencia_de_cualquier_solidez`): es
 > HERRAMIENTA, no SUJETO. Todo H2 se ha **migrado a `⊢ᵢ`**, el cálculo intuicionista
@@ -51,7 +54,7 @@
 | `PeanoRF/HA/Arith.lean` | 2 | 2 | 0 | ✅ `zero_add` y `succ_add` sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
-| `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🔄 **H3**: transferencia DIRECTA (18 casos). Arrastra `Classical` de un solo lema aguas arriba |
+| `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🏁 **H3**: solidez **CONSTRUCTIVA** (`propext, Quot.sound`) |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 
@@ -111,14 +114,15 @@ META heredada de la codificación `String` de RPP, no nuestra.
       `derives0_soundness`. **El espejo ya es un teorema.**
 - [x] ~~**H3 · inducción directa**~~ → hecha, 18 casos. Pero **no basta**: la conjetura de
       ADR-019 era falsa.
-- [ ] **H3 · el último `Classical`**: está localizado en **UN** lema,
-      `FOL.Metamath.Semantics.shift_updateEnv_comm`. Todo lo demás de la cadena (nivel
-      término, `evalTerm`/`evalFormula`, `rule_soundness`, `replaceAt_soundness`) está
-      limpio y hereda de ahí. ⚠️ **Causa NO identificada**: descartadas por medición
-      `by_cases`, `rcases`, `obtain`, `cases`, `omega`, el conjunto `simp` por defecto,
-      `if_pos`/`if_neg`, `funext`, `dsimp`, las dicotomías de `Nat` y un `open Classical`
-      de fichero — **todas limpias en aislamiento, y el ensamblado sigue sucio**. Dos
-      reescrituras constructivas independientes del lema tampoco lo limpian.
+- [x] ~~**H3 · el último `Classical`**~~ → 🏁 **RESUELTO**. Estaba en **una línea** de
+      `FOL.Metamath.Semantics.shift_updateEnv_comm`: un `omega` cerrando por contradicción
+      una meta **fuera de su lenguaje** (de tipo `D`). Sustituido por `absurd`.
+      ⇒ **`derivesI_soundness : propext, Quot.sound`** — la solidez de la lógica
+      intuicionista, demostrada intuicionistamente.
+- [ ] ⚠️ **El arreglo vive en el árbol de FOL, SIN COMMITEAR** (`FOL/FOL/Semantics.lean`).
+      Decidir si se commitea allí: limpia también `derives0_soundness`… no, ése conserva su
+      `Classical` legítimo por las tres reglas clásicas, pero sí limpia toda la semántica y
+      beneficia a Henkin y a quien dependa de ella.
 - [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.
 - [x] ~~Alcance del proyecto~~ → fijado (`PLANNING.md` §1).
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.

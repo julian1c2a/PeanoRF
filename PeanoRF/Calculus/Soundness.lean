@@ -14,38 +14,22 @@ import FOL.Semantics
   «espejo» en un hecho matemático, y el que `FOL.Derives` **no podía tener** (ADR-017):
   cualquier testigo de su solidez da `False`.
 
-  ## ⛔ La conjetura de ADR-019 era FALSA, y la medición localiza el obstáculo real
-
-  La primera versión heredaba la solidez componiendo con `derives0_soundness`, y con ella
-  `Classical.choice`. La conjetura era que ese `Classical` fuese **exactamente** el precio
-  de los tres constructores clásicos de `⊢₀`, y que una inducción directa sobre nuestros 18
-  saliera limpia.
-
-  **Se probó la inducción directa, y NO sale limpia.** Medido (`sondeos/h3b_probe.lean`):
+  ## 🏁 Es CONSTRUCTIVA, y ése es el resultado
 
   | símbolo | footprint |
   |---|---|
-  | `evalTerm`, `evalFormula`, `rule_soundness` | **ninguno** |
-  | `replaceAt_soundness` | `propext` |
-  | **`contextSatisfies_lift_zero`** | `propext, Classical.choice, Quot.sound` |
-  | **`eval_substFormula_zero`** | `propext, Classical.choice, Quot.sound` |
-  | **`eval_liftFormula_zero`** | `propext, Classical.choice, Quot.sound` |
+  | **`derivesI_soundness`** | **`propext, Quot.sound`** |
+  | **`derivesI_consistent`** | **`propext, Quot.sound`** |
+  | `FOL…Soundness0.derives0_soundness` | + `Classical.choice` |
 
-  ⇒ 🔑 **El `Classical` no viene de las reglas clásicas: viene de los tres lemas de
-  LEVANTAMIENTO Y SUSTITUCIÓN de la semántica.** Quitar `dne_rule` y compañía es
-  **necesario pero no suficiente**.
+  **La solidez de la lógica intuicionista, demostrada intuicionistamente.** Y el
+  `Classical.choice` que le queda a `derives0_soundness` es **exactamente el precio de sus
+  tres reglas clásicas** (ADR-019).
 
-  ## ⭐ Por qué esta prueba vale igualmente, y mucho
-
-  Los tres lemas culpables son hechos **puramente combinatorios** sobre índices de De Bruijn
-  y evaluación — no hay nada clásico en su contenido. Todo apunta a un `Classical` **oculto**
-  del tipo que documenta `AI-GUIDE` §27: un `by_cases` sobre una comparación de `Nat` sin
-  instancia `Decidable` a la vista.
-
-  ⇒ Esta prueba es **constructive-ready**: el día que esos tres lemas se saneen —aquí o
-  aguas arriba— `derivesI_soundness` pasa a `⊆ {propext, Quot.sound}` **sin tocar una línea
-  de este fichero**. Y ya no depende de `Soundness0`, así que el obstáculo está reducido de
-  «toda la solidez de `⊢₀`» a **tres lemas con nombre**.
+  ⚠️ Para llegar aquí hubo que limpiar antes **un `omega`** en
+  `FOL.Metamath.Semantics.shift_updateEnv_comm`: cerraba por contradicción una meta de tipo
+  `D`, **fuera del lenguaje de omega**, y eso mete `Classical.choice`. Sobre metas
+  aritméticas omega es limpio. Era la única raíz de toda la semántica de fórmulas.
 
   ## Procedencia de la prueba
 

@@ -628,31 +628,44 @@ está en la PRUEBA**. La definición `satisfies` es limpia; importarla no cuesta
 **Consecuencias**:
 - El teorema de transferencia (`derivesI_soundness`) se puede escribir hoy.
 - Usarlo arrastra `Classical.choice` heredado, que el gate contabiliza por procedencia.
-### ⛔ La conjetura de este ADR era FALSA — corregido el mismo día
+### 🏁 La conjetura de este ADR es CIERTA — y el camino hasta comprobarlo importa
 
-Se conjeturó que el `Classical.choice` de `derives0_soundness` era **exactamente** el precio
-de las tres reglas clásicas de `⊢₀`, y que una inducción directa sobre los 18 constructores
-de `⊢ᵢ` saldría constructiva. **Se hizo la prueba directa y NO sale limpia.**
-
-La medición (`sondeos/h3b_probe.lean`) localiza el obstáculo real:
+**Resultado final (2026-09-16):**
 
 | símbolo | footprint |
 |---|---|
-| `evalTerm`, `evalFormula`, `rule_soundness` | **ninguno** |
-| `replaceAt_soundness` | `propext` |
-| `contextSatisfies_lift_zero` · `eval_substFormula_zero` · `eval_liftFormula_zero` | **`Classical.choice`** |
+| **`PeanoRF.Calculus.derivesI_soundness`** | **`propext, Quot.sound`** ✅ |
+| **`PeanoRF.Calculus.derivesI_consistent`** | **`propext, Quot.sound`** ✅ |
+| `FOL.Metamath.Soundness0.derives0_soundness` | + `Classical.choice` |
 
-🔑 **El `Classical` viene de los tres lemas de levantamiento y sustitución de la semántica,
-no de las reglas clásicas.** Quitar `dne_rule` y compañía era **necesario pero no
-suficiente**.
+⇒ 🏁 **La solidez de la lógica intuicionista, demostrada intuicionistamente.** Y el
+`Classical.choice` que le queda a `derives0_soundness` es **exactamente el precio de sus
+tres reglas clásicas**, ahora que la maquinaria semántica compartida está limpia.
 
-**Lo que sí se gana, y no es poco**: los tres culpables son hechos puramente combinatorios
-sobre De Bruijn; todo apunta a un `Classical` **oculto** (§27) y no esencial. La prueba
-directa es **constructive-ready** — saneados esos tres lemas, `derivesI_soundness` pasa a
-`⊆ {propext, Quot.sound}` sin tocar una línea. Y el obstáculo queda reducido de «toda la
-solidez de `⊢₀`» a **tres lemas con nombre**.
+### ⚠️ Pero primero se midió mal, y la lección es cara
 
-⇒ **Siguiente paso concreto**: reprobar esos tres constructivamente, aquí o aguas arriba.
+La inducción directa sobre los 18 constructores salió **sucia**, y se registró la conjetura
+como REFUTADA. Era falso: la medición estaba **contaminada** por un `Classical` que no tenía
+nada que ver con la lógica clásica.
+
+Toda la suciedad de la semántica entraba por **un solo lema**, `shift_updateEnv_comm`, y
+dentro de él por **una sola línea** — un `omega` cerrando por contradicción una meta de
+tipo `D`, es decir **fuera del lenguaje de omega**:
+
+```lean
+| zero => omega                                                      -- ⛔ Classical.choice
+| zero => exact absurd (Nat.le_zero.mp (Nat.not_lt.mp h1)).symm h2   -- ✅ cero axiomas
+```
+
+🔑 **`omega` sobre metas ARITMÉTICAS es limpio** (`propext, Quot.sound`); **sobre metas
+fuera de su lenguaje, descargadas por contradicción, mete `Classical.choice`.** Instancia
+NUEVA del «Classical oculto» de §27, distinta de las ya documentadas en la familia.
+
+🔑 **Lección de método**: *una medición de footprint sólo refuta una conjetura sobre lógica
+si el resto de la cadena está limpio.* Refutar con la cadena sucia es refutar el ruido. Los
+sospechosos descartados uno a uno (`by_cases`, `rcases`, `simp`, `rw`, `funext`, `dsimp`,
+las dicotomías de `Nat`) eran todos inocentes: el culpable no aparecía porque no se buscó
+**por ramas** hasta el final.
 
 ---
 

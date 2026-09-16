@@ -9,8 +9,9 @@
 > comprueba las tres cosas —build con el gate de los tres ejes, `check-sorry` bloqueante
 > y `check-doc-sync`—, así que la insignia no puede desincronizarse.
 
-> **Estado**: alcance fijado, gate de tres ejes en producción, teoría propia por empezar.
-> Siguiente hito: **H2, el conjunto de axiomas de HA**. Ver
+> **Estado**: **H2 cerrado** — HA axiomatizada sobre `⊢ᵢ`, un cálculo intuicionista,
+> finitario y sin habitantes-axioma (ADR-017), con `zero_add` y `succ_add` probados.
+> Siguiente hito: **H3, la interpretación**. Ver
 > [PLANNING.md](PLANNING.md) y [NEXT-STEPS.md](NEXT-STEPS.md).
 
 Aritmética de Peano en Lean 4, construida sobre **ROBINSON_PlusPlus** (Q⁺⁺) y **FOL**
@@ -52,7 +53,7 @@ Reglas **vinculantes**: incumplirlas es un defecto de build, no una preferencia 
 | **M-6** | Las cuatro librerías, en el mismo toolchain | `cat */lean-toolchain` |
 | **M-7** | El **núcleo es FINITARIO**: prohibidas las 5 ω-reglas de FOL y los 4 meta-axiomas de ROB++, salvo bajo `PeanoRF.Omega.*` | gate, eje finitario |
 | **M-8** | La **inducción entra en el conjunto de axiomas**, nunca como `axiom : axioms ⊢ φ` | gate + revisión |
-| **M-9** | **No** demostrar soundness para derivaciones con `raa`/`imp_intro` | revisión + M-7 |
+| **M-9** | **No** demostrar soundness para derivaciones con `raa`/`imp_intro` | revisión + M-7. ⚠️ Confirmado aguas arriba: `⊢` **no puede** tener solidez |
 
 El gate es [`PeanoRF/Meta/AxiomCheck.lean`](PeanoRF/Meta/AxiomCheck.lean) y corre en **cada
 `lake build`**. Distingue **tres ejes** porque se violan por separado: se puede demostrar
@@ -76,6 +77,8 @@ y las cuatro librerías deben compartir toolchain. Detalles en
 | Módulo | Namespace | Dependencias | Estado |
 |--------|-----------|--------------|--------|
 | `Prelim.lean` | `PeanoRF.Prelim` | FOL (mitad demostrativa), `ROBINSON_PlusPlus.Minimal.Axioms`, `Peano.PeanoNat.Axioms` | 🔄 En curso |
+| `Calculus/DerivesI.lean` | `PeanoRF.Calculus` | `FOL.Derives0` | ✅ El cálculo `⊢ᵢ` |
+| `Calculus/Eq.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Igualdad sobre `⊢ᵢ` |
 | `Meta/AxiomCheck.lean` | `PeanoRF.Meta` | `PeanoRF.Prelim`, `PeanoRF.Omega.Basic` | ✅ Gate de 3 ejes |
 | `Omega/Basic.lean` | `PeanoRF.Omega` | `PeanoRF.Prelim` | ✅ Capa ω declarada |
 
@@ -102,7 +105,7 @@ doc/                          # Nodos REFERENCE-{tema}.md (ADR-007), vacío por 
 ## Compilar
 
 ```bash
-lake build          # 22 jobs, con el gate de 3 ejes incluido
+lake build          # 28 jobs, con el gate (3 ejes + constructores) incluido
 ```
 
 ## Flujo de trabajo

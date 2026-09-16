@@ -1,6 +1,6 @@
 # `sondeos/` — mediciones fuera del build
 
-**Última actualización:** 2026-09-06 21:00
+**Última actualización:** 2026-09-16
 
 Ficheros de medición y experimento. **No forman parte de la librería** (`lakefile.lean`
 no los incluye) y por tanto no rompen el build ni entran en el recuento de módulos.
@@ -19,6 +19,9 @@ lake env lean sondeos/axiom_probe.lean
 | `peano_probe.lean` | Footprint constructivo de **todo** Peano (2207 decls) |
 | `lift_probe.lean` | **H2**: ¿es el contexto de axiomas invariante bajo `liftFormula 0`? |
 | `h2_probe.lean` | **H2**: footprint de `zero_add` finitario vs. el de ROB++ |
+| `h2b_probe.lean` | **2026-09-16**: qué meta-reglas siguen siendo `axiom` aguas arriba |
+| `h2c_probe.lean` | **2026-09-16**: footprint de `succ_add` (caso con parámetro) sobre `⊢ᵢ` |
+| `param_probe.lean` | **2026-09-16**: 🔑 qué hipótesis exige el parámetro para que el contexto sea cerrado |
 
 ⚠️ `peano_probe.lean` tuvo que anotar `Nat` a mano (`Nat.add`, `Nat.sub`): con `Peano`
 importado, el `+` global resuelve a `ℕ₀` y el término queda ambiguo. Es la trampa que ya
@@ -149,3 +152,34 @@ deuda META heredada de la codificación `String` de RPP, no del método.
 ⚠️ **Alcance de esta medición**: `zero_add` no tiene parámetro libre. El caso con parámetro
 (`succ_add`, `add_comm`) está sin medir y es donde la codificación *lift-aware* existe.
 No extrapolar el «coste cero» sin comprobarlo.
+
+
+---
+
+## Medición del 2026-09-16 — el parámetro, y qué cuesta exactamente
+
+`param_probe.lean` aísla la pregunta que decidía H2 con parámetro: **¿es cerrado el
+contexto cuando la instancia de inducción lleva un parámetro `a`?**
+
+| caso | resultado |
+|---|---|
+| `a := zero` (cerrado concreto) | ✅ sale por **`rfl`**, igual que en `zero_add` |
+| `a` arbitrario con `liftTerm 0 a = a` | ⛔ **NO basta** — quedan las invariancias de nivel **1** |
+| `a` con `∀k. liftTerm k a = a` | ⛔ aún faltan las de **sustitución** |
+| `a` con lift **y** subst invariantes (`HA.Closed a`) | ✅ |
+
+**Por qué el nivel 1**: `inductionFormula` usa `liftFormula 1 φ`, así que el parámetro
+aparece levantado a nivel 1 dentro de la instancia. Una sola hipótesis de nivel 0 deja la
+mitad del trabajo sin hacer, y el `simp` se para con las metas a la vista.
+
+⇒ **Con parámetro ABIERTO no hay generalización finitaria.** Haría falta meter en el
+contexto la **clausura universal** de la instancia de inducción. Eso es lo que la ω-regla
+compraba, y es el primer sitio donde la disciplina de ADR-016 cuesta algo de verdad.
+
+`h2c_probe.lean` mide el resultado:
+
+| símbolo | footprint |
+|---|---|
+| `PeanoRF.HA.succ_add` (sobre `⊢ᵢ`) | `propext, Classical.choice, Quot.sound` |
+| `ROBINSON_PlusPlus.Full.succ_add_prim` (sobre `⊢`) | + **`MetaRules.imp_intro`, `ax_induction_prim`** |
+| `PeanoRF.Calculus.derivesI_to_derives0` | `propext` |

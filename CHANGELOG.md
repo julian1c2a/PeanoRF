@@ -1,6 +1,6 @@
 # Changelog
 
-**Last updated:** 2026-09-06 21:00
+**Last updated:** 2026-09-16
 **Author**: Julián Calderón Almendros
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +14,58 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ---
 
 ## [Unreleased]
+
+### Changed (2026-09-16) — ⚠️ EL SUJETO CAMBIA: todo H2 migra a `⊢ᵢ` (ADR-017)
+
+Aguas arriba, en diez días, ROBINSON_PlusPlus declaró **las cinco nociones de
+derivabilidad** (`REFERENCE.md §0bis`) y FOL estrenó un estrato entero. Dos hechos
+invalidan la base sobre la que se construyó H2:
+
+1. ⛔ **`FOL.Derives` NO PUEDE TENER SOLIDEZ.** `FOL/cuarentena/Inconsistencia.lean`
+   demuestra `inconsistencia_de_cualquier_solidez`: *cualquier* testigo del enunciado da
+   `False`. 7 axiomas habitantes, declarado **HERRAMIENTA**. De `axioms ⊢ φ` no se concluye
+   nada sobre ℕ₀ ⇒ el espejo moría ahí. Es **M-9 confirmado** y llevado más lejos.
+2. ⛔ **La ω-regla es ahora un CONSTRUCTOR** (`Derives.gen_rule`), no un axioma.
+
+Y `Derives₀` tampoco sirve: 0 habitantes-axioma y solidez en el build, pero `dne_rule`,
+`dne_schema` y `forall_not_ex_not` son **constructores** ⇒ clásico ⇒ espejo de PA, no de HA.
+
+- **`PeanoRF/Calculus/DerivesI.lean`** — `⊢ᵢ`: los 18 constructores no clásicos de
+  `Derives₀`. Único punto con **0 habitantes-axioma + finitario + intuicionista**.
+  `derivesI_to_derives0` (footprint `propext`) se prueba por inducción **legítima**.
+- **`PeanoRF/Calculus/Eq.lean`** — el coste de la migración: cinco lemas reprobados
+  (`eqI_refl/symm/trans/congr_succ`, `specI`). Los teoremas de `⊢` no bajan a `⊢ᵢ`.
+- `HA/Axioms.lean` y `HA/Arith.lean` migrados enteros.
+
+### Added (2026-09-16) — H2 CERRADO: el caso con parámetro
+
+- **`succ_add`**: `∀x. σa + x = σ(a + x)`, con `Closed a`.
+- **`HA.Closed`** — y es la parte fina del resultado: `liftTerm 0 a = a` **NO basta**.
+  `inductionFormula` usa `liftFormula 1 φ`, así que hacen falta las invariancias **a todo
+  nivel y bajo sustitución**. Con parámetro **abierto** no hay generalización finitaria:
+  habría que meter la **clausura universal** de la instancia en el contexto. Eso es lo que
+  compraba la ω-regla, y es el primer sitio donde ADR-016 cuesta algo de verdad.
+- **ADR-018 — cuarto control del gate, a nivel de CONSTRUCTOR.**
+
+### Fixed (2026-09-16) — el gate se había quedado ciego SIN AVISAR
+
+`FOL.MetaRules.gen` pasó de axioma a constructor ⇒ footprint `[propext]` ⇒ **el eje
+finitario dejó de vigilar la ω-regla**: el contador de la capa ω bajó de 5 a 4 usos y el
+gate siguió diciendo OK. Es ADR-015 otra vez, pero por **deriva aguas arriba**. Arreglado
+con el control de constructores, probado con smoke test en los dos ejes.
+
+**Regla general que sale de aquí**: cuando una dependencia cambia la naturaleza de un
+símbolo (axioma → constructor), los controles que lo vigilaban **caducan en silencio**.
+
+### Measured (2026-09-16)
+
+| símbolo | footprint |
+|---|---|
+| `PeanoRF.HA.succ_add` (sobre `⊢ᵢ`) | `propext, Classical.choice, Quot.sound` |
+| `ROBINSON_PlusPlus.Full.succ_add_prim` (sobre `⊢`) | + **`MetaRules.imp_intro`, `ax_induction_prim`** |
+| `PeanoRF.Calculus.derivesI_to_derives0` | `propext` |
+
+---
 
 ### Added (2026-09-06, H2) — el conjunto de axiomas de HA
 

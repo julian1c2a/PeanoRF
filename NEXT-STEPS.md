@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-06 21:00
+**Última actualización:** 2026-09-16
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -10,44 +10,24 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**Terminar H2: el volcado con PARÁMETRO.** La infraestructura está y `zero_add` ya está
-reprobado sin ω; lo que falta por medir es el caso con parámetro libre (`succ_add`,
-`add_comm`), donde el manejo de índices De Bruijn es de verdad el que muerde.
+**H3 — la interpretación.** Y ha quedado medio regalada por el trabajo de aguas arriba:
+`derives0_soundness : Γ ⊢₀ f → Γ ⊨ f` **está en el build**, y `derivesI_to_derives0` ya
+está probado ⇒ la solidez de `⊢ᵢ` sale de **componer**.
 
 ---
 
-## H2 · El conjunto de axiomas de HA  🔄 Infraestructura ✅, volcado en curso
+## H2 · El conjunto de axiomas de HA  ✅ CERRADO (2026-09-16)
 
-**Objetivo**: axiomatizar HA sobre Q⁺⁺ **sin** postular derivabilidad (M-8).
+- [x] `HA.ctx`, `ax'`, `ind`, `mono`, `induction_object`.
+- [x] 🔑 **`gen_closed`**: sobre contexto cerrado la generalización es finitaria.
+- [x] **`zero_add`** (sin parámetro) y **`succ_add`** (con parámetro).
+- [x] ⚠️ **Migrado entero a `⊢ᵢ`** (ADR-017): `FOL.Derives` resultó no poder tener solidez.
+- [x] **`HA.Closed`** — la hipótesis exacta del caso con parámetro.
 
-- [x] **Contextos finitos**: `HA.ctx insts = axioms ++ insts.map inductionFormula`. Cada
-      teorema declara en su tipo qué instancias usa. Se reutiliza `Full.inductionFormula`
-      (M-4), que ya trae la codificación *lift-aware* correcta.
-- [x] `ax'`, `ind`, `mono`, `induction_object` — la instancia de inducción entra por
-      `Derives.hyp`, **no por un `axiom` de Lean**.
-- [x] 🔑 **`gen_closed`**: sobre un contexto cerrado la generalización es finitaria.
-      `axioms_lift : axioms.map (liftFormula 0) = axioms` sale por **`rfl`** — los axiomas
-      de Q⁺⁺ son sentencias cerradas y el kernel lo computa. Footprint: `[propext]`.
-- [x] **`zero_add` reprobado finitariamente**. Medición:
-
-      | símbolo | footprint |
-      |---|---|
-      | `HA.zero_add` | `propext, Classical.choice, Quot.sound` |
-      | `Full.zero_add` | + `MetaRules.gen`, `MetaRules.imp_intro`, `ax_induction` |
-
-      **Tres axiomas menos, misma estructura de prueba.**
-
-- [ ] **`succ_add` / `add_comm` — el caso CON PARÁMETRO.** `zero_add` no tiene parámetro
-      libre; ahí la ω no aportaba nada. El caso con parámetro es donde la codificación
-      *lift-aware* existe, y donde hay que ver si `gen_closed` basta o hace falta una
-      versión con contexto parametrizado.
-- [ ] Decidir si `insts` debe ser un **predicado decidible** (`isInductionInstance`) además
-      de una lista. Hoy la lista basta y es más informativa; el predicado hará falta cuando
-      se aritmetice la propia teoría (H7).
-
-**Lo aprendido**: la ruta finitaria no exigió reformular ninguna matemática. Lo único que
-cambia es que la hipótesis de inducción entra por el contexto en vez de por una función
-meta, y que el paso se prueba con `#0` libre en vez de con un término arbitrario.
+**Lo aprendido, y es lo que hay que recordar**: el parámetro **sí** cuesta, y el precio está
+localizado. `liftTerm 0 a = a` no basta porque `inductionFormula` usa `liftFormula 1 φ`.
+Con parámetro **abierto** haría falta la **clausura universal** de la instancia en el
+contexto — eso es exactamente lo que compraba la ω-regla.
 
 ---
 
@@ -89,6 +69,8 @@ Ver [PLANNING.md](PLANNING.md) §6.
 |---|---|---|
 | 99/521 decls de ROB++ (19 %) pasan por ω-reglas | aguas arriba | Reprobar finitariamente lo que compense; el resto, a `PeanoRF.Omega.*` |
 | RPP no es constructivo a nivel **meta**: `Minimal.Axioms.axioms` arrastra `Classical.choice` vía primitivas `String` | aguas arriba | El autor lo sanea → `metaDebtIsError := true` y re-medir |
+| ⚠️ El control de constructores va **por NOMBRE**: un constructor nuevo aguas arriba no se vigila | `forbiddenConstructors` | Medir por TIPO, como `check-estratos.bash` de RPP |
+| `add_comm`, `mul_*` sin volcar — ya **sin incógnitas de método** | `HA/Arith.lean` | Trabajo mecánico |
 | `SYMBOL_PREFIXES` vacío ⇒ control **[B]** de `check-doc-sync.bash` desactivado | `check-doc-sync.bash` | Que existan familias de símbolos propias |
 | Sin remoto en GitHub | — | `gh repo create` |
 
@@ -100,7 +82,7 @@ Ver [PLANNING.md](PLANNING.md) §6.
 |---|---|---|
 | H0 | Andamiaje | ✅ |
 | H1 | Directiva fundacional + gate de 3 ejes | ✅ |
-| H2 | Conjunto de axiomas de HA | 🔄 infraestructura ✅ |
+| H2 | Conjunto de axiomas de HA, sobre `⊢ᵢ` | ✅ |
 | H3 | Interpretación + soundness finitaria | ❌ |
 | H4 | Reflexión y adecuación | ❌ |
 | H5 | Volcado del núcleo aritmético | ❌ |

@@ -1,6 +1,6 @@
 # Diagrama de Dependencias — PeanoRF
 
-**Última actualización:** 2026-09-06 21:00
+**Última actualización:** 2026-09-16
 **Autor**: Julián Calderón Almendros
 
 > **Cuándo este fichero deja de ser útil tal cual**: pasado cierto tamaño (la
@@ -60,12 +60,15 @@ añadir un `import` a mano. No se importa el barrel `FOL` por eso.
 3. ROBINSON_PlusPlus tiene ramas de trabajo con el árbol en rojo de forma **conocida y
    localizada**. Por eso este proyecto importa capas concretas y **no el barrel
    completo** (ADR-012): un frente abierto aguas arriba no debe romper este build.
-4. **Carga ω, medida** (`sondeos/omega_probe.lean`): **99 de 521 declaraciones de ROB++
+4. ⚠️ **`FOL.Derives` no es utilizable como SUJETO** (2026-09-16): no puede tener solidez
+   (`inconsistencia_de_cualquier_solidez`). Este proyecto usa su propio `⊢ᵢ` y consume RPP
+   **sólo en la dirección** `⊢ᵢ → ⊢` (ADR-017).
+5. **Carga ω, medida** (`sondeos/omega_probe.lean`): **99 de 521 declaraciones de ROB++
    (19 %) arrastran alguna ω-regla o meta-axioma** — `gen` 70, `ex_elim` 64, `or_elim` 64,
    `imp_intro` 42, `raa` 13 — y **0 usan lógica clásica**. Es decir: ROB++ es intuicionista
    a nivel objeto pero **no finitario**. Por eso el núcleo de PeanoRF no consume `Full/`
    directamente y existe la capa `PeanoRF.Omega.*` (ADR-016).
-5. **Footprint constructivo, medido** (no deducido de los `import` — solo `#print axioms`
+6. **Footprint constructivo, medido** (no deducido de los `import` — solo `#print axioms`
    mide):
 
    | Librería | Decls | Limpias | Nota |
@@ -85,8 +88,11 @@ añadir un `import` a mano. No se importa el barrel `FOL` por eso.
 ```text
 PeanoRF/
 ├── Prelim.lean            # Punto único de contacto con FOL / RPP / Peano
+├── Calculus/
+│   ├── DerivesI.lean      # ⊢ᵢ — el cálculo SUJETO (ADR-017)
+│   └── Eq.lean            # Igualdad sobre ⊢ᵢ
 ├── Meta/
-│   └── AxiomCheck.lean    # Gate de 3 ejes (M-1, M-2, M-7)
+│   └── AxiomCheck.lean    # Gate: 3 ejes de footprint + control de CONSTRUCTORES
 ├── Omega/
 │   └── Basic.lean         # Capa ω: aislada y contada (ADR-016)
 ├── HA/
@@ -102,7 +108,9 @@ sondeos/                      # Mediciones fuera del build — ver sondeos/READM
 ```mermaid
 graph TD
     P[PeanoRF.Prelim] --> OM[PeanoRF.Omega.Basic]
-    P --> HX[PeanoRF.HA.Axioms]
+    P --> DI[PeanoRF.Calculus.DerivesI]
+    DI --> EQ[PeanoRF.Calculus.Eq]
+    EQ --> HX[PeanoRF.HA.Axioms]
     HX --> HR[PeanoRF.HA.Arith]
     OM --> AC[PeanoRF.Meta.AxiomCheck]
     HR --> AC
@@ -129,6 +137,7 @@ subdirectorio con `subgraph`.)*
 | Namespace | Módulo | Notas |
 |---|---|---|
 | `PeanoRF.Prelim` | `PeanoRF/Prelim.lean` | Namespace plano de un nivel bajo la raíz (ADR-005) |
+| `PeanoRF.Calculus` | `PeanoRF/Calculus/{DerivesI,Eq}.lean` | **Dos ficheros, un namespace**: es el cálculo y su igualdad, un solo concepto (excepción consciente a «un namespace por fichero», ADR-005) |
 | `PeanoRF.Meta` | `PeanoRF/Meta/AxiomCheck.lean` | Metaprogramación (gate). El directorio `Meta/` organiza; el namespace sigue siendo de un nivel |
 | `PeanoRF.Omega` | `PeanoRF/Omega/Basic.lean` | **Frontera semántica, no sólo organizativa**: bajo este prefijo el gate permite las ω-reglas (ADR-016) |
 
@@ -162,7 +171,9 @@ subdirectorio con `subgraph`.)*
 | `Prelim` | 0 | 0 |
 | `Meta.AxiomCheck` | 0 (4 comandos `elab`) | 0 |
 | `Omega.Basic` | 5 alias de ω-reglas | 0 |
-| `HA.Axioms` | 1 (`ctx`) | 7 |
+| `Calculus.DerivesI` | 1 inductivo + 1 notación | 2 |
+| `Calculus.Eq` | 0 | 5 |
+| `HA.Axioms` | 1 (`ctx`) + 1 (`Closed`) | 9 |
 | `HA.Arith` | 1 (`phiZeroAdd`) | 1 |
 
 ## 7. Notas de diseño
@@ -178,7 +189,7 @@ subdirectorio con `subgraph`.)*
 ## 8. Comandos de verificación
 
 ```bash
-lake build                        # build completo (25 jobs a fecha de hoy) + gate de 3 ejes
+lake build                        # build completo (28 jobs a fecha de hoy) + gate
 lake graph                        # grafo real y completo (Lake nativo)
 bash check-sorry.bash             # sorrys restantes
 bash check-doc-sync.bash          # doc ↔ código (AI-GUIDE §27)

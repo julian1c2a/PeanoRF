@@ -1,6 +1,6 @@
 # Technical Reference — PeanoRF
 
-**Last updated:** 2026-09-06 21:00
+**Last updated:** 2026-09-16
 **Author**: Julián Calderón Almendros
 **Lean version**: v4.31.0
 
@@ -91,6 +91,8 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Prelim.lean` | `PeanoRF.Prelim` | FOL (mitad demostrativa), `ROBINSON_PlusPlus.Minimal.Axioms`, `Peano.PeanoNat.Axioms` | 🔄 In progress |
 | `Meta/AxiomCheck.lean` | `PeanoRF.Meta` | `PeanoRF.Prelim`, `PeanoRF.Omega.Basic` | ✅ Completo |
 | `Omega/Basic.lean` | `PeanoRF.Omega` | `PeanoRF.Prelim` | ✅ Completo |
+| `Calculus/DerivesI.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim`, `FOL.Derives0` | ✅ Completo |
+| `Calculus/Eq.lean` | `PeanoRF.Calculus` | `PeanoRF.Calculus.DerivesI` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -206,6 +208,84 @@ derivaciones con `raa`/`imp_intro` (M-9) — sus premisas META se cumplen vacía
 
 ---
 
+### 3.3bis Calculus/DerivesI.lean — `⊢ᵢ`, el cálculo SUJETO
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Prelim`, `FOL.Derives0`
+**Last updated**: 2026-09-16
+**Status**: ✅ Completo
+**@axiom_system**: ninguno — **0 habitantes-axioma** (por eso se puede inducir sobre él)
+**@importance**: **foundational**
+
+El objeto central del proyecto (ADR-017). Deducción natural **intuicionista, finitaria y
+sin habitantes-axioma**: los 21 constructores de `FOL.Derives₀` menos los tres clásicos.
+
+**Definición**:
+
+```lean
+inductive Derivesᵢ : List Formula → Formula → Prop
+infix:50 " ⊢ᵢ " => Derivesᵢ
+```
+
+**Los 18 constructores**, por familias:
+
+| familia | constructores |
+|---|---|
+| hipótesis | `hyp` |
+| implicación | `intro_impl`, `elim_impl` |
+| conjunción | `intro_and`, `elim_and_l`, `elim_and_r` |
+| disyunción | `intro_or_l`, `intro_or_r`, `elim_or` |
+| cuantificadores | `intro_forall`, `elim_forall`, `intro_ex`, `elim_ex` |
+| ⊥ | `bot_elim` (*ex falso*, intuicionista — **no** es doble negación) |
+| estructural | `weakening`, `rewrite_at` |
+| igualdad | `refl`, `subst` |
+
+⛔ **Los tres que NO están, y por qué**: `dne_rule`, `dne_schema` y `forall_not_ex_not`
+son clásicos (M-1). Y la ω-regla `gen_rule` tampoco, porque `Derives₀` ya la había
+dejado fuera (M-7).
+
+**Teoremas**:
+
+| nombre | notación matemática | firma Lean 4 | footprint |
+|---|---|---|---|
+| `derivesI_to_derives0` | `Γ ⊢ᵢ f  ⟹  Γ ⊢₀ f` | `(Γ ⊢ᵢ f) → (Γ ⊢₀ f)` | `propext` |
+| `derivesI_to_derives` | `Γ ⊢ᵢ f  ⟹  Γ ⊢ f` | `(Γ ⊢ᵢ f) → (Γ ⊢ f)` | `propext` |
+
+⭐ `derivesI_to_derives0` se prueba **por inducción sobre `⊢ᵢ`**, y esa inducción es
+legítima precisamente porque el inductivo no tiene habitantes-axioma (M-11 de RPP). Sobre
+`⊢` sería ilegítima.
+
+⚠️ **Las recíprocas NO valen, y a propósito.** `⊢₀` tiene las tres reglas clásicas y `⊢`
+tiene además la ω-regla y 7 habitantes-axioma. La asimetría **es** la tesis del proyecto:
+lo nuestro entra en su mundo, lo suyo no entra en el nuestro.
+
+---
+
+### 3.3ter Calculus/Eq.lean — igualdad sobre `⊢ᵢ`
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Calculus.DerivesI`
+**Last updated**: 2026-09-16
+**Status**: ✅ Completo
+**@importance**: high
+
+El **coste medido de la migración** (ADR-017): aguas arriba estos lemas existen, pero
+enunciados sobre `⊢`, y los teoremas de `⊢` no bajan a `⊢ᵢ` — sólo suben. Son cinco, y
+las pruebas son las mismas con los constructores renombrados.
+
+| nombre | notación matemática | firma Lean 4 |
+|---|---|---|
+| `eqI_refl` | `Γ ⊢ᵢ t = t` | `(t : Term) → Γ ⊢ᵢ (Formula.eq t t)` |
+| `eqI_symm` | `Γ ⊢ᵢ t₁ = t₂  ⟹  Γ ⊢ᵢ t₂ = t₁` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq t₂ t₁)` |
+| `eqI_trans` | `t₁ = t₂, t₂ = t₃  ⟹  t₁ = t₃` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq t₂ t₃) → Γ ⊢ᵢ (.eq t₁ t₃)` |
+| `eqI_congr_succ` | `t₁ = t₂  ⟹  σt₁ = σt₂` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq (succ t₁) (succ t₂))` |
+| `specI` | `Γ ⊢ᵢ ∀A  ⟹  Γ ⊢ᵢ A[t]` | `Γ ⊢ᵢ (.forall A) → (t : Term) → Γ ⊢ᵢ substFormula 0 t A` |
+
+Las tres primeras usan la misma táctica: un testigo `f` con `#0` y `liftTerm 0 t₁`, y
+`Derivesᵢ.subst` + `Derivesᵢ.refl`. `specI` es un alias de `elim_forall`.
+
+---
+
 ### 3.4 HA/Axioms.lean — el conjunto de axiomas de HA
 
 **Namespace**: `PeanoRF.HA`
@@ -233,13 +313,21 @@ finita por construcción — eso es lo que hace de HA una teoría r.e. y no ω-l
 | Nombre | Enunciado |
 |---|---|
 | `mem_ctx_of_mem_axioms` | `f ∈ axioms → f ∈ ctx insts` |
-| `ax'` | `f ∈ axioms → ctx insts ⊢ f` |
-| `ind` | `φ ∈ insts → ctx insts ⊢ inductionFormula φ` |
-| `mono` | `insts ⊆ insts' → ctx insts ⊢ ψ → ctx insts' ⊢ ψ` |
+| `ax'` | `f ∈ axioms → ctx insts ⊢ᵢ f` |
+| `ind` | `φ ∈ insts → ctx insts ⊢ᵢ inductionFormula φ` |
+| `mono` | `insts ⊆ insts' → ctx insts ⊢ᵢ ψ → ctx insts' ⊢ᵢ ψ` |
 | `axioms_lift` | `axioms.map (liftFormula 0) = axioms` (por `rfl`: los axiomas son sentencias cerradas) |
 | `ctx_lift` | el contexto entero es cerrado si lo son las instancias |
-| **`gen_closed`** | **`Γ.map (liftFormula 0) = Γ → Γ ⊢ A → Γ ⊢ ∀A`** |
+| **`gen_closed`** | **`Γ.map (liftFormula 0) = Γ → Γ ⊢ᵢ A → Γ ⊢ᵢ ∀A`** |
+| `Closed` (structure) | `a` invariante bajo `liftTerm k` **y** bajo `substTerm k t`, para todo `k`, `t` |
+| `closed_zero` | `Closed zero` |
 | `induction_object` | inducción object-level, con la instancia tomada del contexto |
+
+⚠️ **`Closed` es la hipótesis exacta del caso con PARÁMETRO**, y no es la ingenua.
+`liftTerm 0 a = a` **no basta**: `inductionFormula` usa `liftFormula 1 φ`, así que el
+parámetro aparece levantado a nivel 1 dentro de la instancia, y además sustituido. Con un
+parámetro **abierto** no hay generalización finitaria: haría falta meter en el contexto la
+**clausura universal** de la instancia. Medido en `sondeos/param_probe.lean`.
 
 🔑 **`gen_closed` es el resultado central**: sobre un contexto cerrado la generalización es
 finitaria (`Derives.intro_forall`), luego **la ω-regla `gen` no hace falta**. Lo que `gen`
@@ -277,22 +365,54 @@ heredada de la codificación `String` de RPP.
 
 ## 4. Theorems
 
-### 4.1 HA/Arith.lean
+### 4.1 Calculus — el cálculo `⊢ᵢ`
 
-| Teorema | Enunciado matemático | Instancias de inducción |
+| Teorema | Enunciado |
+|---|---|
+| `derivesI_to_derives0` | `Γ ⊢ᵢ f → Γ ⊢₀ f` — inducción sobre `⊢ᵢ`, legítima (0 habitantes-axioma) |
+| `derivesI_to_derives` | `Γ ⊢ᵢ f → Γ ⊢ f` |
+| `eqI_refl` · `eqI_symm` · `eqI_trans` · `eqI_congr_succ` · `specI` | igualdad y especialización sobre `⊢ᵢ` |
+
+### 4.2 HA/Arith.lean
+
+| Teorema | Enunciado matemático | Instancias |
 |---|---|---|
-| `zero_add` | `HA ⊢ ∀x. 0 + x = x` | `[phiZeroAdd]` |
+| `zero_add` | `HA ⊢ᵢ ∀x. 0 + x = x` | `[phiZeroAdd]` |
+| `succ_add` | `HA ⊢ᵢ ∀x. σa + x = σ(a + x)`, con `Closed a` | `[phiSuccAdd a]` |
+
+**Footprint medido** (`sondeos/h2c_probe.lean`, 2026-09-16):
+
+| símbolo | footprint |
+|---|---|
+| `PeanoRF.HA.succ_add` | `propext, Classical.choice, Quot.sound` |
+| `ROBINSON_PlusPlus.Full.succ_add_prim` | + **`MetaRules.imp_intro`, `ax_induction_prim`** |
+| `PeanoRF.Calculus.derivesI_to_derives0` | `propext` |
 
 ---
 
 ## 5. Notations
 
-*(Ninguna propia. Las notaciones disponibles vienen de FOL, ROBINSON_PlusPlus y Peano;
-se catalogarán aquí las que este proyecto introduzca.)*
+| Símbolo | Expande a | Módulo | Precedencia |
+|---|---|---|---|
+| `Γ ⊢ᵢ f` | `PeanoRF.Calculus.Derivesᵢ Γ f` | `Calculus/DerivesI.lean` | `infix:50` |
+
+Misma precedencia que `⊢` (FOL) y `⊢₀` (`Derives0`), a propósito: los tres se leen igual
+y se distinguen sólo por el subíndice, que es el estrato.
 
 ---
 
 ## 6. Exports
+
+### 6.0 Calculus — lo que exporta el cálculo
+
+```lean
+-- PeanoRF.Calculus
+Derivesᵢ                  -- el inductivo (18 constructores)
+Γ ⊢ᵢ f                    -- notación (infix:50)
+derivesI_to_derives0     -- puente a ⊢₀  ⇒  solidez heredada
+derivesI_to_derives      -- puente a ⊢   ⇒  consumo de RPP en la dirección correcta
+eqI_refl  eqI_symm  eqI_trans  eqI_congr_succ  specI
+```
 
 ### 6.1 Prelim.lean
 
@@ -307,6 +427,11 @@ se catalogarán aquí las que este proyecto introduzca.)*
 ### 7.1 Fully Projected Files
 
 - `Prelim.lean` — proyectado (0 declaraciones propias)
+- `Calculus/DerivesI.lean` — proyectado 2026-09-16 (1 inductivo + 1 notación + 2 teoremas)
+- `Calculus/Eq.lean` — proyectado 2026-09-16 (5 teoremas)
+- `HA/Axioms.lean` — reproyectado 2026-09-16 tras la migración a `⊢ᵢ` (1 def + 1 structure + 9 teoremas)
+- `HA/Arith.lean` — reproyectado 2026-09-16 (2 defs + 2 teoremas)
+- `Omega/Basic.lean`, `Meta/AxiomCheck.lean` — proyectados
 
 ### 7.2 Partially Projected Files
 

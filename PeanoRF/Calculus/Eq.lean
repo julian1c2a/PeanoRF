@@ -1,0 +1,100 @@
+/-
+Copyright (c) 2026. All rights reserved.
+Author: Julián Calderón Almendros
+License: MIT
+-/
+
+import PeanoRF.Calculus.DerivesI
+
+/-! # Igualdad sobre `⊢ᵢ`
+
+  Simetría, transitividad y congruencia del sucesor, **reprobadas en el cálculo
+  intuicionista**. Aguas arriba existen (`FOL.derive_eq_symm`, `FOL.derive_eq_trans`,
+  `Minimal.Axioms.eq_congr_succ`) pero están enunciadas sobre `⊢`, que es HERRAMIENTA
+  (ADR-017): sus teoremas no bajan a `⊢ᵢ`, sólo suben.
+
+  Ése es el coste real de la migración, y es este fichero: **tres lemas**. Las pruebas son
+  las de aguas arriba con los constructores renombrados — `subst` y `refl` existen igual en
+  `⊢ᵢ`, y ninguna usaba lógica clásica ni ω.
+-/
+
+namespace PeanoRF.Calculus
+
+open FOL
+
+set_option autoImplicit false
+
+variable {Γ : List Formula}
+
+/-- Reflexividad. -/
+theorem eqI_refl (t : Term) : Γ ⊢ᵢ (Formula.eq t t) := Derivesᵢ.refl Γ t
+
+/-- Simetría. La `f` testigo es `#0 = t₁↑`: sustituyendo `t₁` da `t₁ = t₁` (que es `refl`)
+    y sustituyendo `t₂` da `t₂ = t₁`. -/
+theorem eqI_symm {t₁ t₂ : Term} (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) : Γ ⊢ᵢ (Formula.eq t₂ t₁) := by
+  have hS1 : substFormula 0 t₁ (Formula.eq (.var 0) (liftTerm 0 t₁)) = Formula.eq t₁ t₁ := by
+    change Formula.eq (substTerm 0 t₁ (.var 0)) (substTerm 0 t₁ (liftTerm 0 t₁))
+         = Formula.eq t₁ t₁
+    rw [substTerm_liftTerm t₁ 0 t₁]
+    rfl
+  have hS2 : substFormula 0 t₂ (Formula.eq (.var 0) (liftTerm 0 t₁)) = Formula.eq t₂ t₁ := by
+    change Formula.eq (substTerm 0 t₂ (.var 0)) (substTerm 0 t₂ (liftTerm 0 t₁))
+         = Formula.eq t₂ t₁
+    rw [substTerm_liftTerm t₁ 0 t₂]
+    rfl
+  have hbase : Γ ⊢ᵢ substFormula 0 t₁ (Formula.eq (.var 0) (liftTerm 0 t₁)) := by
+    rw [hS1]; exact Derivesᵢ.refl Γ t₁
+  have := Derivesᵢ.subst Γ t₁ t₂ (Formula.eq (.var 0) (liftTerm 0 t₁)) h hbase
+  rwa [hS2] at this
+
+/-- Transitividad. Testigo `t₁↑ = #0`. -/
+theorem eqI_trans {t₁ t₂ t₃ : Term}
+    (h12 : Γ ⊢ᵢ (Formula.eq t₁ t₂)) (h23 : Γ ⊢ᵢ (Formula.eq t₂ t₃)) :
+    Γ ⊢ᵢ (Formula.eq t₁ t₃) := by
+  have hS2 : substFormula 0 t₂ (Formula.eq (liftTerm 0 t₁) (.var 0)) = Formula.eq t₁ t₂ := by
+    change Formula.eq (substTerm 0 t₂ (liftTerm 0 t₁)) (substTerm 0 t₂ (.var 0))
+         = Formula.eq t₁ t₂
+    rw [substTerm_liftTerm t₁ 0 t₂]
+    rfl
+  have hS3 : substFormula 0 t₃ (Formula.eq (liftTerm 0 t₁) (.var 0)) = Formula.eq t₁ t₃ := by
+    change Formula.eq (substTerm 0 t₃ (liftTerm 0 t₁)) (substTerm 0 t₃ (.var 0))
+         = Formula.eq t₁ t₃
+    rw [substTerm_liftTerm t₁ 0 t₃]
+    rfl
+  have hbase : Γ ⊢ᵢ substFormula 0 t₂ (Formula.eq (liftTerm 0 t₁) (.var 0)) := by
+    rw [hS2]; exact h12
+  have := Derivesᵢ.subst Γ t₂ t₃ (Formula.eq (liftTerm 0 t₁) (.var 0)) h23 hbase
+  rwa [hS3] at this
+
+/-- Congruencia del sucesor. Testigo `σ(t₁↑) = σ#0`. -/
+theorem eqI_congr_succ {t₁ t₂ : Term} (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) :
+    Γ ⊢ᵢ (Formula.eq (ROBINSON_PlusPlus.Minimal.Axioms.succ t₁)
+                     (ROBINSON_PlusPlus.Minimal.Axioms.succ t₂)) := by
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hS1 : substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
+           = Formula.eq (succ t₁) (succ t₁) := by
+    change Formula.eq (succ (substTerm 0 t₁ (liftTerm 0 t₁))) (succ (substTerm 0 t₁ (.var 0)))
+         = Formula.eq (succ t₁) (succ t₁)
+    rw [substTerm_liftTerm t₁ 0 t₁]
+    rfl
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hS2 : substFormula 0 t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
+           = Formula.eq (succ t₁) (succ t₂) := by
+    change Formula.eq (succ (substTerm 0 t₂ (liftTerm 0 t₁))) (succ (substTerm 0 t₂ (.var 0)))
+         = Formula.eq (succ t₁) (succ t₂)
+    rw [substTerm_liftTerm t₁ 0 t₂]
+    rfl
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hbase : Γ ⊢ᵢ substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) := by
+    rw [hS1]; exact Derivesᵢ.refl Γ _
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have := Derivesᵢ.subst Γ t₁ t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) h hbase
+  rwa [hS2] at this
+
+/-- Especialización de un `∀` con un término (alias de `elim_forall`, para leer igual que
+    el `spec` de ROBINSON_PlusPlus). -/
+theorem specI {A : Formula} (h : Γ ⊢ᵢ Formula.forall A) (t : Term) :
+    Γ ⊢ᵢ substFormula 0 t A :=
+  Derivesᵢ.elim_forall Γ A t h
+
+end PeanoRF.Calculus

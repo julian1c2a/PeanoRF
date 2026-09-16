@@ -515,6 +515,81 @@ Son ejes independientes y se violan por separado.
 
 ---
 
+## ADR-017: El sujeto es `⊢ᵢ` propio, no `Derives` ni `Derives₀`
+
+**Fecha**: 2026-09-16
+**Estado**: Aceptado
+
+**Contexto**: entre el 6 y el 16 de septiembre, ROBINSON_PlusPlus declaró **las cinco
+nociones de derivabilidad** (`REFERENCE.md §0bis`) y FOL estrenó un estrato entero. Dos
+hechos nuevos invalidan la base sobre la que se construyó H2:
+
+1. **`FOL.Derives` no puede tener solidez.** `FOL/cuarentena/Inconsistencia.lean` prueba
+   `inconsistencia_de_cualquier_solidez`: *cualquier* testigo del enunciado de solidez para
+   `⊢` da `False`. Está habitado por 7 axiomas y declarado **HERRAMIENTA** (ADR-024 de RPP):
+   ningún metateorema significa lo que dice sobre él. ⇒ De `axioms ⊢ φ` **jamás** se podrá
+   concluir que φ es verdadera en ℕ₀, y ahí muere el espejo, que es el proyecto.
+   Es M-9 confirmado y llevado más lejos por el autor de aguas arriba.
+2. **La ω-regla es ahora un CONSTRUCTOR** (`Derives.gen_rule`), no un axioma. `⊢` dejó de
+   ser r.e. **por construcción**, y el eje finitario del gate se quedó ciego sin avisar
+   (ver ADR-018).
+
+**Y `Derives₀` tampoco sirve**: tiene 0 habitantes-axioma y `derives0_soundness` en el
+build, pero trae `dne_rule`, `dne_schema` y `forall_not_ex_not` **como constructores** —
+es clásico por diseño, porque su cometido era la completitud. Adoptarlo convertiría a
+PeanoRF en espejo de PA, no de HA, contra M-1.
+
+**Decisión**: `PeanoRF.Calculus.Derivesᵢ` (`⊢ᵢ`) = los **18 constructores no clásicos** de
+`Derives₀`, con el puente `derivesI_to_derives0` probado por inducción (legítima: 0
+habitantes-axioma, footprint `[propext]`). Todo H2 migra ahí.
+
+**Justificación**: es el único punto del retículo que cumple las tres condiciones a la vez
+— 0 habitantes-axioma (inducción legítima), finitario (`⊢` r.e.) e intuicionista (M-1).
+No existe aguas arriba (comprobado), así que M-4 no lo prohíbe.
+
+**Consecuencias**:
+- La solidez de `⊢ᵢ` sale de componer el puente con `derives0_soundness`, que ya está en el
+  build ⇒ **H3 queda en gran parte adelantado**.
+- **Coste medido**: los teoremas de `⊢` no bajan a `⊢ᵢ`, sólo suben. Hubo que reprobar
+  `symm`, `trans`, `congr_succ` y `spec` — **cinco lemas**, mismas pruebas con los
+  constructores renombrados (`PeanoRF/Calculus/Eq.lean`).
+- Los teoremas de ROBINSON_PlusPlus siguen siendo consumibles **en una dirección**: lo
+  nuestro entra en su mundo vía `derivesI_to_derives`; lo suyo no entra en el nuestro.
+
+---
+
+## ADR-018: El control de CONSTRUCTORES, porque `#print axioms` es ciego
+
+**Fecha**: 2026-09-16
+**Estado**: Aceptado
+
+**Decisión**: el gate añade un **cuarto control** que recorre el término de prueba
+buscando constructores prohibidos (`forbiddenConstructors`), además de los tres ejes que
+miden footprint.
+
+**Justificación**: `collectAxioms` ve axiomas, **no constructores**. Cuando aguas arriba
+`FOL.MetaRules.gen` pasó a ser el constructor `Derives.gen_rule`, su footprint quedó en
+`[propext]` y **el eje finitario dejó de vigilar la ω-regla**: el contador de la capa ω
+bajó de 5 a 4 usos y el gate siguió diciendo OK. Es el fallo de ADR-015 otra vez —un
+control que da verde sin comprobar— pero esta vez por **deriva aguas arriba**, no por un
+error al escribirlo.
+
+ROBINSON_PlusPlus ya había nombrado la causa general en su regla **M-11**: «`#print axioms`
+es CIEGO» a los habitantes de un inductivo, y por eso tiene `check-estratos.bash` **además
+de** `check-footprints.bash`. No son el mismo control y ninguno sustituye al otro.
+
+**Consecuencias**:
+- Probado con smoke test en los dos ejes (ADR-015): detecta `Derives₀.dne_rule` y
+  `Derives.gen_rule` donde el footprint no ve nada.
+- ⚠️ **Deuda declarada**: la lista es por NOMBRE. Un constructor nuevo aguas arriba no
+  rompe nada aquí, simplemente **no se vigila**. Aguas arriba lo resuelven midiendo por el
+  TIPO de cada axioma; aquí, de momento, no.
+- **Regla general**: cuando una dependencia cambia la naturaleza de un símbolo (axioma →
+  constructor), los controles que lo vigilaban **caducan en silencio**. Revisarlos forma
+  parte de ponerse al día, no es opcional.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

@@ -9,6 +9,8 @@ License: MIT
 -- Run 'bash gen-root.bash' after adding or removing modules.
 
 import PeanoRF.Prelim
+import PeanoRF.Calculus.DerivesI
+import PeanoRF.Calculus.Eq
 import PeanoRF.HA.Arith
 import PeanoRF.HA.Axioms
 import PeanoRF.Meta.AxiomCheck

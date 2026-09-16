@@ -1,18 +1,20 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-06 21:00
+**Última actualización:** 2026-09-16
 **Autor**: Julián Calderón Almendros
 
 > **Estado: alcance FIJADO; gate de tres ejes en producción; teoría propia por empezar.**
 > PeanoRF vuelca Peano al lenguaje FOL⁼ + ROB++ de forma constructiva: un **espejo** donde
 > lo demostrado se conserva en Peano (`PLANNING.md` §1). El **núcleo es HA finitaria** y la
 > ω-lógica vive aislada y contada en `PeanoRF.Omega.*` (**ADR-016**).
-> **H2 entregado en su parte crítica**: el conjunto de axiomas de HA existe, la
-> generalización finitaria `gen_closed` está probada, y `zero_add` está **reprobado sin
-> ω-reglas y sin `ax_induction`** — tres axiomas menos que la versión de ROB++.
+> **H2 CERRADO** (2026-09-16), y sobre un cálculo nuevo. Aguas arriba se demostró que
+> `FOL.Derives` **no puede tener solidez** (`inconsistencia_de_cualquier_solidez`): es
+> HERRAMIENTA, no SUJETO. Todo H2 se ha **migrado a `⊢ᵢ`**, el cálculo intuicionista
+> finitario de `PeanoRF/Calculus/DerivesI.lean` (ADR-017). `zero_add` y **`succ_add` (el
+> caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **25 jobs · 5 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **28 jobs · 7 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 
 ---
 
@@ -20,13 +22,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 5 (`Prelim`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/Axioms`, `HA/Arith`) |
-| Módulos con 0 `sorry` | 5 / 5 |
-| Teoremas propios | 8 |
+| Módulos propios | 7 (`Prelim`, `Calculus/{DerivesI,Eq}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
+| Módulos con 0 `sorry` | 7 / 7 |
+| Teoremas propios | 16 |
 | Definiciones propias | 0 |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 25 jobs |
+| Build | ✅ 28 jobs |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |
@@ -41,7 +43,9 @@
 | `PeanoRF/Meta/AxiomCheck.lean` | 0 | 0 | 0 | ✅ Completo (gate de 3 ejes en producción) |
 | `PeanoRF/Omega/Basic.lean` | 0 | 5 | 0 | ✅ Capa ω declarada (5 alias sancionados) |
 | `PeanoRF/HA/Axioms.lean` | 7 | 1 | 0 | ✅ Conjunto de axiomas + `gen_closed` |
-| `PeanoRF/HA/Arith.lean` | 1 | 1 | 0 | 🔄 Primer teorema finitario (`zero_add`) |
+| `PeanoRF/HA/Arith.lean` | 2 | 2 | 0 | ✅ `zero_add` y `succ_add` sobre `⊢ᵢ` |
+| `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
+| `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 
@@ -96,10 +100,10 @@ META heredada de la codificación `String` de RPP, no nuestra.
 
 ## Trabajo pendiente
 
-- [x] ~~**H2 · infraestructura**~~ → `ctx`, `ax'`, `ind`, `mono`, `induction_object`,
-      `gen_closed`, y `zero_add` reprobado finitariamente.
-- [ ] **H2 · resto**: reprobar el siguiente escalón de `Full/Induction` (`succ_add`,
-      `add_comm`, `mul_*`) para medir el coste con **parámetro**, no sólo sin él.
+- [x] ~~**H2 completo**~~ → `⊢ᵢ`, `ctx`, `gen_closed`, `Closed`, `zero_add` y `succ_add`.
+- [ ] **H3**: la interpretación. Aguas arriba ya existe `derives0_soundness` **en el
+      build**, y `⊢ᵢ → ⊢₀` está probado ⇒ la solidez de `⊢ᵢ` sale casi gratis.
+- [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.
 - [x] ~~Alcance del proyecto~~ → fijado (`PLANNING.md` §1).
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.
 - [x] ~~Qué naturales~~ → **M-3**: `ℕ₀` de peanolib (ADR-014).
@@ -130,7 +134,7 @@ sondeos/                   # Mediciones fuera del build (no cuentan como módulo
 |-------|-------------|--------|
 | H0 Andamiaje | Plantilla, dependencias, build verde | ✅ |
 | H1 Directiva | Pureza constructiva + gate de 3 ejes | ✅ |
-| H2 Axiomas HA | Q⁺⁺ + inducción como axiomas (M-8) | 🔄 infraestructura ✅, volcado en curso |
+| H2 Axiomas HA | Q⁺⁺ + inducción como axiomas (M-8), sobre `⊢ᵢ` | ✅ |
 | H3 Interpretación | `⟦·⟧` en ℕ₀ + soundness finitaria (M-9) | ❌ |
 | H4 Reflexión | `⌜·⌝` + adecuación + táctica | ❌ |
 | H5–H7 | Volcado, realizabilidad, metateoría | ❌ |
@@ -140,6 +144,6 @@ sondeos/                   # Mediciones fuera del build (no cuentan como módulo
 ---
 
 **Autor**: Julián Calderón Almendros
-*Última actualización: 2026-09-06 21:00*
+*Última actualización: 2026-09-16*
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)

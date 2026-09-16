@@ -55,6 +55,25 @@ License: MIT
 --   • `FOL.MetaRules.gen` — ω-regla; no es clásica, es infinitaria.
 --   • `FOL.MetaRules.{imp_intro, or_elim, ex_elim}` — reglas meta estructurales.
 --
+--   ⚠⚠ LA CEGUERA DE `#print axioms`, Y EL CUARTO CONTROL (2026-09-16)
+--     `collectAxioms` ve AXIOMAS. No ve **constructores**. Y aguas arriba las dos reglas
+--     que este gate existía para vigilar se han vuelto constructores:
+--
+--       • `FOL.Derives.gen_rule` — la ω-regla, antes el `axiom FOL.MetaRules.gen`.
+--         `gen` pasó a tener footprint `[propext]` y **el eje finitario dejó de verla**:
+--         el contador de la capa ω bajó de 5 a 4 usos y el gate siguió diciendo OK.
+--       • `Derives₀.dne_rule` / `.dne_schema` / `.forall_not_ex_not` — las tres clásicas
+--         de `Derives₀`, que son constructores desde su nacimiento.
+--
+--     Es el fallo de ADR-015 otra vez (un control que da VERDE sin comprobar), esta vez
+--     por deriva aguas arriba y no por un error al escribirlo. ROBINSON_PlusPlus ya había
+--     nombrado la causa general en su regla M-11: «`#print axioms` es CIEGO» a los
+--     habitantes de un inductivo, y por eso tiene `check-estratos.bash` **además de**
+--     `check-footprints.bash`. No son el mismo control y ninguno sustituye al otro.
+--
+--     ⇒ El cuarto control recorre el TÉRMINO DE PRUEBA (no el footprint) y prohíbe
+--     constructores por nombre. Ver `forbiddenConstructors`.
+--
 -- El gate recorre TODA declaración propia (módulo bajo `PeanoRF.*`) vía
 -- `Lean.collectAxioms`. Detecta el «Classical OCULTO» que `grep 'Classical\.'` no ve:
 -- `by_cases`/`decide`/`omega`/`simp` sobre una proposición sin instancia `Decidable`
@@ -69,6 +88,8 @@ import Lean.Util.CollectAxioms
 -- módulo de la librería MENOS el barrel raíz `PeanoRF.lean` — que importa a este el
 -- último — para evitar el ciclo. Añadir aquí cada módulo nuevo.
 import PeanoRF.Prelim
+import PeanoRF.Calculus.DerivesI
+import PeanoRF.Calculus.Eq
 import PeanoRF.Omega.Basic
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Arith
@@ -147,6 +168,27 @@ private def omegaAxioms : List Name :=
     Todo lo demás es núcleo finitario. -/
 private def omegaLayer : Name := `PeanoRF.Omega
 
+/-- **CONTROL DE CONSTRUCTORES** — lo que `#print axioms` no puede ver.
+
+    Cada entrada es `(constructor, eje, sustituto)`. Se prohíben en todo el núcleo; los
+    del eje FINITARIO se toleran bajo `PeanoRF.Omega.*`, los del eje OBJETO **en ninguna
+    parte** (son la tesis).
+
+    ⚠️ Esta lista hay que revisarla cuando FOL cambie: un constructor nuevo en un
+    inductivo de aguas arriba no rompe nada aquí, simplemente **no se vigila**. Es la
+    misma fragilidad que `check-estratos.bash` resuelve aguas arriba midiendo por el TIPO
+    de cada axioma en vez de por una lista. Deuda declarada, no resuelta. -/
+private def forbiddenConstructors : List (Name × String × String) :=
+  [ (`Derives.gen_rule,              "FINITARIO",
+     "es la ω-regla: premisa infinitaria `∀ n : Term, Γ ⊢ A[n]`. Usar `Derivesᵢ.intro_forall`")
+  , (`Derives₀.dne_rule,             "OBJETO",
+     "eliminación de doble negación. `⊢ᵢ` no la tiene, y ése es el punto")
+  , (`Derives₀.dne_schema,           "OBJETO",
+     "¬¬A ⇒ A como esquema. Idem")
+  , (`Derives₀.forall_not_ex_not,    "OBJETO",
+     "¬∀A ⇒ ∃¬A. Clásica")
+  ]
+
 /-- Prefijos de módulo de las dependencias sibling. Un axioma no-constructivo solo se
     considera HEREDADO si entra a través de una constante definida en uno de estos
     módulos. El núcleo de Lean (`Init.*`, `Std.*`) **no** está aquí a propósito:
@@ -199,7 +241,7 @@ private def directRefs (env : Environment) (n : Name) : Array Name :=
     `n` HEREDADO. Si no, se lo ha metido nuestra propia prueba.
 
     El recorrido va acotado (`fuel`): un gate no puede colgar un build. -/
-private def inheritsFromDependency (ax : Name) (n : Name) : CommandElabM Bool := do
+private def frontierOf (n : Name) : CommandElabM NameSet := do
   let env ← getEnv
   let mods := env.header.moduleNames
   let mut work : Array Name := #[n]
@@ -216,11 +258,26 @@ private def inheritsFromDependency (ax : Name) (n : Name) : CommandElabM Bool :=
         unless seen.contains r do work := work.push r
       else
         frontier := frontier.insert r
+  return frontier
+
+private def inheritsFromDependency (ax : Name) (n : Name) : CommandElabM Bool := do
+  let env ← getEnv
+  let mods := env.header.moduleNames
+  let frontier ← frontierOf n
   for c in frontier.toList do
     if isDependency env mods c then
       let axs ← collectAxioms c
       if axs.contains ax then return true
   return false
+
+/-- **El cuarto control**: qué constructores prohibidos aparecen en el término de prueba.
+
+    Un constructor es una constante ajena (vive en el inductivo de FOL), así que cae en la
+    FRONTERA del recorrido — el mismo que usa la procedencia. Por eso este control sale
+    casi gratis una vez `frontierOf` existe. -/
+private def forbiddenCtorsUsed (n : Name) : CommandElabM (Array (Name × String × String)) := do
+  let frontier ← frontierOf n
+  return forbiddenConstructors.toArray.filter (fun e => frontier.contains e.1)
 
 -- ──────────────────────────────────────────────────────────────
 -- Herramienta puntual
@@ -255,6 +312,14 @@ elab "#assert_finitary " id:ident : command => do
     if axioms.contains a then
       throwError "'{name}' usa la ω-regla / meta-axioma '{a}' — el núcleo de PeanoRF es         FINITARIO (M-7, ADR-016). Usar el constructor de `Derives` correspondiente, o         mover la declaración a la capa `PeanoRF.Omega.*`."
 
+/-- Falla si la declaración usa un constructor prohibido (control de CONSTRUCTORES). -/
+elab "#assert_no_forbidden_ctor " id:ident : command => do
+  let name ← resolveGlobalConstNoOverload id
+  let used ← forbiddenCtorsUsed name
+  unless used.isEmpty do
+    throwError "'{name}' usa {used.size} constructor(es) prohibido(s): \
+      {used.toList.map (fun e => e.1)}. `#print axioms` NO ve esto."
+
 /-- Barrido de TODA declaración propia de `PeanoRF`:
 
     * cualquier axioma clásico de nivel objeto ⟹ **error** (eje objeto, sin baseline);
@@ -268,6 +333,7 @@ elab "#assert_constructive_footprint" : command => do
   let mut scanned : Nat := 0
   let mut objectViolations : Array (Name × Name) := #[]
   let mut omegaViolations : Array (Name × Name) := #[]
+  let mut ctorViolations : Array (Name × Name × String) := #[]
   let mut omegaLayerUses : Nat := 0
   let mut metaViolations : Array (Name × Name) := #[]
   let mut debtCarriers : Array Name := #[]
@@ -288,6 +354,11 @@ elab "#assert_constructive_footprint" : command => do
       if axs.contains a then
         if inOmegaLayer then omegaLayerUses := omegaLayerUses + 1
         else omegaViolations := omegaViolations.push (name, a)
+    -- CONTROL DE CONSTRUCTORES (lo que el footprint no ve)
+    for (ctor, eje, remedio) in ← forbiddenCtorsUsed name do
+      -- los del eje FINITARIO se toleran en la capa ω declarada; los del OBJETO, nunca
+      unless eje == "FINITARIO" && inOmegaLayer do
+        ctorViolations := ctorViolations.push (name, ctor, s!"[{eje}] {remedio}")
     -- eje meta
     let bad := axs.filter (fun a =>
       !allowedAxioms.contains a && !objectClassicalAxioms.contains a && !omegaAxioms.contains a)
@@ -315,6 +386,12 @@ elab "#assert_constructive_footprint" : command => do
       {objectViolations.toList}\n\
       → La lógica formalizada es INTUICIONISTA (M-1, ADR-013). Esto no tiene baseline: \
       reformular la prueba sin eliminación de doble negación."
+  unless ctorViolations.isEmpty do
+    throwError m!"[gate · CONSTRUCTORES] {ctorViolations.size} uso(s) de constructores \
+      prohibidos — esto `#print axioms` NO lo ve:\n{ctorViolations.toList}\n\
+      → El núcleo usa `PeanoRF.Calculus.Derivesᵢ`, que no tiene ni la ω-regla ni las \
+      tres reglas clásicas. Si de verdad hace falta una, la declaración va a \
+      `PeanoRF.Omega.*` (y sólo vale para las ω, no para las clásicas)."
   unless omegaViolations.isEmpty do
     throwError m!"[gate · EJE FINITARIO] {omegaViolations.size} uso(s) de ω-reglas o       meta-axiomas fuera de la capa `PeanoRF.Omega.*`:\n{omegaViolations.toList}\n      → El núcleo de PeanoRF es HA finitaria (M-7, ADR-016): `⊢` tiene que seguir siendo       r.e. Sustitutos finitarios: `imp_intro`→`Derives.intro_impl`, `raa`→`intro_impl`       (¬A = A⇒⊥), `or_elim`→`Derives.elim_or`, `ex_elim`→`Derives.elim_ex`,       `gen`→`Derives.intro_forall`. Y la inducción va EN EL CONJUNTO DE AXIOMAS, no       postulada como derivable de Q⁺⁺."
   unless metaViolations.isEmpty do
@@ -328,7 +405,7 @@ elab "#assert_constructive_footprint" : command => do
       `Classical.choice`/axiomas sancionados de ROBINSON_PlusPlus. Es deuda AGUAS ARRIBA, \
       no nuestra — pero cuenta: cuando RPP se sanee, poner `metaDebtIsError := true`."
   logInfo m!"[gate] OK — {scanned} declaraciones propias verificadas. \
-    Eje objeto: intuicionista puro. Eje finitario: núcleo r.e. \
+    Eje objeto: intuicionista puro (axiomas Y constructores). Eje finitario: núcleo r.e. \
     ({omegaLayerUses} uso(s) de ω en la capa `PeanoRF.Omega`). \
     Eje meta: ⊆ propext + Quot.sound (+ {debtCarriers.size} con deuda heredada de RPP)."
 

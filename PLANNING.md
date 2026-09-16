@@ -1,6 +1,6 @@
 # Project Planning — PeanoRF
 
-**Última actualización:** 2026-09-06 21:00
+**Última actualización:** 2026-09-16
 **Autor**: Julián Calderón Almendros
 
 > Extensión de [NEXT-STEPS.md](NEXT-STEPS.md). Allí van las fases accionables a corto
@@ -42,11 +42,13 @@ que el proyecto promete y la que es barata.
 
 Tres observaciones que ordenan el trabajo:
 
-1. **No se puede reutilizar la semántica de FOL.** `FOL.Semantics`/`Soundness` son la
-   mitad clásica de FOL y están prohibidas (M-5). Pero **no hacen falta**: interpretar en
-   **una** estructura concreta (ℕ₀) no necesita la maquinaria de teoría de modelos
-   general, que es clásica por Lindenbaum/Henkin/enumeración. La interpretación de
-   PeanoRF se construye desde cero y es constructiva.
+1. ⚠️ **Revisado el 2026-09-16.** La versión anterior decía que había que construir la
+   interpretación desde cero porque `FOL.Semantics` estaba prohibida por M-5. Eso ha
+   cambiado: aguas arriba existe ahora **`derives0_soundness : Γ ⊢₀ f → Γ ⊨ f`, en el
+   build**, y `derivesI_to_derives0` ya está probado ⇒ la solidez de `⊢ᵢ` **sale de
+   componer**. Lo que queda por decidir es si M-5 se enmienda con una medición (¿cuál es
+   el footprint real de `Soundness0`?) o si se construye una interpretación propia en ℕ₀
+   para no importar la mitad clásica. **Esa decisión es H3.**
 2. **La dirección inversa (Peano → PeanoRF) no es automática, y tiene un techo de
    principio.** Lean es mucho más fuerte que HA; por Gödel habrá verdades sobre `ℕ₀`
    demostrables en Lean que HA no demuestra. «Volcar Peano al completo» es una meta
@@ -137,8 +139,8 @@ Justificación completa en `DECISIONS.md` **ADR-016**; medición en `sondeos/REA
 |---|---|---|
 | **H0** | Andamiaje, dependencias, build verde | ✅ 2026-09-06 |
 | **H1** | Directiva fundacional + gate de 3 ejes | ✅ 2026-09-06 |
-| **H2** | **El conjunto de axiomas de HA**: Q⁺⁺ + esquema de inducción como axiomas, con contextos finitos (M-8). Reprobar finitariamente lo que hoy sale de `ax_induction` | 🔄 infraestructura ✅ + `zero_add` |
-| **H3** | **La interpretación `⟦·⟧` en ℕ₀ + soundness del fragmento finitario** (M-9). Aquí aparece el teorema de transferencia: el espejo deja de ser metáfora | ❌ |
+| **H2** | **El conjunto de axiomas de HA** sobre `⊢ᵢ`, con contextos finitos (M-8) | ✅ 2026-09-16 |
+| **H3** | **La interpretación `⟦·⟧` + soundness**. ⭐ Medio hecha aguas arriba: `derives0_soundness` está en el build y `⊢ᵢ → ⊢₀` probado ⇒ **componer** | 🔄 siguiente |
 | **H4** | **Reflexión `⌜·⌝` + adecuación + táctica**: el espejo se genera, no se transcribe | ❌ |
 | **H5** | **Volcado del núcleo aritmético** de Peano (suma, producto, orden, divisibilidad, primos) | ❌ |
 | **H6** | **Realizabilidad explícita**: extracción de realizadores hacia Peano | ❌ |

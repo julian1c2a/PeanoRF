@@ -212,3 +212,38 @@ pero no suficiente**.
 `Classical` **oculto** (§27), no esencial. Saneados, `derivesI_soundness` pasa a
 `⊆ {propext, Quot.sound}` **sin tocar el fichero**. El obstáculo queda reducido de «toda la
 solidez de `⊢₀`» a **tres lemas con nombre**.
+
+
+---
+
+## Medición del 2026-09-16c — la caza del último `Classical`: resultado NEGATIVO
+
+Localizado: **toda** la contaminación de la semántica entra por **un solo lema**,
+`FOL.Metamath.Semantics.shift_updateEnv_comm`. Aguas abajo todo hereda; aguas arriba
+(nivel término) todo está limpio.
+
+**Lo que NO es la causa**, descartado por medición (cada uno limpio en aislamiento):
+
+| candidato | footprint aislado |
+|---|---|
+| `by_cases` · `rcases` · `obtain` · `cases` | ninguno |
+| `omega` | `propext, Quot.sound` |
+| `simp` (conjunto por defecto) sobre un `if` | `propext` |
+| `if_pos` / `if_neg` | ninguno |
+| `funext` | `Quot.sound` |
+| `dsimp [updateEnv]` | ninguno |
+| `Nat.lt_or_ge` · `Nat.not_lt` · `Nat.eq_or_lt_of_le` | ninguno |
+| `updateEnv` · `shiftEnv` (definiciones) | ninguno |
+| `open Classical` de fichero | no existe en `Semantics.lean` ni en `FOL.lean` |
+
+⛔ **Y sin embargo el lema ensamblado sale sucio.** Se reescribió la prueba dos veces de
+forma independiente —dicotomías constructivas + `simp`, y dicotomías + `rw [if_pos/if_neg]`
+puro— y **las dos siguen arrastrando `Classical.choice`**.
+
+⇒ La causa está en el **ensamblado**, no en ningún ingrediente, y **no se ha identificado**.
+El espacio de búsqueda queda reducido a un lema de 18 líneas. Siguiente intento razonable:
+`set_option pp.all` sobre la meta tras `dsimp` para ver qué instancia `Decidable` queda
+como metavariable, o construir el término a mano sin tácticas.
+
+⚠️ La edición de prueba en `FOL/Semantics.lean` se **revirtió**: no lograba el objetivo y el
+árbol de FOL está en uso activo.

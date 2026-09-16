@@ -14,7 +14,12 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **31 jobs · 8 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **30 jobs · 8 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+>
+> ⚠️ **La cifra de `jobs` NO es un invariante del proyecto**: depende de qué dependencias
+> locales haya que reconstruir. El 2026-09-16 osciló entre 30 y 31 según el estado de la
+> caché de FOL, y el control [A] dio VERDE con la cifra desfasada. Las otras tres sí son
+> invariantes; ésta se lee con esa reserva.
 
 ---
 
@@ -28,7 +33,7 @@
 | Definiciones propias | 0 |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 31 jobs |
+| Build | ✅ 30 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |
@@ -46,7 +51,7 @@
 | `PeanoRF/HA/Arith.lean` | 2 | 2 | 0 | ✅ `zero_add` y `succ_add` sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
-| `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🔄 **H3**: transferencia heredada; falta la versión constructiva |
+| `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🔄 **H3**: transferencia DIRECTA (18 casos). Arrastra `Classical` de un solo lema aguas arriba |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 
@@ -104,9 +109,16 @@ META heredada de la codificación `String` de RPP, no nuestra.
 - [x] ~~**H2 completo**~~ → `⊢ᵢ`, `ctx`, `gen_closed`, `Closed`, `zero_add` y `succ_add`.
 - [x] ~~**H3 · transferencia**~~ → `derivesI_soundness` y `derivesI_consistent`, heredando
       `derives0_soundness`. **El espejo ya es un teorema.**
-- [ ] **H3 · la versión CONSTRUCTIVA** (ADR-019 §conjetura): probar la solidez de `⊢ᵢ` por
-      inducción directa sobre sus 18 constructores. Si sale `⊆ {propext, Quot.sound}`, el
-      `Classical` de aguas arriba queda localizado en exactamente tres constructores.
+- [x] ~~**H3 · inducción directa**~~ → hecha, 18 casos. Pero **no basta**: la conjetura de
+      ADR-019 era falsa.
+- [ ] **H3 · el último `Classical`**: está localizado en **UN** lema,
+      `FOL.Metamath.Semantics.shift_updateEnv_comm`. Todo lo demás de la cadena (nivel
+      término, `evalTerm`/`evalFormula`, `rule_soundness`, `replaceAt_soundness`) está
+      limpio y hereda de ahí. ⚠️ **Causa NO identificada**: descartadas por medición
+      `by_cases`, `rcases`, `obtain`, `cases`, `omega`, el conjunto `simp` por defecto,
+      `if_pos`/`if_neg`, `funext`, `dsimp`, las dicotomías de `Nat` y un `open Classical`
+      de fichero — **todas limpias en aislamiento, y el ensamblado sigue sucio**. Dos
+      reescrituras constructivas independientes del lema tampoco lo limpian.
 - [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.
 - [x] ~~Alcance del proyecto~~ → fijado (`PLANNING.md` §1).
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.

@@ -636,6 +636,57 @@ esté vigilado.
 lista vieja **no contenía** — y otro que usa `Derives.gen_rule`: los caza los dos y los
 clasifica (`OBJETO` vs `FINITARIO/AJENO`).
 
+### 🔁 Revisión b (2026-09-17, tarde): el tipo, por TELESCOPIO
+
+La misma auditoría, repetida por la tarde con la pregunta de siempre —**¿sobre cuánto del
+terreno actúa?**— encontró que el criterio por tipo de la mañana reconocía **una forma
+fija**, `List Formula → Formula → Prop`. En 24 h aguas arriba había aparecido lo que no
+cabe en esa forma:
+
+| relación | tipo | ctors |
+|---|---|---|
+| `LK₀`, `LKc` (FOL, ADR-046/052) | `List Formula → List Formula → Prop` | 14 + 15 |
+| `LKh` (FOL, Hauptsatz) | `Nat → List Formula → List Formula → Prop` | 14 |
+| `Prf`, `Prf₀` (RPP, Hilbert) | `Formula → Prop` | 7 + 17 |
+
+**Cinco relaciones, 67 constructores, invisibles.** Medido: un teorema con `LK₀.ax` y otro
+con **`LKc.cut`** —la regla de corte— pasaban sin una palabra.
+
+🔑 **La misma lección un nivel más arriba**: el silencio volvía a significar
+*permitido*, ahora por la forma del tipo en lugar de por el nombre. Corregir la polaridad
+de la lista no sirve de nada si el conjunto sobre el que se aplica se fija a mano.
+
+Y una segunda medición, peor: **la última lista POR NOMBRE que quedaba** —la que decide
+qué constructor es *clásico*— dejaba entrar la doble negación en la capa ω. `PrfH.p3` es
+`((A ⇒ ⊥) ⇒ ⊥) ⇒ A`, o sea la DNE con otro nombre; como `p3` no estaba en la lista,
+se clasificaba «FINITARIO/AJENO» y la capa ω lo toleraba. Con un teorema que probaba ese
+esquema dentro de `PeanoRF.Omega`, el gate imprimía:
+
+```text
+[gate] OK — 86 declaraciones propias verificadas. Eje objeto: intuicionista puro
+```
+
+**El criterio, en su forma actual:**
+
+1. **Descubrimiento por TELESCOPIO**: inductivo **recursivo**, que menciona `Formula`,
+   que acaba en `Prop` y **todos** cuyos argumentos son `Formula`, `List Formula` o `Nat`.
+   La recursividad es lo que separa un cálculo de un predicado auxiliar (`LocalRule`,
+   `EqInstance`); `mentionsFormula`, lo que impide que entre `Nat.le`.
+2. **CLÁSICO por lo que la regla DICE**: se busca el patrón de la doble negación en el
+   TIPO del constructor, en sus dos escrituras (`neg (neg A)` y `((A ⇒ ⊥) ⇒ ⊥)`), más
+   el esquema `(¬∀A) ⇒ ∃¬A`. La lista por nombre queda como **refuerzo**: sólo añade.
+3. **La capa ω deja de ser un comodín**: ya no basta con estar en `PeanoRF.Omega.*`; el
+   constructor tiene que estar además en `omegaAllowedForeignCtors` — hoy **vacía**. La
+   capa ω relaja en EFECTIVIDAD (M-7), nunca en la lógica objeto (M-1).
+4. **El inventario publica los CASI-CANDIDATOS**: recursivos que hablan de fórmulas y
+   acaban en `Prop` pero cuyo telescopio se rechazó. Si algún día aparece ahí algo que
+   sí es un cálculo, **se ve** en vez de no existir.
+
+**Medido después** (`sondeos/audit_2026-09-17b.lean`, con los seis módulos importados):
+**11 relaciones detectadas, 90 constructores ajenos vigilados, 14 clásicos**. Los cuatro
+smoke tests —`LK₀.ax`, `LKc.cut`, `PrfH.p3`, `Prf.p3`— cazados; y el contraejemplo
+`Derives₀.hyp` sigue **pasando**, que es lo que mantiene vivos los puentes.
+
 **Consecuencias**:
 - Probado con smoke test en los dos ejes (ADR-015) **y con las dos clases de declaración**:
   detecta `Derives₀.dne_rule` y `Derives.gen_rule` donde el footprint no ve nada.

@@ -183,43 +183,148 @@ private def omegaLayer : Name := `PeanoRF.Omega
     El defecto no era la lista: era su **polaridad**. Una lista de prohibidos deja pasar
     todo lo que no nombra, y aguas arriba crece más rápido de lo que se actualiza.
 
-    ## El criterio, ahora estructural
+    ## 🔁 Segunda revisión (2026-09-17 b): el TIPO, por TELESCOPIO
 
-    1. Se **descubren por TIPO** todas las relaciones de derivabilidad del entorno: los
-       inductivos de tipo `List Formula → Formula → Prop`. Es el mismo criterio que usa
-       `check-estratos.bash` de ROBINSON_PlusPlus — clasificar por el TIPO, no por el
-       nombre — y por eso un cálculo nuevo **aparece solo**.
+    La primera versión por tipo reconocía **una forma fija**, `List Formula → Formula →
+    Prop`. La auditoría de la tarde midió lo que eso deja fuera: en 24 h FOL estrenó
+    `LK₀` y `LKc` (secuentes de DOS lados, `List Formula → List Formula → Prop`) y `LKh`
+    (indexado por altura, `Nat → …`), y RPP tenía desde antes `Prf`/`Prf₀`, Hilbert SIN
+    contexto (`Formula → Prop`). **Cinco relaciones, 67 constructores, invisibles.**
+    Probado: un teorema con `LK₀.ax` y otro con `LKc.cut` pasaban sin una palabra.
+
+    Misma lección que la vez anterior, un nivel más arriba: **el silencio volvía a
+    significar permitido**, ahora por la forma del tipo en vez de por el nombre.
+
+    ## El criterio, ahora estructural de verdad
+
+    1. Se **descubren por TELESCOPIO**: inductivo **recursivo**, que **menciona
+       `Formula`**, cuyo tipo termina en `Prop` y **todos** cuyos argumentos son
+       `Formula`, `List Formula` o `Nat`. Cubre de una vez deducción natural, secuentes
+       de uno y dos lados, cálculos con altura y Hilbert con o sin contexto.
+       * La **recursividad** es lo que separa un cálculo de un predicado auxiliar:
+         `LocalRule` y `FOL.Herbrand0.EqInstance` acaban en `Prop` y hablan de fórmulas,
+         pero ninguna regla suya tiene premisa propia ⇒ no son sistemas de prueba.
+       * `Nat` se admite como ÍNDICE (alturas), no como lenguaje.
     2. Se toman los constructores de **nuestro** `Derivesᵢ` como referencia.
     3. **Cualquier constructor de otro cálculo cuyo nombre corto NO esté entre los de
        `Derivesᵢ` es una regla que nosotros NO tenemos** ⇒ prohibido en el núcleo.
+    4. Y **CLÁSICO se decide por lo que la regla DICE**, no por cómo se llama: se busca
+       el patrón de la doble negación en el TIPO del constructor (`isClassicalCtorType`).
+       Lo forzó otra medición: `PrfH.p3 : ((A ⇒ ⊥) ⇒ ⊥) ⇒ A` **es** la DNE con otro
+       nombre, y con la lista por nombre la capa ω la daba por buena — el gate imprimía
+       «OK — Eje objeto: intuicionista puro» sobre un teorema que probaba justo eso.
 
-    ⇒ **El silencio significa PROHIBIDO, no permitido.** Un `Derives₃` futuro entra
-    vigilado por defecto, sin tocar este fichero.
+    ⇒ **El silencio significa PROHIBIDO, no permitido.** Un `Derives₃`, un `LK₁` o un
+    Hilbert nuevo entran vigilados por defecto, sin tocar este fichero.
 
     ⚠️ Los puentes (`derivesI_to_derives0`) usan `Derives₀.hyp`, `Derives₀.intro_impl`…
     y **pasan**, porque esos nombres cortos SÍ están en `Derivesᵢ`. Lo que no pasa es
-    justo lo que `⊢ᵢ` no tiene.-/
+    justo lo que `⊢ᵢ` no tiene.
 
-/-- Nombres cortos de los constructores CLÁSICOS de nivel objeto. Prohibidos **en todas
-    partes, incluida la capa ω**: son la tesis (M-1), no una cuestión de efectividad.
-    Se comparan por nombre CORTO, así que cubren los cuatro cálculos a la vez y los que
-    vengan. -/
+    ⚠️ Y el **inventario** que se publica en cada build lista también los
+    **casi-candidatos**: inductivos recursivos que hablan de fórmulas y acaban en `Prop`
+    pero cuyo telescopio se rechazó. Si algún día aparece ahí algo que SÍ es un cálculo,
+    se ve — en vez de no existir. -/
+
+/-- Nombres cortos de constructores CLÁSICOS de nivel objeto.
+
+    ⚠️ **Es un REFUERZO, no el criterio.** Desde la revisión del 2026-09-17(b) la
+    clasificación la hace `isClassicalCtorType`, leyendo el tipo. Esta lista sólo **añade**
+    —nunca quita— y cubre el caso de una regla clásica que no pase por la doble negación
+    y todavía no tenga patrón propio. -/
 private def classicalCtorShortNames : List Name :=
   [`dne_rule, `dne_schema, `forall_not_ex_not]
 
 /-- Excepciones conscientes: constructores ajenos que **no** están en `Derivesᵢ` pero se
-    aceptan igualmente. **Vacía**, y cada entrada necesitará su justificación escrita.
-    Candidato previsible: las congruencias primitivas de `Derives₂`, que sustituyen a
-    `subst` y no son clásicas. -/
+    aceptan igualmente EN EL NÚCLEO. **Vacía**, y cada entrada necesitará su justificación
+    escrita. Candidato previsible: las congruencias primitivas de `Derives₂`, que
+    sustituyen a `subst` y no son clásicas. -/
 private def benignForeignCtors : List Name := []
 
-/-- ¿Es `iv` una **relación de derivabilidad**? Criterio por TIPO:
-    `List Formula → Formula → Prop`. -/
-private def isDerivRelation (iv : InductiveVal) : Bool :=
-  match iv.type with
-  | .forallE _ t1 (.forallE _ t2 (.sort lvl) _) _ =>
-      lvl.isZero && t1.isAppOf `List && t2.isConstOf `Formula
+/-- ω-reglas ajenas admitidas **dentro de `PeanoRF.Omega.*`, y sólo ahí**.
+
+    ⚠️ **Vacía hoy, y a propósito.** Hasta el 2026-09-17(b) la capa ω toleraba
+    *cualquier* constructor ajeno no clásico — otra vez el silencio significando
+    permitido, y justo en la capa que relaja. Se midió que por ahí entraba `PrfH.p3`,
+    que es la DNE. La capa ω relaja en EFECTIVIDAD (M-7), jamás en la lógica objeto
+    (M-1). Hoy no hace falta ninguna entrada: `PeanoRF/Omega/Basic.lean` usa
+    `FOL.MetaRules.*`, que son **axiomas** y los vigila el eje finitario. -/
+private def omegaAllowedForeignCtors : List Name := []
+
+/-- Tipos que puede tener un argumento de una relación de derivabilidad: fórmulas,
+    listas de fórmulas (contextos y secuentes) e índices `Nat` (alturas). -/
+private def isObjectArgType (t : Expr) : Bool :=
+  t.isConstOf `Formula
+  || t.isConstOf `Nat
+  || (t.isAppOfArity `List 1 && t.appArg!.isConstOf `Formula)
+
+/-- El TELESCOPIO entero: todos los argumentos de lenguaje objeto y final `Prop`. -/
+private partial def telescopeIsObjectProp : Expr → Bool
+  | .forallE _ ty body _ => isObjectArgType ty && telescopeIsObjectProp body
+  | .sort lvl => lvl.isZero
   | _ => false
+
+/-- Sólo que acabe en `Prop`, sin mirar los argumentos: para los CASI-candidatos. -/
+private partial def telescopeEndsInProp : Expr → Bool
+  | .forallE _ _ body _ => telescopeEndsInProp body
+  | .sort lvl => lvl.isZero
+  | _ => false
+
+private def mentionsFormula (t : Expr) : Bool :=
+  (t.find? (fun e => e.isConstOf `Formula)).isSome
+
+/-- ¿Es `iv` una **relación de derivabilidad**? Criterio por TELESCOPIO (2026-09-17 b).
+
+    La **recursividad** es lo que separa un cálculo de un predicado auxiliar: `LocalRule`
+    y `FOL.Herbrand0.EqInstance` acaban en `Prop` y hablan de fórmulas, pero ninguna regla
+    suya tiene premisa propia. Y `mentionsFormula` es lo que impide que entre `Nat.le`,
+    que es recursivo y cuyos argumentos son `Nat`. -/
+private def isDerivRelation (iv : InductiveVal) : Bool :=
+  iv.isRec && mentionsFormula iv.type && telescopeIsObjectProp iv.type
+
+/-- Los CASI-candidatos: recursivos, hablan de fórmulas, acaban en `Prop`, pero el
+    telescopio los rechazó. Se publican para que el hueco se VEA. -/
+private def isNearMissRelation (iv : InductiveVal) : Bool :=
+  iv.isRec && mentionsFormula iv.type && telescopeEndsInProp iv.type
+    && !telescopeIsObjectProp iv.type
+
+/-- `¬f` se escribe de DOS maneras aguas arriba: `neg f` y `f ⇒ ⊥`. Devuelve `f`. -/
+private def negArg? (e : Expr) : Option Expr :=
+  if e.isAppOfArity `neg 1 then some e.appArg!
+  else if e.isAppOfArity `Formula.impl 2 && e.appArg!.isConstOf `Formula.bottom then
+    some e.appFn!.appArg!
+  else none
+
+/-- Los patrones CLÁSICOS, reconocidos en el TIPO del constructor:
+
+    1. **doble negación en cualquier posición**, `¬¬A`. Cubre a la vez la regla
+       (`dne_rule`, premisa `Γ ⊢ ¬¬A`), el esquema (`dne_schema`, conclusión
+       `¬¬A ⇒ A`) y **`Prf.p3`/`PrfH.p3`**, que es lo mismo escrito
+       `((A ⇒ ⊥) ⇒ ⊥) ⇒ A`;
+    2. el esquema `(¬∀A) ⇒ ∃¬A`, que NO pasa por doble negación y por eso necesita
+       patrón propio.
+
+    Sobreaproxima **hacia lo estricto**, que es la dirección segura: un falso positivo
+    prohibe de más y se ve al compilar; un falso negativo deja entrar clasicidad y no se
+    ve nunca. Ninguna regla de `Derivesᵢ` menciona `¬`. -/
+private def isClassicalFormulaPattern (e : Expr) : Bool :=
+  (match negArg? e with
+   | some inner => (negArg? inner).isSome
+   | none => false)
+  ||
+  (if e.isAppOfArity `Formula.impl 2 then
+     match negArg? e.appFn!.appArg! with
+     | some fa =>
+         let b := e.appArg!
+         fa.isAppOfArity `Formula.forall 1 && b.isAppOfArity `Formula.ex 1
+           && (match negArg? b.appArg! with
+               | some nb => nb == fa.appArg!
+               | none => false)
+     | none => false
+   else false)
+
+private def isClassicalCtorType (t : Expr) : Bool :=
+  (t.find? isClassicalFormulaPattern).isSome
 
 /-- Todas las relaciones de derivabilidad del entorno, descubiertas por tipo. -/
 private def derivRelations : CommandElabM (Array InductiveVal) := do
@@ -228,6 +333,22 @@ private def derivRelations : CommandElabM (Array InductiveVal) := do
   for (_, info) in env.constants.toList do
     if let .inductInfo iv := info then
       if isDerivRelation iv then out := out.push iv
+  return out
+
+/-- Auxiliares que Lean GENERA junto a cada inductivo (`below`, `ibelow`) y que
+    `Name.isInternalDetail` no marca. Sin este filtro el canal de casi-candidatos se
+    llena de ruido, y un canal ruidoso no lo lee nadie — que es como se pierde la señal. -/
+private def isGeneratedCompanion (n : Name) : Bool :=
+  [`below, `ibelow].contains n.componentsRev.head!
+
+/-- Los casi-candidatos del entorno, para el inventario. -/
+private def nearMissRelations : CommandElabM (Array Name) := do
+  let env ← getEnv
+  let mut out : Array Name := #[]
+  for (n, info) in env.constants.toList do
+    if n.isInternalDetail || isGeneratedCompanion n then continue
+    if let .inductInfo iv := info then
+      if isNearMissRelation iv then out := out.push n
   return out
 
 /-- Nombres CORTOS de los constructores de nuestro `Derivesᵢ`: la referencia. -/
@@ -243,15 +364,26 @@ private def ownCtorShortNames : CommandElabM (Array Name) := do
 private def foreignForbiddenCtors : CommandElabM (Array (Name × Bool)) := do
   let own ← ownCtorShortNames
   let rels ← derivRelations
+  let env ← getEnv
   let mut out : Array (Name × Bool) := #[]
   for iv in rels do
     if iv.name == `PeanoRF.Calculus.Derivesᵢ then continue
     for c in iv.ctors do
       let short := c.componentsRev.head!
-      if own.contains short then continue
-      if benignForeignCtors.contains c then continue
-      -- el Bool dice si es CLÁSICO de nivel objeto (prohibido también en la capa ω)
-      out := out.push (c, classicalCtorShortNames.contains short)
+      -- CLÁSICO se decide por lo que la regla DICE; el nombre sólo refuerza.
+      let esClasico :=
+        classicalCtorShortNames.contains short
+        || (match env.find? c with
+            | some info => isClassicalCtorType info.type
+            | none => false)
+      -- ⚠️ Un constructor CLÁSICO entra en la lista aunque su nombre corto coincida con
+      -- uno de los nuestros: coincidir de nombre no es ser la misma regla.
+      if esClasico then
+        out := out.push (c, true)
+      else if own.contains short || benignForeignCtors.contains c then
+        continue
+      else
+        out := out.push (c, false)
   return out
 
 
@@ -432,8 +564,11 @@ elab "#assert_constructive_footprint" : command => do
     -- CONTROL DE CONSTRUCTORES (lo que el footprint no ve)
     for (ctor, esClasico) in ← forbiddenCtorsUsed name do
       -- Los CLÁSICOS de nivel objeto no se toleran en ninguna parte (M-1, es la tesis).
-      -- El resto —ω-reglas y cualquier regla que `⊢ᵢ` no tenga— sólo en la capa ω.
-      unless (!esClasico) && inOmegaLayer do
+      -- El resto sólo en la capa ω Y estando en la lista EXPLÍCITA de ω-reglas: antes
+      -- bastaba con estar en la capa ω, y por ahí entraba cualquier regla ajena.
+      let toleradoEnOmega :=
+        inOmegaLayer && !esClasico && omegaAllowedForeignCtors.contains ctor
+      unless toleradoEnOmega do
         let eje := if esClasico then "OBJETO" else "FINITARIO/AJENO"
         ctorViolations := ctorViolations.push (name, ctor, eje)
     -- eje meta
@@ -486,9 +621,15 @@ elab "#assert_constructive_footprint" : command => do
   -- silencio signifique prohibido.
   let rels ← derivRelations
   let fbd ← foreignForbiddenCtors
-  logInfo m!"[gate · inventario] {rels.size} relaciones de derivabilidad detectadas POR TIPO: \
-    {rels.toList.map (fun iv => iv.name)} ⇒ {fbd.size} constructores ajenos vigilados, \
-    de ellos {(fbd.filter (fun e => e.2)).size} clásicos de nivel objeto."
+  let near ← nearMissRelations
+  logInfo m!"[gate · inventario] {rels.size} relaciones de derivabilidad detectadas POR \
+    TELESCOPIO: {rels.toList.map (fun iv => iv.name)} ⇒ {fbd.size} constructores ajenos \
+    vigilados, de ellos {(fbd.filter (fun e => e.2)).size} CLÁSICOS (por lo que la regla \
+    dice, no por su nombre)."
+  unless near.isEmpty do
+    logInfo m!"[gate · inventario] ⚠️ {near.size} casi-candidato(s) que el telescopio \
+      RECHAZÓ — recursivos, acaban en `Prop` y hablan de fórmulas: {near.toList}. \
+      Revisar si alguno es de verdad un cálculo."
   logInfo m!"[gate] OK — {scanned} declaraciones propias verificadas. \
     Eje objeto: intuicionista puro (axiomas Y constructores). Eje finitario: núcleo r.e. \
     ({omegaLayerUses} uso(s) de ω en la capa `PeanoRF.Omega`). \

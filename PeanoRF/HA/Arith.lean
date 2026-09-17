@@ -139,8 +139,10 @@ theorem succ_add (a : Term) (hc : Closed a) :
     -- de igualdad, que hablan de `add`/`succ`.
     have goal_eq : substFormula 0 (succ (.var 0)) (liftFormula 1 (phiSuccAdd a))
         = (add (succ a) (succ (.var 0)) =eq succ (add a (succ (.var 0)))) := by
+      -- ⚠️ `FOL.substTerm_liftTerm` estaba aquí y el linter lo dio por NO USADO: quien
+      -- cierra el caso es `hc.subst`, la hipótesis de clausura del parámetro.
       simp [phiSuccAdd, substFormula, substTerm, substTerms, liftFormula, liftTerm,
-        liftTerms, add, succ, hc.lift, hc.subst, FOL.substTerm_liftTerm]
+        liftTerms, add, succ, hc.lift, hc.subst]
     show (phiSuccAdd a :: ctx [phiSuccAdd a]) ⊢ᵢ
       substFormula 0 (succ (.var 0)) (liftFormula 1 (phiSuccAdd a))
     rw [goal_eq]

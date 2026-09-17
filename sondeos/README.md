@@ -274,3 +274,66 @@ tipo `D`— descargadas por contradicción, mete `Classical.choice`.** Medido:
 ⚠️ **Por qué la primera conclusión fue errónea**: se midió la conjetura de ADR-019 sobre una
 cadena contaminada. *Una medición de footprint sólo refuta una conjetura sobre lógica si el
 resto de la cadena está limpio.*
+
+
+---
+
+## Medición del 2026-09-17 (b) — auditoría de COBERTURA del gate
+
+La pregunta no era si el control funciona, sino **sobre cuánto del terreno actúa**. Ficheros:
+`audit_2026-09-17b.lean` (cobertura y smoke tests) y `audit_2026-09-17c.lean` (re-medición
+de footprints propios tras 18 commits de FOL y 15 de RPP en 24 h).
+
+### Lo medido ANTES (criterio `List Formula → Formula → Prop`)
+
+| | relaciones | constructores |
+|---|---|---|
+| el gate VE | 6 — `Derives`, `Derives₀`, `Derivesᵢ`, `Derives₁`, `Derives₂`, **`PrfH`** | 23 vigilados |
+| el gate está CIEGO | 5 — `LK₀`, `LKc`, `LKh`, `Prf`, `Prf₀` | **67 sin vigilar** |
+
+Y los smoke tests `LK₀.ax` y `LKc.cut` **pasaban sin una palabra**. `PrfH` —que nunca
+estuvo en ninguna lista— apareció sola: el descubrimiento por tipo sí funcionaba, dentro
+de su forma.
+
+### La medición que obligó a tocar la clasificación
+
+Con un módulo **temporal** en la capa ω que probaba `((A ⇒ ⊥) ⇒ ⊥) ⇒ A` vía `PrfH.p3`:
+
+```text
+[gate] OK — 86 declaraciones propias verificadas. Eje objeto: intuicionista puro
+```
+
+🔑 `p3` **es** la DNE con otro nombre. La última lista por nombre la clasificaba como
+«FINITARIO/AJENO» y la capa ω la toleraba — justo la capa que relaja.
+
+### Lo medido DESPUÉS (criterio por TELESCOPIO + clásico por el tipo)
+
+```text
+[gate · inventario] 11 relaciones de derivabilidad detectadas POR TELESCOPIO:
+  [Derives, LKh, Derives₀, Derivesᵢ, LK₀, PrfH, Prf, Derives₂, LKc, Derives₁, Prf₀]
+  ⇒ 90 constructores ajenos vigilados, de ellos 14 CLÁSICOS
+[gate · inventario] ⚠️ 2 casi-candidato(s) que el telescopio RECHAZÓ:
+  [FOL.Canonical0.PointwiseEqv, FOL.Derives2.PwEq]
+```
+
+Los cuatro smoke tests cazados (`LK₀.ax`, `LKc.cut`, `PrfH.p3`, `Prf.p3`), y el
+contraejemplo `Derives₀.hyp` **pasando**, que es lo que mantiene vivos los puentes. Y con
+un módulo temporal usando `Derives.gen_rule` dentro de `PeanoRF.Omega`:
+
+```text
+[gate · CONSTRUCTORES] 1 uso(s) de constructores prohibidos:
+  [(PeanoRF.Omega.smokeGen, (Derives.gen_rule, FINITARIO/AJENO))]
+```
+
+⇒ la capa ω ya no es comodín.
+
+### Re-medición de los footprints propios — sin cambios
+
+| declaración | footprint |
+|---|---|
+| `derivesI_to_derives0`, `derivesI_to_derives`, `gen_closed`, `specI` | `[propext]` |
+| `derivesI_soundness`, `derivesI_consistent`, `eqI_symm`, `eqI_trans` | `[propext, Quot.sound]` |
+| `zero_add`, `succ_add`, `induction_object` | `+ Classical.choice` (deuda heredada de RPP) |
+
+`Derives₀` conserva sus 21 constructores ⇒ `⊢ᵢ` sigue siendo exactamente `⊢₀` menos las
+tres clásicas, y el puente sigue en pie.

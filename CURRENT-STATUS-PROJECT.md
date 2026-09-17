@@ -19,6 +19,14 @@
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
 > **30 jobs · 8 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
+> 🔎 **Auditoría del 2026-09-17 (tarde)**: el gate está verde y los footprints no se
+> han movido, pero la auditoría de **cobertura** encontró dos agujeros y los cerró
+> (ADR-018 rev. b): el criterio por tipo reconocía **una forma fija** y dejaba fuera
+> `LK₀`/`LKc`/`LKh`/`Prf`/`Prf₀` — **67 constructores**; y la última lista por nombre
+> dejaba pasar la **DNE en la capa ω** (`PrfH.p3`). Ahora: descubrimiento por
+> **telescopio**, clásico **por lo que la regla dice**, capa ω con lista explícita
+> (vacía), e inventario que publica también los **casi-candidatos**.
+>
 > ⚠️ **La cifra de `jobs` NO es un invariante del proyecto**: depende de qué dependencias
 > locales haya que reconstruir. El 2026-09-16 osciló entre 30 y 31 según el estado de la
 > caché de FOL, y el control [A] dio VERDE con la cifra desfasada. Las otras tres sí son
@@ -84,8 +92,8 @@
   Al probarlo se encontró y corrigió un fallo real: toleraba `Classical.choice` por
   nombre de axioma, de modo que un `Classical.em` propio pasaba como deuda heredada.
 - **Import surface de FOL estrechado** a la mitad demostrativa: fuera Semantics,
-  Soundness, Completeness y Compacity (donde vive todo lo clásico). El build bajó de
-  25 a 21 jobs.
+  Soundness, Completeness y Compacity (donde vive todo lo clásico).
+  El build bajó de 25 a 21 jobs.
 - **Alcance fijado y ADR-016**: el núcleo es **HA finitaria**; la ω-lógica queda aislada
   en `PeanoRF.Omega.*`. Nace de medir que **99 de 521 declaraciones de ROB++ (19 %)
   pasan por ω-reglas**, y de que `Full/Induction.lean` postula
@@ -124,6 +132,21 @@ META heredada de la codificación `String` de RPP, no nuestra.
 - [x] ~~`forbiddenConstructors` por NOMBRE~~ → **reescrito POR TIPO** (ADR-018, 2026-09-17)
       tras una auditoría que midió **9 de 12 constructores clásicos sin vigilar**. El gate
       publica ahora un **inventario** de las relaciones de derivabilidad que detecta.
+- [x] ~~El tipo, por UNA FORMA FIJA~~ → **por TELESCOPIO** (ADR-018 rev. b, 2026-09-17
+      tarde). Medía 6 relaciones de 11; `LK₀`, `LKc`, `LKh`, `Prf` y `Prf₀` quedaban fuera
+      — **67 constructores**. Ahora ve las 11 y vigila 90.
+- [x] ~~Clásico por NOMBRE~~ → **por lo que la regla DICE** (el patrón de la doble
+      negación en el tipo). Lo forzó medir que `PrfH.p3` —la DNE con otro nombre— pasaba
+      **dentro de la capa ω**, con el gate imprimiendo «intuicionista puro».
+- [x] ~~La capa ω como comodín~~ → ahora exige entrada explícita en
+      `omegaAllowedForeignCtors`, **vacía**. Relaja en efectividad (M-7), nunca en M-1.
+- [x] ~~`check-doc-sync.bash` daba VERDE VACUO~~ → sin `lake` en el `PATH` se saltaba el
+      control [A] entero y anunciaba «sin cifras obsoletas» con exit 0, sobre un árbol que
+      con `lake` daba exit 1. **Con ese verde vacuo se empujó `67b0d50`.** Ahora: no poder
+      medir es ROJO, las cifras se comprueban contra la **línea canónica**, y la prosa de
+      cabecera sólo avisa (medía 2 falsos positivos y 0 verdaderos).
+- [x] ~~`CRASH` versionado~~ → fichero basura de un programa ajeno, colado en `b786238`
+      por un `git add -A`. Retirado. ⚠️ Es la misma queja de proceso que llegó de FOL.
 - [ ] ⬜ Aguas arriba, sin resolver (de FOL): la causa del `Classical` en `Theorems.Eq` (3)
       y `Tactics.tryMem` (sin medir).
 - [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.

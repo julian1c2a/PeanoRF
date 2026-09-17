@@ -182,13 +182,19 @@ La deuda heredada se clasifica **por procedencia, no por nombre de axioma**: un
 **Puntos de configuración** (todos `private`, documentados en el fichero):
 `objectClassicalAxioms`, `allowedAxioms`, `inheritedMetaDebt`, `omegaAxioms`,
 `omegaLayer`, `dependencyRoots`, `metaDebtIsError`, `baselineOwn`,
-`classicalCtorShortNames`, `benignForeignCtors`.
+`classicalCtorShortNames`, `benignForeignCtors`, `omegaAllowedForeignCtors`.
 
-**Control de constructores, POR TIPO** (reescrito 2026-09-17, ADR-018). Descubre las
-relaciones de derivabilidad del entorno por su **tipo** (`List Formula → Formula → Prop`) y
-prohibe en el núcleo **todo constructor ajeno cuyo nombre corto no esté entre los de
-`Derivesᵢ`**. El silencio significa **prohibido**: un cálculo nuevo entra vigilado sin tocar
-el fichero. Publica un **inventario** en cada build.
+**Control de constructores, POR TELESCOPIO** (reescrito 2026-09-17, revisado esa misma
+tarde; ADR-018). Descubre las relaciones de derivabilidad del entorno por su **tipo**:
+inductivo **recursivo**, que menciona `Formula`, acaba en `Prop` y todos cuyos argumentos
+son `Formula`, `List Formula` o `Nat`. Cubre deducción natural, secuentes de uno y dos
+lados, cálculos con altura y Hilbert con o sin contexto. Prohibe en el núcleo **todo
+constructor ajeno cuyo nombre corto no esté entre los de `Derivesᵢ`**, y marca como
+**CLÁSICO por lo que la regla dice** — el patrón de la doble negación en el tipo del
+constructor — no por cómo se llama. El silencio significa **prohibido**, también en la
+capa ω, que ya no es comodín: necesita entrada explícita en `omegaAllowedForeignCtors`.
+Publica en cada build un **inventario** con las relaciones detectadas y los
+**casi-candidatos** que el telescopio rechazó.
 
 ---
 

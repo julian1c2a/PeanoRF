@@ -1,6 +1,6 @@
 # Changelog
 
-**Last updated:** 2026-09-16
+**Last updated:** 2026-09-17
 **Author**: Julián Calderón Almendros
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +14,29 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ---
 
 ## [Unreleased]
+
+### 2026-09-17 (tarde) · auditoría de COBERTURA — el gate deja de reconocer una sola forma
+
+**Gate** (ADR-018 rev. b, `PeanoRF/Meta/AxiomCheck.lean`)
+- Descubrimiento de relaciones de derivabilidad **por TELESCOPIO** en lugar de por la
+  forma fija `List Formula → Formula → Prop`. Medía 6 de 11: fuera quedaban `LK₀`, `LKc`,
+  `LKh` (FOL, secuentes y Hauptsatz) y `Prf`, `Prf₀` (RPP, Hilbert) — **67 constructores**.
+- **CLÁSICO se decide por el TIPO del constructor** (patrón de la doble negación en sus
+  dos escrituras, más `(¬∀A) ⇒ ∃¬A`). La lista por nombre queda como refuerzo.
+  Lo forzó medir que `PrfH.p3` —que **es** la DNE— pasaba dentro de la capa ω.
+- La capa ω exige ahora `omegaAllowedForeignCtors` (**vacía**): estar en `PeanoRF.Omega.*`
+  ya no basta.
+- El inventario publica además los **casi-candidatos** rechazados por el telescopio.
+
+**`check-doc-sync.bash`**
+- **Si no puede medir, es ROJO.** Sin `lake` en el `PATH` se saltaba [A] y daba exit 0.
+- [A] se parte: la **línea canónica** bloquea; la prosa de cabecera sólo avisa.
+
+**Limpieza**
+- `git rm CRASH` (fichero ajeno colado por un `git add -A` en `b786238`).
+- Retirado un argumento `simp` no usado en `PeanoRF/HA/Arith.lean`.
+
+Sin cambios en FOL ni en ROBINSON_PlusPlus. Footprints propios re-medidos: **sin cambios**.
 
 ### Changed (2026-09-16) — ⚠️ EL SUJETO CAMBIA: todo H2 migra a `⊢ᵢ` (ADR-017)
 

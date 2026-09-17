@@ -400,6 +400,23 @@ cuyo cometido es que no te fies de lo que dicen los docs. Para que [A] muerda de
 El script avisa explícitamente (`control VACÍO`) cuando un patrón no aparece en ninguna
 parte, para que un fraseo cambiado en los docs no se convierta en un control silenciado.
 
+⚠️ **Y lo mismo vale para su propia ENTRADA** (añadido el 2026-09-17 tras medirlo). La
+cifra de `jobs` sale de correr `lake build` dentro del script. Sin `lake` en el `PATH`,
+`JOBS` quedaba vacío, [A] se saltaba entero y el script anunciaba **«✓ sin cifras
+obsoletas» con exit 0** — sobre un árbol en el que, con `lake` disponible, salía **exit
+1**. Con ese verde vacuo se empujó un commit. Regla: **un control que no puede medir es
+ROJO, nunca verde**; el único verde sin medida es el que se pide a mano (`--quick`), y se
+anuncia como tal.
+
+⚠️ **[A] se parte en dos, y sólo una mitad bloquea.** Las cifras se comprueban contra la
+**línea canónica**, que es una forma fija; la prosa de cabecera se sigue mirando pero
+sólo **avisa**. La razón es empírica: un documento de estado habla también del pasado
+—«el build bajó de 25 a 21 jobs», «las insignias anteriores decían 22 jobs»— y contra eso
+no hay lista de excluyentes que aguante: basta un salto de línea para que el excluyente
+quede en la línea de arriba. Medido en este proyecto: **2 falsos positivos, 0
+verdaderos**. Un control que grita en falso deja de leerse, y entonces da igual que
+funcione.
+
 ⚠️ **Y la regla de oro que ningún script sustituye: NO basta con arreglar el banner.** Al corregir,
 recorrer también las tablas resumen, las secciones de «Próximos pasos» y las notas de auditoría
 antiguas.

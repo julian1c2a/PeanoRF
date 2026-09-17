@@ -15,6 +15,38 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-17 (e) · H3bis: el prerrequisito, demostrado — y el gate muerde sobre código propio
+
+**`Calculus/Subst.lean`** — sustitución PARALELA sobre la sintaxis de FOL⁼
+- `substT`/`substF`, `upS`, `consS`, `compS`, y las dos identificaciones que la conectan con
+  el cálculo: `liftFormula` y `substFormula` **son** sustituciones paralelas.
+- ⚠️ Deuda declarada: es infraestructura de SINTAXIS, o sea de FOL. **Medido: no la tienen.**
+  Escrito para que puedan adoptarlo tal cual (`doc/ENCARGO-FOL-2026-09-17.md`).
+- ⚠️ Las sustituciones se llaman `ρ` porque **`σ` no es identificador válido**: `peanolib`
+  la declara como notación para `ℕ₀.succ`. El error no se parece nada a su causa.
+
+**`Calculus/SubstDerives.lean`** — `derivesI_subst`: **`⊢ᵢ` es cerrado bajo sustitución**
+- Los 18 casos, con el `∀ ρ` DENTRO de la inducción. Hermano de `FOL.Lift0.derives0_lift`.
+- Incluye la navegación (`subst_getAt?`, `subst_replaceAt`, `subst_localRule`) que
+  `rewrite_at` exige.
+
+**`Calculus/Slash.lean`** — `slash_rewrite`: **la barra sobrevive a la reescritura local**
+- El caso que no se ve venir: `LocalRule` sólo tiene `commuteImpl`, pero se aplica en una
+  posición cualquiera. Va como EQUIVALENCIA porque la posición puede caer a la izquierda de
+  una implicación, donde la dirección se invierte.
+- Más el álgebra de posiciones (`getAt_replaceAt`, `replaceAt_self`, `replaceAt_replaceAt`).
+
+**⭐ El gate cazó un `Classical.choice` NUESTRO**, por primera vez
+- `upS_singleS` lo metía por un `simp` a secas, y contaminaba **siete** declaraciones aguas
+  abajo. Reescrito con `if_pos`/`if_neg` explícitos. Misma familia que el `omega` de
+  ADR-019: una táctica automática decidiendo sin instancia `Decidable` puesta a mano.
+
+**⏳ Falta UN caso de L2**: la regla de Leibniz (`subst`), porque sustituye sólo en el
+índice 0 y bajo un `∀` el índice se mueve. Las dos salidas están escritas en el módulo.
+⛔ Sin `sorry`: el proyecto lleva 0 y esa cifra es un control, no un adorno.
+
+Cifras: **45 jobs · 12 módulos · 0 sorry · 147 declaraciones vigiladas**. Sin tocar FOL ni RPP.
+
 ### 2026-09-17 (d) · H3bis arranca: la barra de Kleene
 
 **`Calculus/Slash.lean`** — módulo nuevo, PARCIAL y declarado como tal

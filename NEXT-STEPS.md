@@ -10,32 +10,36 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H3bis — terminar la propiedad de disyunción**, que es donde está el bloqueo y dónde
-está medido.
+**H3bis — cerrar L2. Queda UN caso, y está identificado.**
 
-Hecho ya (`Calculus/Slash.lean`, 🔶 parcial): `fdepth`, `fdepth_subst`, `Slash` por
-recursión bien fundada con sus ocho ecuaciones, **L1** `slash_derives` y `cut_context`.
-Todo en `[propext]` / `[propext, Quot.sound]`.
+Hecho y medido (todo en `[propext]` / `[propext, Quot.sound]`):
 
-**Falta L2**: `Γ ⊢ᵢ f` con `Γ` barrado ⟹ `Slash f`. El obstáculo está localizado:
+| pieza | dónde |
+|---|---|
+| álgebra de sustitución paralela (`substF`, `upS`, `consS`, `compS`, comp/id/lift) | `Calculus/Subst.lean` |
+| **`derivesI_subst`** — `⊢ᵢ` cerrado bajo sustitución, 18 casos | `Calculus/SubstDerives.lean` |
+| **`slash_rewrite`** — la barra sobrevive a `rewrite_at` | `Calculus/Slash.lean` |
+| L1, `cut_context`, `derives_empty_of_slashed` | `Calculus/Slash.lean` |
 
-> el enunciado hay que generalizarlo **sobre sustituciones** —
-> `Γ ⊢ᵢ f ⟹ ∀ σ, (∀ g ∈ Γ, Slash (gσ)) → Slash (fσ)` —
-> y eso pide **SUSTITUCIÓN PARALELA** sobre la sintaxis, que **FOL no tiene** (medido).
+**Lo que falta**: el caso `Derivesᵢ.subst` de L2 — la regla de Leibniz. Hace falta que la
+barra sea invariante bajo sustituciones **probablemente iguales**; los casos atómicos,
+`∧`, `∨` y `→` salen, y **el que se atasca es el cuantificador**: `subst` sustituye sólo en
+el **índice 0** y bajo un `∀` el índice pasa al 1.
 
-⇒ Encargado a FOL: `doc/ENCARGO-FOL-2026-09-17.md`. **Nada aplicado en su árbol.**
+⇒ Hace falta la regla de Leibniz **en un índice cualquiera**:
+`[] ⊢ᵢ x = y → [] ⊢ᵢ f[x/k] → [] ⊢ᵢ f[y/k]`.
 
-⚠️ Al retomar, lo primero es **mirar si ha llegado**: si está, L2 cierra con inducción
-estructural y detrás vienen la propiedad de existencia y la separación `⊢ᵢ ≠ ⊢₀`. Si no
-está, la alternativa es escribir la sustitución paralela aquí como duplicado declarado —
-peor, y sólo si hay prisa.
+Dos salidas, y la elección es de diseño:
 
-⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**. FOL se mueve rápido:
-18 commits en las 24 h del 16 al 17.
+1. **Derivarla aquí** con el álgebra σ que ya existe (permutar los índices 0 y k). No toca
+   ni el cálculo ni FOL.
+2. **Pedirla aguas arriba**: `Derives₀` tiene el mismo `subst` fijado en 0, así que es
+   problema suyo también. Encaja con el encargo ya abierto.
 
-➕ Mi primer diagnóstico del obstáculo —«indexar las derivaciones por ALTURA, como `LKh`
-en el Hauptsatz»— era **FALSO**. Lo descartó desarrollar los casos. Si aparece esa versión
-en alguna nota, es la equivocada.
+Después de L2: la propiedad de disyunción es inmediata, y con `notP_syn` sale la separación
+`⊢ᵢ ≠ ⊢₀` — el primer teorema del proyecto que **falla clásicamente**.
+
+⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**. FOL se mueve rápido.
 
 ---
 

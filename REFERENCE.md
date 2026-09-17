@@ -95,7 +95,9 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Eq.lean` | `PeanoRF.Calculus` | `PeanoRF.Calculus.DerivesI` | ✅ Completo |
 | `Calculus/Soundness.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Semantics` | ✅ Completo |
 | `Calculus/Consistency.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Finitary0` | ✅ Completo |
-| `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.Consistency` | 🔶 Parcial (falta L2) |
+| `Calculus/Subst.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim` | ✅ Completo |
+| `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
+| `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives}` | 🔶 Parcial (falta 1 caso de L2) |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -374,15 +376,66 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 | `Slash` | `∣ f` | `Formula → Prop` (recursión en `fdepth`) | `propext, Quot.sound` |
 | `slash_derives` (**L1**) | `∣ f ⟹ ⊢ᵢ f` | `Slash f → ([] ⊢ᵢ f)` | `propext, Quot.sound` |
 | `cut_context` | `Γ` derivable ⟹ `Γ` sobra | `(∀ g ∈ Γ, [] ⊢ᵢ g) → (Γ ⊢ᵢ f) → ([] ⊢ᵢ f)` | `propext` |
+| **`slash_rewrite`** | la barra sobrevive a `rewrite_at` | — | `propext, Quot.sound` |
+| `derives_empty_of_slashed` | contexto barrado ⇒ sin contexto | — | `propext, Quot.sound` |
 
 **El objetivo**: la propiedad de disyunción, `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A ó [] ⊢ᵢ B`. Es el
 **primer enunciado del proyecto que falla para `⊢₀`** — que prueba `P ∨ ¬P` sin probar
 ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teorema.
 
-⏳ **Falta L2** (`Γ ⊢ᵢ f` con `Γ` barrado ⟹ `Slash f`). El obstáculo está localizado y
-no es la altura de las derivaciones: es que el enunciado tiene que generalizarse **sobre
-sustituciones**, y eso pide **sustitución paralela** sobre la sintaxis, que **FOL no tiene**
-(medido). Va como encargo a FOL; el lema de clausura de `⊢ᵢ` bajo sustitución sí es nuestro.
+✅ **Resuelto el prerrequisito**: la sustitución paralela (§3.3septies) y la clausura de
+`⊢ᵢ` bajo ella (§3.3octies) están demostradas, y con ellas `slash_rewrite` — que la barra
+sobrevive a la reescritura local, el caso que no se ve venir.
+
+⏳ **Falta UN caso de L2**: `Derivesᵢ.subst`, la regla de Leibniz. Hace falta que la barra
+sea invariante bajo sustituciones **probablemente iguales**, y el caso del cuantificador se
+atasca porque `subst` sustituye sólo en el **índice 0** y bajo un `∀` el índice se mueve al
+1. Las dos salidas —derivar la regla de Leibniz en un índice cualquiera con el álgebra σ, o
+pedirla aguas arriba— están escritas en el propio módulo.
+
+---
+
+### 3.3septies Calculus/Subst.lean — sustitución PARALELA
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Prelim`
+**Last updated**: 2026-09-17
+**Status**: ✅ Completo — ⚠️ **deuda declarada**: es infraestructura de SINTAXIS, o sea de FOL
+**@importance**: **foundational**
+
+| nombre | notación | firma |
+|---|---|---|
+| `substT` / `substTs` / `substF` | `tρ`, `fρ` | `Subst → Term/List Term/Formula → …` |
+| `upS` / `consS` / `compS` | `ρ⁺`, `t·ρ`, `ρ∘τ` | las tres operaciones del álgebra |
+| `liftS` / `singleS` | — | `liftFormula` y `substFormula` **como** sustituciones paralelas |
+| `substF_comp`, `substF_id`, `substF_lift_consS`, `substFormula_upS`, `substF_upS_lift` | — | el álgebra |
+
+Todo en `[propext]` / `[propext, Quot.sound]`. **FOL no tiene esto** (medido): sólo
+sustitución de una variable. Pedido en `doc/ENCARGO-FOL-2026-09-17.md`; el módulo está
+escrito para que puedan adoptarlo tal cual.
+
+⚠️ **Las sustituciones se llaman `ρ`, no `σ`**: `peanolib` declara `σ` como NOTACIÓN
+(`ℕ₀.succ`), así que no es un identificador válido en este árbol.
+
+---
+
+### 3.3octies Calculus/SubstDerives.lean — `⊢ᵢ` cerrado bajo sustitución
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `Calculus.Subst`, `Calculus.DerivesI`, `FOL.Eigenvariable`
+**Last updated**: 2026-09-17
+**Status**: ✅ Completo
+**@importance**: **foundational**
+
+| nombre | notación matemática | footprint |
+|---|---|---|
+| `subst_getAt?` / `subst_replaceAt` / `subst_localRule` | navegación bajo `ρ` | `propext, Quot.sound` |
+| `substF_substFormula` | `(f[t])ρ = (fρ⁺)[tρ]` | `propext, Quot.sound` |
+| **`derivesI_subst`** | `Γ ⊢ᵢ f ⟹ Γρ ⊢ᵢ fρ` | `propext, Quot.sound` |
+
+Hermano de `FOL.Lift0.derives0_lift`, con `ρ` donde ellos llevan `k`. ⚠️ El `∀ ρ` va
+**dentro** de la inducción: en `intro_forall`, `elim_ex` y `rewrite_at` la hipótesis
+inductiva se usa con otra sustitución.
 
 ---
 

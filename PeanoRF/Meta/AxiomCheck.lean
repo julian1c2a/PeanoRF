@@ -96,6 +96,8 @@ import PeanoRF.Prelim
 import PeanoRF.Calculus.DerivesI
 import PeanoRF.Calculus.Consistency
 import PeanoRF.Calculus.Slash
+import PeanoRF.Calculus.Subst
+import PeanoRF.Calculus.SubstDerives
 import PeanoRF.Calculus.Eq
 import PeanoRF.Calculus.Soundness
 import PeanoRF.Omega.Basic

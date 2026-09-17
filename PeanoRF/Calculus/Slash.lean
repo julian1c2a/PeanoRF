@@ -5,6 +5,7 @@ License: MIT
 -/
 
 import PeanoRF.Calculus.Consistency
+import PeanoRF.Calculus.SubstDerives
 
 /-! # H3bis · La BARRA DE KLEENE — hacia la propiedad de disyunción
 
@@ -81,6 +82,7 @@ import PeanoRF.Calculus.Consistency
 namespace PeanoRF.Calculus
 
 open FOL
+open FOL.Eigenvariable   -- `posDepth`
 
 set_option autoImplicit false
 
@@ -209,5 +211,278 @@ theorem cut_context : ∀ (Γ : List Formula) (f : Formula),
       have hrest : ∀ x, x ∈ Γ' → (([] : List Formula) ⊢ᵢ x) :=
         fun x hx => hall x (List.Mem.tail _ hx)
       Derivesᵢ.elim_impl _ g f (cut_context Γ' (Formula.impl g f) hrest hgf) hg
+
+
+/-! ## L2 · toda derivación desde un contexto barrado barra su conclusión
+
+    Tres piezas antes del lema: el corte del contexto compuesto con la clausura bajo
+    sustitución, el álgebra de posiciones que `rewrite_at` necesita, y la invariancia de la
+    barra por reescritura local — que es el caso que no se ve venir. -/
+
+/-- Si cada hipótesis está barrada bajo `ρ`, cada una es derivable sin hipótesis. -/
+theorem slashed_ctx_derivable {Γ : List Formula} {ρ : Subst}
+    (hall : ∀ g, g ∈ Γ → Slash (substF ρ g)) :
+    ∀ x, x ∈ Γ.map (substF ρ) → (([] : List Formula) ⊢ᵢ x) := by
+  intro x hx
+  rcases List.mem_map.mp hx with ⟨y, hy, rfl⟩
+  exact slash_derives _ (hall y hy)
+
+/-- Desde un contexto barrado, lo derivable lo es **sin contexto**: `cut_context` compuesto
+    con la clausura de `⊢ᵢ` bajo sustitución. -/
+theorem derives_empty_of_slashed {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) (ρ : Subst)
+    (hall : ∀ g, g ∈ Γ → Slash (substF ρ g)) : ([] : List Formula) ⊢ᵢ substF ρ f :=
+  cut_context _ _ (slashed_ctx_derivable hall) (derivesI_subst h ρ)
+
+/-! ### Álgebra de posiciones -/
+
+/-- `LocalRule` es simétrica: conmutar dos veces devuelve el original. -/
+theorem localRule_symm {A B : Formula} (h : LocalRule A B) : LocalRule B A := by
+  cases h with
+  | commuteImpl A B C => exact LocalRule.commuteImpl B A C
+
+theorem getAt_replaceAt : ∀ (p : Pos) (f x sub : Formula),
+    getAt? f p = some sub → getAt? (replaceAt f p x) p = some x := by
+  intro p
+  induction p with
+  | root => intro f x sub _; simp [replaceAt, getAt?]
+  | left p' ih =>
+      intro f x sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | exact ih _ x sub h | simp at h
+  | right p' ih =>
+      intro f x sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | exact ih _ x sub h | simp at h
+  | body p' ih =>
+      intro f x sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | exact ih _ x sub h | simp at h
+
+theorem replaceAt_self : ∀ (p : Pos) (f sub : Formula),
+    getAt? f p = some sub → replaceAt f p sub = f := by
+  intro p
+  induction p with
+  | root => intro f sub h; simp only [getAt?, Option.some.injEq] at h; simp [replaceAt, h]
+  | left p' ih =>
+      intro f sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | rw [ih _ sub h] | simp at h
+  | right p' ih =>
+      intro f sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | rw [ih _ sub h] | simp at h
+  | body p' ih =>
+      intro f sub h
+      cases f <;> simp only [getAt?, replaceAt] at h ⊢ <;>
+        first | rw [ih _ sub h] | simp at h
+
+theorem replaceAt_replaceAt : ∀ (p : Pos) (f x y : Formula),
+    replaceAt (replaceAt f p x) p y = replaceAt f p y := by
+  intro p
+  induction p with
+  | root => intro f x y; simp [replaceAt]
+  | left p' ih => intro f x y; cases f <;> simp only [replaceAt, ih]
+  | right p' ih => intro f x y; cases f <;> simp only [replaceAt, ih]
+  | body p' ih => intro f x y; cases f <;> simp only [replaceAt, ih]
+
+/-- La reescritura local, transportada a través de una sustitución. -/
+theorem derives_rewrite_subst {p : Pos} {f sub sub' : Formula} {ρ : Subst}
+    (hd : ([] : List Formula) ⊢ᵢ substF ρ f)
+    (hget : getAt? f p = some sub) (hrule : LocalRule sub sub') :
+    ([] : List Formula) ⊢ᵢ substF ρ (replaceAt f p sub') := by
+  refine Derivesᵢ.rewrite_at _ _ _ p (substF (upSn (posDepth p) ρ) sub)
+    (substF (upSn (posDepth p) ρ) sub') hd ?_ (subst_localRule _ hrule) ?_
+  · rw [subst_getAt?, hget]; rfl
+  · rw [← subst_replaceAt]
+
+/-- Y de vuelta, que es lo que hace falta en las posiciones contravariantes. -/
+theorem derives_rewrite_back {p : Pos} {f sub sub' : Formula} {ρ : Subst}
+    (hget : getAt? f p = some sub) (hrule : LocalRule sub sub')
+    (hd : ([] : List Formula) ⊢ᵢ substF ρ (replaceAt f p sub')) :
+    ([] : List Formula) ⊢ᵢ substF ρ f := by
+  have h1 : getAt? (replaceAt f p sub') p = some sub' := getAt_replaceAt p f sub' sub hget
+  have h2 := derives_rewrite_subst hd h1 (localRule_symm hrule)
+  rwa [replaceAt_replaceAt, replaceAt_self p f sub hget] at h2
+
+/-! ### La barra sobrevive a `rewrite_at` -/
+
+/-- ⭐ **La barra es invariante por reescritura local.**
+
+    El caso que no se ve venir. `LocalRule` sólo tiene `commuteImpl`
+    (`A ⇒ B ⇒ C ↝ B ⇒ A ⇒ C`), pero se aplica **en una posición cualquiera** del árbol, y la
+    barra no es una propiedad de la fórmula entera sino de su estructura.
+
+    Va como **equivalencia**, no como implicación, porque la posición puede caer a la
+    IZQUIERDA de una implicación y ahí la dirección se invierte. Y el `∀ ρ` va **dentro**,
+    porque bajo un cuantificador la sustitución que actúa ya no es `ρ`. -/
+theorem slash_rewrite : ∀ (p : Pos) (sub sub' : Formula), LocalRule sub sub' →
+    ∀ (f : Formula) (ρ : Subst), getAt? f p = some sub →
+      (Slash (substF ρ f) ↔ Slash (substF ρ (replaceAt f p sub'))) := by
+  intro p
+  induction p with
+  | root =>
+      intro sub sub' hrule f ρ hget
+      simp only [getAt?, Option.some.injEq] at hget
+      subst hget
+      simp only [replaceAt]
+      cases hrule with
+      | commuteImpl A B C =>
+          have hcomm : ∀ X Y Z : Formula, ([] : List Formula) ⊢ᵢ
+              Formula.impl X (Formula.impl Y Z) →
+              ([] : List Formula) ⊢ᵢ Formula.impl Y (Formula.impl X Z) := by
+            intro X Y Z hd
+            exact Derivesᵢ.rewrite_at _ _ _ Pos.root _ _ hd rfl
+              (LocalRule.commuteImpl X Y Z) rfl
+          simp only [substF, slash_impl]
+          constructor
+          · rintro ⟨hd, himp⟩
+            refine ⟨hcomm _ _ _ hd, fun hb => ?_⟩
+            exact ⟨Derivesᵢ.elim_impl _ _ _ (hcomm _ _ _ hd) (slash_derives _ hb),
+              fun ha => (himp ha).2 hb⟩
+          · rintro ⟨hd, himp⟩
+            refine ⟨hcomm _ _ _ hd, fun ha => ?_⟩
+            exact ⟨Derivesᵢ.elim_impl _ _ _ (hcomm _ _ _ hd) (slash_derives _ ha),
+              fun hb => (himp hb).2 ha⟩
+  | left p' ih =>
+      intro sub sub' hrule f ρ hget
+      cases f with
+      | impl a b =>
+          have hg : getAt? a p' = some sub := hget
+          have hab := ih sub sub' hrule a ρ hg
+          have hfwd := fun hd => derives_rewrite_subst (p := Pos.left p')
+            (f := Formula.impl a b) (ρ := ρ) hd hget hrule
+          have hbwd := fun hd => derives_rewrite_back (p := Pos.left p')
+            (f := Formula.impl a b) (ρ := ρ) hget hrule hd
+          simp only [replaceAt, substF, slash_impl] at hfwd hbwd ⊢
+          constructor
+          · rintro ⟨hd, himp⟩
+            exact ⟨hfwd hd, fun ha' => himp (hab.mpr ha')⟩
+          · rintro ⟨hd, himp⟩
+            exact ⟨hbwd hd, fun ha => himp (hab.mp ha)⟩
+      | and a b =>
+          have hg : getAt? a p' = some sub := hget
+          have hab := ih sub sub' hrule a ρ hg
+          simp only [replaceAt, substF, slash_and]
+          exact ⟨fun h => ⟨hab.mp h.1, h.2⟩, fun h => ⟨hab.mpr h.1, h.2⟩⟩
+      | or a b =>
+          have hg : getAt? a p' = some sub := hget
+          have hab := ih sub sub' hrule a ρ hg
+          simp only [replaceAt, substF, slash_or]
+          exact ⟨fun h => h.imp hab.mp id, fun h => h.imp hab.mpr id⟩
+      | bottom => simp [getAt?] at hget
+      | atom _ _ => simp [getAt?] at hget
+      | eq _ _ => simp [getAt?] at hget
+      | «forall» _ => simp [getAt?] at hget
+      | ex _ => simp [getAt?] at hget
+  | right p' ih =>
+      intro sub sub' hrule f ρ hget
+      cases f with
+      | impl a b =>
+          have hg : getAt? b p' = some sub := hget
+          have hab := ih sub sub' hrule b ρ hg
+          have hfwd := fun hd => derives_rewrite_subst (p := Pos.right p')
+            (f := Formula.impl a b) (ρ := ρ) hd hget hrule
+          have hbwd := fun hd => derives_rewrite_back (p := Pos.right p')
+            (f := Formula.impl a b) (ρ := ρ) hget hrule hd
+          simp only [replaceAt, substF, slash_impl] at hfwd hbwd ⊢
+          constructor
+          · rintro ⟨hd, himp⟩
+            exact ⟨hfwd hd, fun ha => hab.mp (himp ha)⟩
+          · rintro ⟨hd, himp⟩
+            exact ⟨hbwd hd, fun ha => hab.mpr (himp ha)⟩
+      | and a b =>
+          have hg : getAt? b p' = some sub := hget
+          have hab := ih sub sub' hrule b ρ hg
+          simp only [replaceAt, substF, slash_and]
+          exact ⟨fun h => ⟨h.1, hab.mp h.2⟩, fun h => ⟨h.1, hab.mpr h.2⟩⟩
+      | or a b =>
+          have hg : getAt? b p' = some sub := hget
+          have hab := ih sub sub' hrule b ρ hg
+          simp only [replaceAt, substF, slash_or]
+          exact ⟨fun h => h.imp id hab.mp, fun h => h.imp id hab.mpr⟩
+      | bottom => simp [getAt?] at hget
+      | atom _ _ => simp [getAt?] at hget
+      | eq _ _ => simp [getAt?] at hget
+      | «forall» _ => simp [getAt?] at hget
+      | ex _ => simp [getAt?] at hget
+  | body p' ih =>
+      intro sub sub' hrule f ρ hget
+      cases f with
+      | «forall» a =>
+          have hg : getAt? a p' = some sub := hget
+          have hfwd := fun hd => derives_rewrite_subst (p := Pos.body p')
+            (f := Formula.forall a) (ρ := ρ) hd hget hrule
+          have hbwd := fun hd => derives_rewrite_back (p := Pos.body p')
+            (f := Formula.forall a) (ρ := ρ) hget hrule hd
+          simp only [replaceAt, substF, slash_forall] at hfwd hbwd ⊢
+          constructor
+          · rintro ⟨hd, hall⟩
+            refine ⟨hfwd hd, fun t => ?_⟩
+            rw [substFormula_upS]
+            exact (ih sub sub' hrule a (consS t ρ) hg).mp
+              (by rw [← substFormula_upS]; exact hall t)
+          · rintro ⟨hd, hall⟩
+            refine ⟨hbwd hd, fun t => ?_⟩
+            rw [substFormula_upS]
+            exact (ih sub sub' hrule a (consS t ρ) hg).mpr
+              (by rw [← substFormula_upS]; exact hall t)
+      | ex a =>
+          have hg : getAt? a p' = some sub := hget
+          simp only [replaceAt, substF, slash_ex]
+          constructor
+          · rintro ⟨t, ht⟩
+            refine ⟨t, ?_⟩
+            rw [substFormula_upS]
+            exact (ih sub sub' hrule a (consS t ρ) hg).mp
+              (by rw [← substFormula_upS]; exact ht)
+          · rintro ⟨t, ht⟩
+            refine ⟨t, ?_⟩
+            rw [substFormula_upS]
+            exact (ih sub sub' hrule a (consS t ρ) hg).mpr
+              (by rw [← substFormula_upS]; exact ht)
+      | bottom => simp [getAt?] at hget
+      | atom _ _ => simp [getAt?] at hget
+      | eq _ _ => simp [getAt?] at hget
+      | impl _ _ => simp [getAt?] at hget
+      | and _ _ => simp [getAt?] at hget
+      | or _ _ => simp [getAt?] at hget
+
+
+/-! ## ⏳ Lo que falta de L2, y es UN caso
+
+    Con `slash_rewrite`, `derivesI_subst` y `cut_context` en la mano, **diecisiete de los
+    dieciocho casos de L2 son mecánicos**. El que no lo es, y conviene decirlo con nombre y
+    apellidos, es `Derivesᵢ.subst` — la regla de Leibniz:
+
+    > `Γ ⊢ᵢ t₁ = t₂ → Γ ⊢ᵢ f[t₁/0] → Γ ⊢ᵢ f[t₂/0]`
+
+    Para L2 hace falta: de `Slash (substF ρ (f[t₁/0]))` y `[] ⊢ᵢ t₁ρ = t₂ρ`, concluir
+    `Slash (substF ρ (f[t₂/0]))`. Por el álgebra de `Subst.lean` eso es exactamente
+
+    > `Slash (substF (consS x ρ) f) → Slash (substF (consS y ρ) f)`  con `[] ⊢ᵢ x = y`,
+
+    o sea: **la barra es invariante bajo sustituciones probablemente iguales**. Es verdad,
+    y se demuestra por inducción en `fdepth f`. Los casos atómicos salen de la propia regla
+    `Derivesᵢ.subst`; `∧`, `∨`, `→` salen de la hipótesis de inducción (con `→` pidiendo la
+    dirección contraria, que da `eqI_symm`).
+
+    ⛔ **El caso que se atasca es el cuantificador.** Bajo un `∀`, las dos sustituciones
+    dejan de diferir en el índice 0 y pasan a diferir en el 1 — y `Derivesᵢ.subst`
+    **sólo sustituye en el índice 0**. Hace falta la regla de Leibniz **en un índice
+    cualquiera**:
+
+    > `[] ⊢ᵢ x = y → [] ⊢ᵢ f[x/k] → [] ⊢ᵢ f[y/k]`
+
+    Dos salidas, y la elección es de diseño, no técnica:
+
+    1. **Derivarla aquí** con el álgebra σ que ya existe: hace falta la permutación de los
+       índices `0` y `k`, y reescribir `f[x/k]` como `(f∘swap)[x/0]`. Es trabajo, pero no
+       toca ni el cálculo ni FOL.
+    2. **Pedirla aguas arriba**: `Derives₀` tiene el mismo `subst` fijado en 0, así que el
+       problema es suyo también en cuanto quieran la propiedad de disyunción. Encaja con el
+       encargo ya abierto (`doc/ENCARGO-FOL-2026-09-17.md`).
+
+    ⚠️ Lo que NO se hace es meter un `sorry` para enseñar L2 antes de tiempo: el proyecto
+    lleva 0 y esa cifra es un control, no un adorno. -/
 
 end PeanoRF.Calculus

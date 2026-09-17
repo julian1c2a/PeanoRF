@@ -17,7 +17,15 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **43 jobs · 10 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **45 jobs · 12 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+>
+> ⭐ **H3bis en marcha, y con un hallazgo del propio gate**: está demostrado que **`⊢ᵢ` es
+> cerrado bajo sustitución paralela** (`derivesI_subst`, los 18 casos) y que **la barra
+> sobrevive a `rewrite_at`** (`slash_rewrite`). Falta **un caso de L2**: la regla de
+> Leibniz, porque `subst` sustituye sólo en el índice 0 y bajo un `∀` el índice se mueve.
+> ⚠️ Al construirlo, el gate cazó un `Classical.choice` **propio** — un `simp` en
+> `upS_singleS` — que contaminaba siete declaraciones. Reescrito con `if_pos`/`if_neg`
+> explícitos. Es la primera vez que el eje META muerde sobre código nuestro.
 >
 > 🔎 **Auditoría del 2026-09-17 (tarde)**: el gate está verde y los footprints no se
 > han movido, pero la auditoría de **cobertura** encontró dos agujeros y los cerró
@@ -38,13 +46,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 10 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
-| Módulos con 0 `sorry` | 10 / 10 |
-| Teoremas propios | 33 |
-| Definiciones propias | 0 |
+| Módulos propios | 12 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
+| Módulos con 0 `sorry` | 12 / 12 |
+| Teoremas propios | 60 |
+| Definiciones propias | 8 (el álgebra de sustituciones) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 43 jobs (ver la reserva del banner) |
+| Build | ✅ 45 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

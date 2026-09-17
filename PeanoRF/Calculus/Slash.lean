@@ -6,6 +6,7 @@ License: MIT
 
 import PeanoRF.Calculus.Consistency
 import PeanoRF.Calculus.SubstDerives
+import PeanoRF.Calculus.Eq
 
 /-! # H3bis · La BARRA DE KLEENE — hacia la propiedad de disyunción
 
@@ -448,41 +449,254 @@ theorem slash_rewrite : ∀ (p : Pos) (sub sub' : Formula), LocalRule sub sub' �
       | or _ _ => simp [getAt?] at hget
 
 
-/-! ## ⏳ Lo que falta de L2, y es UN caso
 
-    Con `slash_rewrite`, `derivesI_subst` y `cut_context` en la mano, **diecisiete de los
-    dieciocho casos de L2 son mecánicos**. El que no lo es, y conviene decirlo con nombre y
-    apellidos, es `Derivesᵢ.subst` — la regla de Leibniz:
 
-    > `Γ ⊢ᵢ t₁ = t₂ → Γ ⊢ᵢ f[t₁/0] → Γ ⊢ᵢ f[t₂/0]`
+/-! ## La barra es invariante bajo sustituciones PROBABLEMENTE iguales -/
 
-    Para L2 hace falta: de `Slash (substF ρ (f[t₁/0]))` y `[] ⊢ᵢ t₁ρ = t₂ρ`, concluir
-    `Slash (substF ρ (f[t₂/0]))`. Por el álgebra de `Subst.lean` eso es exactamente
+/-- ⭐⭐ **El último ingrediente de L2.**
 
-    > `Slash (substF (consS x ρ) f) → Slash (substF (consS y ρ) f)`  con `[] ⊢ᵢ x = y`,
+    Si dos sustituciones coinciden salvo en un índice, y en ese índice los términos son
+    **demostrablemente iguales**, la barra no distingue entre ellas.
 
-    o sea: **la barra es invariante bajo sustituciones probablemente iguales**. Es verdad,
-    y se demuestra por inducción en `fdepth f`. Los casos atómicos salen de la propia regla
-    `Derivesᵢ.subst`; `∧`, `∨`, `→` salen de la hipótesis de inducción (con `→` pidiendo la
-    dirección contraria, que da `eqI_symm`).
+    La derivabilidad la transporta `leibniz_at`; el resto es inducción en la complejidad de
+    la fórmula. Va como **equivalencia** porque el caso `→` necesita la dirección contraria,
+    y el índice **sube a `k+1`** al entrar bajo un cuantificador — que es exactamente la
+    razón por la que hizo falta Leibniz en un índice cualquiera. -/
+theorem slash_eq_congr : ∀ (A : Formula) (k : Nat) (ρ₁ ρ₂ : Subst),
+    (∀ n, n ≠ k → ρ₁ n = ρ₂ n) →
+    (([] : List Formula) ⊢ᵢ Formula.eq (ρ₁ k) (ρ₂ k)) →
+    (Slash (substF ρ₁ A) ↔ Slash (substF ρ₂ A))
+  | .bottom, _, _, _, _, _ => Iff.rfl
+  | .atom p ts, k, ρ₁, ρ₂, hag, heq => by
+      simp only [substF, slash_atom]
+      exact ⟨fun h => leibniz_at k (Formula.atom p ts) ρ₁ ρ₂ hag heq h,
+        fun h => leibniz_at k (Formula.atom p ts) ρ₂ ρ₁
+          (fun n hn => (hag n hn).symm) (eqI_symm heq) h⟩
+  | .eq t u, k, ρ₁, ρ₂, hag, heq => by
+      simp only [substF, slash_eq]
+      exact ⟨fun h => leibniz_at k (Formula.eq t u) ρ₁ ρ₂ hag heq h,
+        fun h => leibniz_at k (Formula.eq t u) ρ₂ ρ₁
+          (fun n hn => (hag n hn).symm) (eqI_symm heq) h⟩
+  | .and a b, k, ρ₁, ρ₂, hag, heq => by
+      have iha := slash_eq_congr a k ρ₁ ρ₂ hag heq
+      have ihb := slash_eq_congr b k ρ₁ ρ₂ hag heq
+      simp only [substF, slash_and]
+      exact ⟨fun h => ⟨iha.mp h.1, ihb.mp h.2⟩, fun h => ⟨iha.mpr h.1, ihb.mpr h.2⟩⟩
+  | .or a b, k, ρ₁, ρ₂, hag, heq => by
+      have iha := slash_eq_congr a k ρ₁ ρ₂ hag heq
+      have ihb := slash_eq_congr b k ρ₁ ρ₂ hag heq
+      simp only [substF, slash_or]
+      exact ⟨fun h => h.imp iha.mp ihb.mp, fun h => h.imp iha.mpr ihb.mpr⟩
+  | .impl a b, k, ρ₁, ρ₂, hag, heq => by
+      have iha := slash_eq_congr a k ρ₁ ρ₂ hag heq
+      have ihb := slash_eq_congr b k ρ₁ ρ₂ hag heq
+      have hfw : ([] : List Formula) ⊢ᵢ substF ρ₁ (Formula.impl a b) →
+          ([] : List Formula) ⊢ᵢ substF ρ₂ (Formula.impl a b) :=
+        fun h => leibniz_at k (Formula.impl a b) ρ₁ ρ₂ hag heq h
+      have hbw : ([] : List Formula) ⊢ᵢ substF ρ₂ (Formula.impl a b) →
+          ([] : List Formula) ⊢ᵢ substF ρ₁ (Formula.impl a b) :=
+        fun h => leibniz_at k (Formula.impl a b) ρ₂ ρ₁
+          (fun n hn => (hag n hn).symm) (eqI_symm heq) h
+      simp only [substF, slash_impl] at hfw hbw ⊢
+      exact ⟨fun h => ⟨hfw h.1, fun ha => ihb.mp (h.2 (iha.mpr ha))⟩,
+        fun h => ⟨hbw h.1, fun ha => ihb.mpr (h.2 (iha.mp ha))⟩⟩
+  | .forall a, k, ρ₁, ρ₂, hag, heq => by
+      have hag' : ∀ (t : Term) (n : Nat), n ≠ k + 1 →
+          consS t ρ₁ n = consS t ρ₂ n := by
+        intro t n hn
+        cases n with
+        | zero => rfl
+        | succ m => exact hag m (by omega)
+      have heq' : ∀ t : Term, ([] : List Formula) ⊢ᵢ
+          Formula.eq (consS t ρ₁ (k + 1)) (consS t ρ₂ (k + 1)) := fun _ => heq
+      have hfw : ([] : List Formula) ⊢ᵢ substF ρ₁ (Formula.forall a) →
+          ([] : List Formula) ⊢ᵢ substF ρ₂ (Formula.forall a) :=
+        fun h => leibniz_at k (Formula.forall a) ρ₁ ρ₂ hag heq h
+      have hbw : ([] : List Formula) ⊢ᵢ substF ρ₂ (Formula.forall a) →
+          ([] : List Formula) ⊢ᵢ substF ρ₁ (Formula.forall a) :=
+        fun h => leibniz_at k (Formula.forall a) ρ₂ ρ₁
+          (fun n hn => (hag n hn).symm) (eqI_symm heq) h
+      simp only [substF, slash_forall] at hfw hbw ⊢
+      constructor
+      · rintro ⟨hd, hall⟩
+        refine ⟨hfw hd, fun t => ?_⟩
+        rw [substFormula_upS]
+        exact (slash_eq_congr a (k + 1) (consS t ρ₁) (consS t ρ₂) (hag' t) (heq' t)).mp
+          (by rw [← substFormula_upS]; exact hall t)
+      · rintro ⟨hd, hall⟩
+        refine ⟨hbw hd, fun t => ?_⟩
+        rw [substFormula_upS]
+        exact (slash_eq_congr a (k + 1) (consS t ρ₁) (consS t ρ₂) (hag' t) (heq' t)).mpr
+          (by rw [← substFormula_upS]; exact hall t)
+  | .ex a, k, ρ₁, ρ₂, hag, heq => by
+      have hag' : ∀ (t : Term) (n : Nat), n ≠ k + 1 →
+          consS t ρ₁ n = consS t ρ₂ n := by
+        intro t n hn
+        cases n with
+        | zero => rfl
+        | succ m => exact hag m (by omega)
+      have heq' : ∀ t : Term, ([] : List Formula) ⊢ᵢ
+          Formula.eq (consS t ρ₁ (k + 1)) (consS t ρ₂ (k + 1)) := fun _ => heq
+      simp only [substF, slash_ex]
+      constructor
+      · rintro ⟨t, ht⟩
+        refine ⟨t, ?_⟩
+        rw [substFormula_upS]
+        exact (slash_eq_congr a (k + 1) (consS t ρ₁) (consS t ρ₂) (hag' t) (heq' t)).mp
+          (by rw [← substFormula_upS]; exact ht)
+      · rintro ⟨t, ht⟩
+        refine ⟨t, ?_⟩
+        rw [substFormula_upS]
+        exact (slash_eq_congr a (k + 1) (consS t ρ₁) (consS t ρ₂) (hag' t) (heq' t)).mpr
+          (by rw [← substFormula_upS]; exact ht)
+termination_by A => fdepth A
+decreasing_by
+  all_goals simp only [fdepth]
+  all_goals omega
 
-    ⛔ **El caso que se atasca es el cuantificador.** Bajo un `∀`, las dos sustituciones
-    dejan de diferir en el índice 0 y pasan a diferir en el 1 — y `Derivesᵢ.subst`
-    **sólo sustituye en el índice 0**. Hace falta la regla de Leibniz **en un índice
-    cualquiera**:
 
-    > `[] ⊢ᵢ x = y → [] ⊢ᵢ f[x/k] → [] ⊢ᵢ f[y/k]`
+/-! ## ⭐⭐⭐ L2, y con ella la propiedad de disyunción -/
 
-    Dos salidas, y la elección es de diseño, no técnica:
+/-- **L2.** Toda derivación desde un contexto barrado barra su conclusión.
 
-    1. **Derivarla aquí** con el álgebra σ que ya existe: hace falta la permutación de los
-       índices `0` y `k`, y reescribir `f[x/k]` como `(f∘swap)[x/0]`. Es trabajo, pero no
-       toca ni el cálculo ni FOL.
-    2. **Pedirla aguas arriba**: `Derives₀` tiene el mismo `subst` fijado en 0, así que el
-       problema es suyo también en cuanto quieran la propiedad de disyunción. Encaja con el
-       encargo ya abierto (`doc/ENCARGO-FOL-2026-09-17.md`).
+    ⚠️ El `∀ ρ` va **dentro** de la inducción, y ésa es toda la historia: en `intro_forall`
+    la meta pide la hipótesis inductiva de la premisa **con otra sustitución**, y sin
+    cuantificar sobre todas no hay manera. -/
+theorem slash_of_derives {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) :
+    ∀ ρ : Subst, (∀ g, g ∈ Γ → Slash (substF ρ g)) → Slash (substF ρ f) := by
+  induction h with
+  | hyp Γ' f' hIn => intro ρ hall; exact hall f' hIn
+  | intro_impl Γ' A B d ih =>
+      intro ρ hall
+      refine (slash_impl (substF ρ A) (substF ρ B)).mpr
+        ⟨derives_empty_of_slashed (Derivesᵢ.intro_impl Γ' A B d) ρ hall, fun ha => ?_⟩
+      refine ih ρ (fun g hg => ?_)
+      rcases List.mem_cons.mp hg with rfl | hg'
+      · exact ha
+      · exact hall g hg'
+  | elim_impl Γ' A B _ _ ih1 ih2 =>
+      intro ρ hall
+      exact ((slash_impl _ _).mp (ih1 ρ hall)).2 (ih2 ρ hall)
+  | intro_and Γ' A B _ _ ih1 ih2 =>
+      intro ρ hall; exact (slash_and _ _).mpr ⟨ih1 ρ hall, ih2 ρ hall⟩
+  | elim_and_l Γ' A B _ ih => intro ρ hall; exact ((slash_and _ _).mp (ih ρ hall)).1
+  | elim_and_r Γ' A B _ ih => intro ρ hall; exact ((slash_and _ _).mp (ih ρ hall)).2
+  | intro_or_l Γ' A B _ ih => intro ρ hall; exact (slash_or _ _).mpr (Or.inl (ih ρ hall))
+  | intro_or_r Γ' A B _ ih => intro ρ hall; exact (slash_or _ _).mpr (Or.inr (ih ρ hall))
+  | elim_or Γ' A B C _ _ _ ih1 ih2 ih3 =>
+      intro ρ hall
+      rcases (slash_or _ _).mp (ih1 ρ hall) with ha | hb
+      · refine ih2 ρ (fun g hg => ?_)
+        rcases List.mem_cons.mp hg with rfl | hg'
+        · exact ha
+        · exact hall g hg'
+      · refine ih3 ρ (fun g hg => ?_)
+        rcases List.mem_cons.mp hg with rfl | hg'
+        · exact hb
+        · exact hall g hg'
+  | intro_forall Γ' A d ih =>
+      intro ρ hall
+      refine (slash_forall (substF (upS ρ) A)).mpr
+        ⟨derives_empty_of_slashed (Derivesᵢ.intro_forall Γ' A d) ρ hall, fun t => ?_⟩
+      rw [substFormula_upS]
+      refine ih (consS t ρ) (fun g hg => ?_)
+      rcases List.mem_map.mp hg with ⟨y, hy, rfl⟩
+      rw [substF_lift_consS]
+      exact hall y hy
+  | elim_forall Γ' A t _ ih =>
+      intro ρ hall
+      rw [substF_substFormula]
+      exact ((slash_forall _).mp (ih ρ hall)).2 (substT ρ t)
+  | intro_ex Γ' A t _ ih =>
+      intro ρ hall
+      refine (slash_ex (substF (upS ρ) A)).mpr ⟨substT ρ t, ?_⟩
+      rw [← substF_substFormula]
+      exact ih ρ hall
+  | elim_ex Γ' A B _ _ ih1 ih2 =>
+      intro ρ hall
+      rcases (slash_ex _).mp (ih1 ρ hall) with ⟨t, ht⟩
+      have h2 : Slash (substF (consS t ρ) (liftFormula 0 B)) := by
+        refine ih2 (consS t ρ) (fun g hg => ?_)
+        rcases List.mem_cons.mp hg with rfl | hg'
+        · rwa [substFormula_upS] at ht
+        · rcases List.mem_map.mp hg' with ⟨y, hy, rfl⟩
+          rw [substF_lift_consS]
+          exact hall y hy
+      rwa [substF_lift_consS] at h2
+  | bot_elim Γ' A _ ih => intro ρ hall; exact (slash_bottom.mp (ih ρ hall)).elim
+  | weakening Γ' Γ'' f' _ hSub ih =>
+      intro ρ hall; exact ih ρ (fun g hg => hall g (hSub g hg))
+  | rewrite_at Γ' f f' p sub sub' _ hget hrule heq ih =>
+      intro ρ hall
+      rw [heq]
+      exact (slash_rewrite p sub sub' hrule f ρ hget).mp (ih ρ hall)
+  | refl Γ' t => intro ρ hall; exact (slash_eq _ _).mpr (Derivesᵢ.refl _ (substT ρ t))
+  | subst Γ' t₁ t₂ A _ _ ih1 ih2 =>
+      intro ρ hall
+      have heq : ([] : List Formula) ⊢ᵢ
+          Formula.eq (substT ρ t₁) (substT ρ t₂) := (slash_eq _ _).mp (ih1 ρ hall)
+      have h1 := ih2 ρ hall
+      rw [substF_substFormula, substFormula_upS] at h1 ⊢
+      exact (slash_eq_congr A 0 (consS (substT ρ t₁) ρ) (consS (substT ρ t₂) ρ)
+        (fun n hn => by cases n with
+                        | zero => exact absurd rfl hn
+                        | succ m => rfl) heq).mp h1
 
-    ⚠️ Lo que NO se hace es meter un `sorry` para enseñar L2 antes de tiempo: el proyecto
-    lleva 0 y esa cifra es un control, no un adorno. -/
+/-! ## 🏁 Las dos propiedades, y la separación -/
+
+/-- 🏁 **LA PROPIEDAD DE DISYUNCIÓN.**
+
+    `⊢₀` **no la tiene**: prueba `P ∨ ¬P` sin probar ninguna de las dos ramas. -/
+theorem disjunction_property {A B : Formula}
+    (h : ([] : List Formula) ⊢ᵢ Formula.or A B) :
+    (([] : List Formula) ⊢ᵢ A) ∨ (([] : List Formula) ⊢ᵢ B) := by
+  have hs := slash_of_derives h Term.var (fun g hg => absurd hg (List.not_mem_nil))
+  rw [substF_id] at hs
+  rcases (slash_or A B).mp hs with ha | hb
+  · exact Or.inl (slash_derives A ha)
+  · exact Or.inr (slash_derives B hb)
+
+/-- 🏁 **LA PROPIEDAD DE EXISTENCIA**: de un existencial demostrado sale un TESTIGO.
+
+    Es la sombra sintáctica de la realizabilidad (ADR-016): el testigo `t` es el cómputo
+    que el lado Peano del espejo tendría que ejecutar. -/
+theorem existence_property {A : Formula}
+    (h : ([] : List Formula) ⊢ᵢ Formula.ex A) :
+    ∃ t : Term, ([] : List Formula) ⊢ᵢ substFormula 0 t A := by
+  have hs := slash_of_derives h Term.var (fun g hg => absurd hg (List.not_mem_nil))
+  rw [substF_id] at hs
+  rcases (slash_ex A).mp hs with ⟨t, ht⟩
+  exact ⟨t, slash_derives _ ht⟩
+
+/-- `⊢ᵢ` no prueba `¬P` — la otra mitad de la separación. Misma vía sintáctica que
+    `notP_syn`, con la valuación `true` en vez de `false`. -/
+theorem notNotP_syn : ¬ (([] : List Formula) ⊢ᵢ neg (Formula.atom "P" [])) := by
+  intro h
+  have hc := FOL.NDtoLK0.ndToLK
+    (FOL.Derives2.derives0_iff_derives2.mp (derivesI_to_derives0 h))
+  rcases FOL.Finitary0.lkc_tval hc true
+    (fun _ hx => absurd hx List.not_mem_nil) with ⟨x, hx, hv⟩
+  cases hx with
+  | head => exact absurd hv (by simp [FOL.Finitary0.tval, neg])
+  | tail _ hm => exact absurd hm List.not_mem_nil
+
+/-- 🏁🏁🏁 **LA SEPARACIÓN: `⊢ᵢ` NO es `⊢₀`.**
+
+    El primer teorema de este proyecto que **falla clásicamente**. Hasta hoy los 22
+    teoremas de PeanoRF valían palabra por palabra para `⊢₀`: sustituyendo `⊢ᵢ` por `⊢₀` en
+    todo el árbol, todo seguía compilando, y la tesis —«PeanoRF es HA y no PA»— la sostenían
+    la elección de cálculo y el gate, no una demostración.
+
+    Ya no. `P ∨ ¬P` es derivable en `⊢₀` (`FOL.Propositional0.derives0_em_ctx`, y **sin
+    `Classical.choice`**) y **no lo es en `⊢ᵢ`**: por la propiedad de disyunción tendría que
+    serlo `P` o `¬P`, y ninguna lo es. -/
+theorem derivesI_ne_derives0 :
+    ∃ φ : Formula, (([] : List Formula) ⊢₀ φ) ∧ ¬ (([] : List Formula) ⊢ᵢ φ) := by
+  refine ⟨Formula.or (Formula.atom "P" []) (neg (Formula.atom "P" [])),
+    FOL.Propositional0.derives0_em_ctx [] (Formula.atom "P" []), ?_⟩
+  intro h
+  rcases disjunction_property h with hP | hnP
+  · exact notP_syn hP
+  · exact notNotP_syn hnP
 
 end PeanoRF.Calculus

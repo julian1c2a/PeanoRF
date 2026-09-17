@@ -842,6 +842,64 @@ que manda es [E], y lo que el gate publica es su **entrada**.
 
 ---
 
+## ADR-022: La propiedad de disyunción, y por qué se intercaló antes que H4
+
+**Fecha**: 2026-09-17
+**Estado**: Aceptado
+
+**Contexto**: al inventariar los 22 teoremas del proyecto salió un hecho incómodo:
+**ninguno fallaba clásicamente**. Todos valían palabra por palabra para `⊢₀`, porque sólo
+usan los 18 constructores compartidos. Sustituyendo `⊢ᵢ` por `⊢₀` en todo el árbol, **todo
+seguía compilando**. La tesis del proyecto —«PeanoRF es HA y no PA»— era arquitectónica: la
+sostenían la elección de cálculo y el gate, no una demostración.
+
+**Decisión**: intercalar **H3bis** antes de H4 y demostrar la **propiedad de disyunción** y
+la **de existencia** por la barra de Kleene, y con ellas la separación `⊢ᵢ ≠ ⊢₀`.
+
+**Justificación**: automatizar el volcado (H4) antes de tener un solo teorema que
+justifique por qué este espejo merece existir es optimizar el transporte antes de saber qué
+se transporta. Y las dos propiedades **son** la tesis: PA no tiene ninguna de las dos.
+
+**Consecuencias**:
+- 🏁 `derivesI_ne_derives0 : ∃φ, ([] ⊢₀ φ) ∧ ¬([] ⊢ᵢ φ)`, en `[propext, Quot.sound]`.
+  El testigo es `P ∨ ¬P`, que `⊢₀` prueba **sin `Classical.choice`** por la vía H de FOL.
+- La propiedad de **existencia** es la sombra sintáctica de la realizabilidad (ADR-016): el
+  testigo `t` **es** el cálculo que el lado Peano del espejo tendría que ejecutar. H6 deja
+  de ser una aspiración y pasa a tener un enunciado del que colgar.
+- Costó **tres módulos de infraestructura**: `Subst` (álgebra σ), `SubstDerives`
+  (`⊢ᵢ` cerrado bajo sustitución) y el grueso de `Slash`.
+
+---
+
+## ADR-023: La regla de Leibniz en un índice cualquiera se DERIVA, no se pide
+
+**Fecha**: 2026-09-17
+**Estado**: Aceptado
+
+**Contexto**: el último caso de L2 —`Derivesᵢ.subst`— pedía que la barra fuera invariante
+bajo sustituciones **demostrablemente iguales**. Los casos atómicos, `∧`, `∨` y `→` salían;
+el del cuantificador se atascaba: `Derivesᵢ.subst` sustituye sólo en el **índice 0**, y al
+entrar bajo un `∀` el índice en que dos sustituciones difieren pasa del 0 al 1.
+
+Se contemplaron dos salidas: derivar la regla aquí, o pedirla aguas arriba — `Derives₀`
+tiene el mismo `subst` clavado en 0, así que el problema es suyo también.
+
+**Decisión**: derivarla. `leibniz_at` en `Calculus/SubstDerives.lean`.
+
+**Justificación**: **no hace falta un axioma ni un encargo**, sólo el álgebra σ que ya
+existía. Se abstrae la variable `k` al índice 0 con
+`θ n = if n = k then #0 else liftTerm 0 (ρ₁ n)`, y entonces `substF ρ f` es literalmente
+`(substF θ f)[ρ k / 0]` — con lo que la regla de índice 0 ya vale. Doce líneas.
+
+**Consecuencias**:
+- ✅ El encargo a FOL se queda sólo con la sustitución paralela y `formulaComplexity`.
+  **La regla de Leibniz indexada ya no se pide**: se resta del encargo.
+- ⚠️ Y queda la observación aprovechable para ellos: cuando quieran la propiedad de
+  disyunción para su cálculo, `Derives₀.subst` les planteará exactamente el mismo problema,
+  y la misma solución sirve.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

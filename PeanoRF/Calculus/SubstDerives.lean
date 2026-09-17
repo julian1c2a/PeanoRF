@@ -165,4 +165,44 @@ theorem derivesI_subst {Γ : List Formula} {φ : Formula} (h : Γ ⊢ᵢ φ) :
       rw [← substF_substFormula]
       exact ih2 ρ
 
+
+/-! ## ⭐⭐ La regla de Leibniz en un índice CUALQUIERA
+
+    `Derivesᵢ.subst` sustituye sólo en el índice 0, y eso bastaba mientras no hubiera
+    cuantificadores por medio: bajo un `∀`, el índice en el que dos sustituciones difieren
+    pasa del 0 al 1, y la regla deja de aplicar. Era el último obstáculo de L2.
+
+    🔑 **Y se deriva, no hace falta pedirla.** El truco es aislar la variable `k`:
+    se abstrae con `θ`, que manda `k ↦ #0` y levanta todo lo demás, y entonces `substF ρ f`
+    es literalmente `(substF θ f)[ρ k / 0]` — con lo que la regla de índice 0 ya vale. Todo
+    el trabajo lo hace el álgebra de `Subst.lean`. -/
+theorem leibniz_at (k : Nat) (f : Formula) (ρ₁ ρ₂ : Subst)
+    (hagree : ∀ n, n ≠ k → ρ₁ n = ρ₂ n)
+    (heq : ([] : List Formula) ⊢ᵢ Formula.eq (ρ₁ k) (ρ₂ k))
+    (hd : ([] : List Formula) ⊢ᵢ substF ρ₁ f) :
+    ([] : List Formula) ⊢ᵢ substF ρ₂ f := by
+  -- `θ` abstrae la variable `k` al índice 0 y levanta el resto.
+  let θ : Subst := fun n => if n = k then Term.var 0 else liftTerm 0 (ρ₁ n)
+  have key : ∀ ρ : Subst, (∀ n, n ≠ k → ρ₁ n = ρ n) → compS (singleS 0 (ρ k)) θ = ρ := by
+    intro ρ hag
+    funext n
+    by_cases h : n = k
+    · subst h
+      show substT (singleS 0 (ρ n)) (if n = n then Term.var 0 else liftTerm 0 (ρ₁ n)) = ρ n
+      rw [if_pos rfl]
+      show singleS 0 (ρ n) 0 = ρ n
+      rfl
+    · show substT (singleS 0 (ρ k)) (if n = k then Term.var 0 else liftTerm 0 (ρ₁ n)) = ρ n
+      rw [if_neg h, ← substT_liftS 0 (ρ₁ n), substT_comp, compS_singleS_liftS,
+        substT_var_id]
+      exact hag n h
+  have h1 : compS (singleS 0 (ρ₁ k)) θ = ρ₁ := key ρ₁ (fun _ _ => rfl)
+  have h2 : compS (singleS 0 (ρ₂ k)) θ = ρ₂ := key ρ₂ hagree
+  have e1 : substFormula 0 (ρ₁ k) (substF θ f) = substF ρ₁ f := by
+    rw [← substF_singleS _ 0 (ρ₁ k), substF_comp, h1]
+  have e2 : substFormula 0 (ρ₂ k) (substF θ f) = substF ρ₂ f := by
+    rw [← substF_singleS _ 0 (ρ₂ k), substF_comp, h2]
+  rw [← e2]
+  exact Derivesᵢ.subst [] (ρ₁ k) (ρ₂ k) (substF θ f) heq (by rw [e1]; exact hd)
+
 end PeanoRF.Calculus

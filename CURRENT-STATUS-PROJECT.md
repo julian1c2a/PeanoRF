@@ -19,10 +19,22 @@
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
 > **45 jobs · 12 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
-> ⭐ **H3bis en marcha, y con un hallazgo del propio gate**: está demostrado que **`⊢ᵢ` es
-> cerrado bajo sustitución paralela** (`derivesI_subst`, los 18 casos) y que **la barra
-> sobrevive a `rewrite_at`** (`slash_rewrite`). Falta **un caso de L2**: la regla de
-> Leibniz, porque `subst` sustituye sólo en el índice 0 y bajo un `∀` el índice se mueve.
+> 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
+>
+> ```
+> derivesI_ne_derives0 : ∃ φ, ([] ⊢₀ φ) ∧ ¬([] ⊢ᵢ φ)      [propext, Quot.sound]
+> ```
+>
+> Hasta hoy los 22 teoremas del proyecto valían **palabra por palabra** para `⊢₀`:
+> sustituyendo `⊢ᵢ` por `⊢₀` en todo el árbol, todo seguía compilando. La tesis —«PeanoRF
+> es HA y no PA»— era **arquitectónica**: la sostenían la elección de cálculo y el gate, no
+> una demostración. Ya no.
+>
+> Detrás van la **propiedad de disyunción** (`disjunction_property`) y la **de existencia**
+> (`existence_property`) — las dos marcas que separan HA de PA, y la sombra sintáctica de la
+> realizabilidad: el testigo de un existencial demostrado **es** el cálculo que el lado
+> Peano del espejo tendría que ejecutar.
+>
 > ⚠️ Al construirlo, el gate cazó un `Classical.choice` **propio** — un `simp` en
 > `upS_singleS` — que contaminaba siete declaraciones. Reescrito con `if_pos`/`if_neg`
 > explícitos. Es la primera vez que el eje META muerde sobre código nuestro.
@@ -48,8 +60,8 @@
 |--------|-------|
 | Módulos propios | 12 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
 | Módulos con 0 `sorry` | 12 / 12 |
-| Teoremas propios | 60 |
-| Definiciones propias | 8 (el álgebra de sustituciones) |
+| Teoremas propios | 67 |
+| Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
 | Build | ✅ 45 jobs (ver la reserva del banner) |

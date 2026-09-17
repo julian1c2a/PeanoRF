@@ -142,7 +142,7 @@ Justificación completa en `DECISIONS.md` **ADR-016**; medición en `sondeos/REA
 | **H2** | **El conjunto de axiomas de HA** sobre `⊢ᵢ`, con contextos finitos (M-8) | ✅ 2026-09-16 |
 | **H3** | **La interpretación `⟦·⟧` + soundness**, y salió **CONSTRUCTIVA**: `derivesI_soundness` mide `[propext, Quot.sound]` — no por composición, sino por inducción directa sobre los 18 constructores | ✅ 2026-09-16 |
 | **H3′** | **Consistencia SIN semántica**: `consistI_syn`, vía los secuentes sin corte de FOL. Ni un modelo en toda la cadena (ADR-020) | ✅ 2026-09-17 |
-| **H3bis** | **Propiedad de DISYUNCIÓN y de EXISTENCIA** por la barra de Kleene — el primer enunciado que **falla para `⊢₀`**, y con él la separación `⊢ᵢ ≠ ⊢₀` | 🔶 en curso |
+| **H3bis** | **Propiedad de DISYUNCIÓN y de EXISTENCIA** por la barra de Kleene, y con ellas **`derivesI_ne_derives0`**: el primer teorema del proyecto que **falla clásicamente** | ✅ 2026-09-17 |
 | **H4** | **Reflexión `⌜·⌝` + adecuación + táctica**: el espejo se genera, no se transcribe | ❌ |
 | **H5** | **Volcado del núcleo aritmético** de Peano (suma, producto, orden, divisibilidad, primos) | ❌ |
 | **H6** | **Realizabilidad explícita**: extracción de realizadores hacia Peano | ❌ |

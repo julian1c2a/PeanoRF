@@ -10,34 +10,30 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H3bis — cerrar L2. Queda UN caso, y está identificado.**
+**H4 — reflexión `⌈·⌉` + adecuación + táctica.** Ahora sí toca: el espejo ya tiene un
+teorema que justifica su existencia (`derivesI_ne_derives0`, H3bis), así que automatizar el
+volcado deja de ser optimizar el transporte antes de saber qué se transporta.
 
-Hecho y medido (todo en `[propext]` / `[propext, Quot.sound]`):
+La alternativa sigue siendo el volcado a mano de `add_comm`/`mul_*` (H5), que **no tiene
+incógnitas de método**; PLANNING pone H4 antes por la razón de siempre — volcar a mano lo
+que luego se generará es trabajo tirado.
 
-| pieza | dónde |
+### Lo que quedó cerrado el 2026-09-17
+
+| | |
 |---|---|
-| álgebra de sustitución paralela (`substF`, `upS`, `consS`, `compS`, comp/id/lift) | `Calculus/Subst.lean` |
-| **`derivesI_subst`** — `⊢ᵢ` cerrado bajo sustitución, 18 casos | `Calculus/SubstDerives.lean` |
-| **`slash_rewrite`** — la barra sobrevive a `rewrite_at` | `Calculus/Slash.lean` |
-| L1, `cut_context`, `derives_empty_of_slashed` | `Calculus/Slash.lean` |
+| H3′ | consistencia SIN semántica (`consistI_syn`) |
+| **H3bis** | **propiedad de disyunción, de existencia, y `derivesI_ne_derives0`** |
+| infraestructura | álgebra σ, `derivesI_subst`, `leibniz_at`, la barra entera |
 
-**Lo que falta**: el caso `Derivesᵢ.subst` de L2 — la regla de Leibniz. Hace falta que la
-barra sea invariante bajo sustituciones **probablemente iguales**; los casos atómicos,
-`∧`, `∨` y `→` salen, y **el que se atasca es el cuantificador**: `subst` sustituye sólo en
-el **índice 0** y bajo un `∀` el índice pasa al 1.
+### ⚠️ Deudas vivas
 
-⇒ Hace falta la regla de Leibniz **en un índice cualquiera**:
-`[] ⊢ᵢ x = y → [] ⊢ᵢ f[x/k] → [] ⊢ᵢ f[y/k]`.
-
-Dos salidas, y la elección es de diseño:
-
-1. **Derivarla aquí** con el álgebra σ que ya existe (permutar los índices 0 y k). No toca
-   ni el cálculo ni FOL.
-2. **Pedirla aguas arriba**: `Derives₀` tiene el mismo `subst` fijado en 0, así que es
-   problema suyo también. Encaja con el encargo ya abierto.
-
-Después de L2: la propiedad de disyunción es inmediata, y con `notP_syn` sale la separación
-`⊢ᵢ ≠ ⊢₀` — el primer teorema del proyecto que **falla clásicamente**.
+- **`Calculus/Subst.lean` es infraestructura de SINTAXIS duplicada** (ADR-010). Sigue
+  pedida en `doc/ENCARGO-FOL-2026-09-17.md`. ✅ Del encargo **se resta** la regla de Leibniz
+  indexada: resultó derivable (ADR-023).
+- `formulaComplexity` detrás de la cadena clásica ⇒ `fdepth` duplicado. Mismo encargo.
+- `metaDebtIsError := true` cuando RPP sanee su nivel meta (hoy 10 decls).
+- `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
 
 ⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**. FOL se mueve rápido.
 

@@ -15,6 +15,32 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 🏁🏁🏁 2026-09-17 (f) · H3bis CERRADO — `⊢ᵢ` no es `⊢₀`, y ahora es un teorema
+
+```
+derivesI_ne_derives0 : ∃ φ, ([] ⊢₀ φ) ∧ ¬([] ⊢ᵢ φ)      [propext, Quot.sound]
+```
+
+**El primer teorema del proyecto que falla clásicamente.** Hasta hoy los 22 teoremas de
+PeanoRF valían palabra por palabra para `⊢₀`; la tesis era arquitectónica, no demostrada.
+
+- 🏁 **`disjunction_property`** — `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B`.
+- 🏁 **`existence_property`** — de un existencial demostrado sale un TESTIGO. Es la sombra
+  sintáctica de la realizabilidad: ese testigo **es** el cálculo del lado Peano (ADR-016).
+- **L2** (`slash_of_derives`), los 18 casos, con el `∀ ρ` dentro de la inducción.
+- ⭐ **`leibniz_at`** — la regla de Leibniz en un índice CUALQUIERA, **derivada** de la de
+  índice 0 con el álgebra σ (ADR-023). Era el último obstáculo, y **no hizo falta pedir
+  nada aguas arriba**: doce líneas abstrayendo la variable `k` al índice 0.
+- **`slash_eq_congr`** — la barra no distingue términos demostrablemente iguales.
+- `notNotP_syn` — la otra mitad de la separación, por la vía sintáctica de FOL.
+
+Todo en **`[propext, Quot.sound]`**. El testigo de la separación es `P ∨ ¬P`, que `⊢₀`
+prueba **sin `Classical.choice`** (`FOL.Propositional0.derives0_em_ctx`).
+
+ADR-022 (por qué H3bis se intercaló antes que H4) y ADR-023 (Leibniz indexado se deriva).
+
+**45 jobs · 12 módulos · 0 sorry · 154 declaraciones vigiladas.** Sin tocar FOL ni RPP.
+
 ### 2026-09-17 (e) · H3bis: el prerrequisito, demostrado — y el gate muerde sobre código propio
 
 **`Calculus/Subst.lean`** — sustitución PARALELA sobre la sintaxis de FOL⁼

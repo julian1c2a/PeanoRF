@@ -97,7 +97,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Consistency.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Finitary0` | ✅ Completo |
 | `Calculus/Subst.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim` | ✅ Completo |
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
-| `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives}` | 🔶 Parcial (falta 1 caso de L2) |
+| `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -366,7 +366,7 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 **Namespace**: `PeanoRF.Calculus`
 **Dependencies**: `PeanoRF.Calculus.Consistency`
 **Last updated**: 2026-09-17
-**Status**: 🔶 Parcial — infraestructura y L1 hechos; falta **L2**
+**Status**: ✅ Completo — 🏁 **H3bis cerrado**
 **@importance**: **foundational**
 
 | nombre | notación matemática | firma Lean 4 | footprint |
@@ -383,15 +383,23 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 **primer enunciado del proyecto que falla para `⊢₀`** — que prueba `P ∨ ¬P` sin probar
 ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teorema.
 
-✅ **Resuelto el prerrequisito**: la sustitución paralela (§3.3septies) y la clausura de
-`⊢ᵢ` bajo ella (§3.3octies) están demostradas, y con ellas `slash_rewrite` — que la barra
-sobrevive a la reescritura local, el caso que no se ve venir.
+| **`slash_eq_congr`** | la barra no distingue términos demostrablemente iguales | `propext, Quot.sound` |
+| **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
+| 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` | `propext, Quot.sound` |
+| 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` | `propext, Quot.sound` |
+| `notNotP_syn` | `[] ⊬ᵢ ¬P` | `propext, Quot.sound` |
+| 🏁🏁🏁 **`derivesI_ne_derives0`** | `∃φ, [] ⊢₀ φ ∧ [] ⊬ᵢ φ` | `propext, Quot.sound` |
 
-⏳ **Falta UN caso de L2**: `Derivesᵢ.subst`, la regla de Leibniz. Hace falta que la barra
-sea invariante bajo sustituciones **probablemente iguales**, y el caso del cuantificador se
-atasca porque `subst` sustituye sólo en el **índice 0** y bajo un `∀` el índice se mueve al
-1. Las dos salidas —derivar la regla de Leibniz en un índice cualquiera con el álgebra σ, o
-pedirla aguas arriba— están escritas en el propio módulo.
+🏁 **Cerrado el 2026-09-17.** El testigo de la separación es `P ∨ ¬P`: `⊢₀` lo prueba
+(`FOL.Propositional0.derives0_em_ctx`, y **sin `Classical.choice`**) y `⊢ᵢ` no, porque por la
+propiedad de disyunción tendría que probar `P` o `¬P`, y ninguna lo es.
+
+⭐ **El último obstáculo y cómo cayó**: el caso `Derivesᵢ.subst` de L2 pedía que la barra
+fuera invariante bajo sustituciones demostrablemente iguales, y el caso del cuantificador se
+atascaba porque `subst` sustituye sólo en el **índice 0**. La regla de Leibniz **en un
+índice cualquiera** resulta **derivable** de la de índice 0 con el álgebra σ: se abstrae la
+variable `k` al índice 0 y se vuelve (`leibniz_at`, §3.3octies). No hizo falta pedir nada
+aguas arriba.
 
 ---
 
@@ -432,6 +440,7 @@ escrito para que puedan adoptarlo tal cual.
 | `subst_getAt?` / `subst_replaceAt` / `subst_localRule` | navegación bajo `ρ` | `propext, Quot.sound` |
 | `substF_substFormula` | `(f[t])ρ = (fρ⁺)[tρ]` | `propext, Quot.sound` |
 | **`derivesI_subst`** | `Γ ⊢ᵢ f ⟹ Γρ ⊢ᵢ fρ` | `propext, Quot.sound` |
+| ⭐ **`leibniz_at`** | Leibniz en un índice CUALQUIERA | `propext, Quot.sound` |
 
 Hermano de `FOL.Lift0.derives0_lift`, con `ρ` donde ellos llevan `k`. ⚠️ El `∀ ρ` va
 **dentro** de la inducción: en `intro_forall`, `elim_ex` y `rewrite_at` la hipótesis

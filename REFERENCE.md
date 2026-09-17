@@ -95,6 +95,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Eq.lean` | `PeanoRF.Calculus` | `PeanoRF.Calculus.DerivesI` | ✅ Completo |
 | `Calculus/Soundness.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Semantics` | ✅ Completo |
 | `Calculus/Consistency.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Finitary0` | ✅ Completo |
+| `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.Consistency` | 🔶 Parcial (falta L2) |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -355,6 +356,33 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 `ε₀`: fuera del núcleo finitario (ADR-016). Aquí el contexto es **vacío**.
 
 ⭐ `notP_syn` es **la mitad** de la separación `⊢ᵢ` ≠ `⊢₀` que persigue H3bis.
+
+---
+
+### 3.3sexies Calculus/Slash.lean — H3bis, la barra de Kleene
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Calculus.Consistency`
+**Last updated**: 2026-09-17
+**Status**: 🔶 Parcial — infraestructura y L1 hechos; falta **L2**
+**@importance**: **foundational**
+
+| nombre | notación matemática | firma Lean 4 | footprint |
+|---|---|---|---|
+| `fdepth` | complejidad lógica | `Formula → Nat` | — |
+| `fdepth_subst` | `‖f[t/v]‖ = ‖f‖` | `fdepth (substFormula v t f) = fdepth f` | `propext` |
+| `Slash` | `∣ f` | `Formula → Prop` (recursión en `fdepth`) | `propext, Quot.sound` |
+| `slash_derives` (**L1**) | `∣ f ⟹ ⊢ᵢ f` | `Slash f → ([] ⊢ᵢ f)` | `propext, Quot.sound` |
+| `cut_context` | `Γ` derivable ⟹ `Γ` sobra | `(∀ g ∈ Γ, [] ⊢ᵢ g) → (Γ ⊢ᵢ f) → ([] ⊢ᵢ f)` | `propext` |
+
+**El objetivo**: la propiedad de disyunción, `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A ó [] ⊢ᵢ B`. Es el
+**primer enunciado del proyecto que falla para `⊢₀`** — que prueba `P ∨ ¬P` sin probar
+ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teorema.
+
+⏳ **Falta L2** (`Γ ⊢ᵢ f` con `Γ` barrado ⟹ `Slash f`). El obstáculo está localizado y
+no es la altura de las derivaciones: es que el enunciado tiene que generalizarse **sobre
+sustituciones**, y eso pide **sustitución paralela** sobre la sintaxis, que **FOL no tiene**
+(medido). Va como encargo a FOL; el lema de clausura de `⊢ᵢ` bajo sustitución sí es nuestro.
 
 ---
 

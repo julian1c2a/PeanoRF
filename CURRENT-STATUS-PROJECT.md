@@ -17,7 +17,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **42 jobs · 9 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **43 jobs · 10 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🔎 **Auditoría del 2026-09-17 (tarde)**: el gate está verde y los footprints no se
 > han movido, pero la auditoría de **cobertura** encontró dos agujeros y los cerró
@@ -38,13 +38,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 9 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
-| Módulos con 0 `sorry` | 9 / 9 |
-| Teoremas propios | 22 |
+| Módulos propios | 10 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
+| Módulos con 0 `sorry` | 10 / 10 |
+| Teoremas propios | 33 |
 | Definiciones propias | 0 |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 42 jobs (ver la reserva del banner) |
+| Build | ✅ 43 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

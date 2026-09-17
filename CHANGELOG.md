@@ -15,6 +15,25 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-17 (d) · H3bis arranca: la barra de Kleene
+
+**`Calculus/Slash.lean`** — módulo nuevo, PARCIAL y declarado como tal
+- `fdepth` + `fdepth_subst` (sustituir no cambia la complejidad), `Slash` por recursión
+  bien fundada, sus ocho ecuaciones, **L1** `slash_derives` y `cut_context`.
+- Todo mide `[propext]` o `[propext, Quot.sound]`.
+- ⏳ **Falta L2**, y el obstáculo está localizado: el enunciado hay que generalizarlo
+  **sobre sustituciones**, lo que pide **sustitución paralela** sobre la sintaxis.
+  **Medido: FOL no la tiene** — sólo sustitución de una variable. Es infraestructura de
+  sintaxis, o sea suya (ADR-010): va como ENCARGO, no como parche.
+- ⚠️ El primer diagnóstico —«hace falta indexar por altura, como `LKh`»— era **falso**;
+  desarrollar los casos lo descartó. Queda escrito en el módulo porque el descarte informa.
+
+**Por qué este hito**: de los 22 teoremas del proyecto, **ninguno fallaba clásicamente**.
+Sustituyendo `⊢ᵢ` por `⊢₀` en todo el árbol, todo seguía compilando. La tesis era
+arquitectónica; la propiedad de disyunción la convierte en teorema.
+
+Cifras: **43 jobs · 10 módulos · 0 sorry**. Sin tocar FOL ni ROBINSON_PlusPlus.
+
 ### 2026-09-17 (c) · la consistencia sin semántica, y el gate que no veía un módulo
 
 **`Calculus/Consistency.lean`** (ADR-020) — módulo nuevo

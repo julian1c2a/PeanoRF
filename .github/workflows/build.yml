@@ -53,7 +53,10 @@ jobs:
       # («mapping values are not allowed here»). Ése era el fallo original.
       - name: Install Lean toolchain
         run: |
-          elan toolchain install $(cut -d: -f2 PeanoRF/lean-toolchain)
+          # ⚠️ `tr -d '\r'` NO es decorativo: si `lean-toolchain` llega con CRLF —le pasó
+          # a AczelSetTheory, cuyo blob lo tenía— `cut` devuelve «v4.31.0\r» y elan
+          # contesta «invalid toolchain name». Medido: su CI murió en 11 s por ese byte.
+          elan toolchain install $(cut -d: -f2 PeanoRF/lean-toolchain | tr -d '\r')
 
       - name: Cache Lake builds
         uses: actions/cache@v4

@@ -594,12 +594,52 @@ un TEOREMA**, que ahora sí se caza.
 clase de declaración** que el control vigila. Un control puede pasar su prueba y seguir
 siendo vacuo para el caso real.
 
+### 🔁 Reescrito el 2026-09-17: de lista POR NOMBRE a descubrimiento POR TIPO
+
+La lista de constructores prohibidos **caducó tres veces en dos días**, y la auditoría del
+2026-09-17 lo dejó medido:
+
+| qué pasó | efecto |
+|---|---|
+| `FOL.MetaRules.gen` → constructor `Derives.gen_rule` | el eje finitario dejó de verla |
+| `Derives` movió sus clásicas de axiomas de `MetaRules` a **constructores propios** | sin vigilar |
+| aparecieron `Derives₁` y `Derives₂`, cada uno con **su copia** de las tres clásicas | sin vigilar |
+
+**9 de 12 constructores clásicos quedaron ciegos.** El eje objeto —que es la tesis del
+proyecto— cubría una cuarta parte del terreno.
+
+🔑 **El defecto no era la lista: era su POLARIDAD.** Una lista de prohibidos deja pasar
+todo lo que no nombra, y aguas arriba crece más rápido de lo que se actualiza.
+
+**El criterio nuevo, estructural:**
+
+1. Se **descubren por TIPO** las relaciones de derivabilidad: inductivos de tipo
+   `List Formula → Formula → Prop`. Mismo criterio que `check-estratos.bash` de RPP
+   —clasificar por el TIPO, no por el nombre—, y por eso **un cálculo nuevo aparece solo**.
+2. Los constructores de **nuestro** `Derivesᵢ` son la referencia.
+3. **Todo constructor de otro cálculo cuyo nombre corto no esté entre los de `Derivesᵢ` es
+   una regla que no tenemos** ⇒ prohibido en el núcleo. Los tres clásicos
+   (`dne_rule`, `dne_schema`, `forall_not_ex_not`), **en ninguna parte, ni en la capa ω**.
+
+⇒ **El silencio significa PROHIBIDO, no permitido.** Un `Derives₃` futuro entra vigilado
+sin tocar el fichero.
+
+⚠️ Los puentes (`derivesI_to_derives0`) siguen pasando: usan `Derives₀.hyp`,
+`Derives₀.intro_impl`… y esos nombres cortos **sí** están en `Derivesᵢ`. Lo que no pasa es
+exactamente lo que `⊢ᵢ` no tiene.
+
+**Y el gate publica un INVENTARIO en cada build** — cuántas relaciones ha detectado y
+cuántos constructores ajenos vigila. Sin eso, un cálculo nuevo entra en silencio aunque
+esté vigilado.
+
+**Probado** (ADR-015) con un **teorema** que usa `Derives₁.dne_rule` — un constructor que la
+lista vieja **no contenía** — y otro que usa `Derives.gen_rule`: los caza los dos y los
+clasifica (`OBJETO` vs `FINITARIO/AJENO`).
+
 **Consecuencias**:
 - Probado con smoke test en los dos ejes (ADR-015) **y con las dos clases de declaración**:
   detecta `Derives₀.dne_rule` y `Derives.gen_rule` donde el footprint no ve nada.
-- ⚠️ **Deuda declarada**: la lista es por NOMBRE. Un constructor nuevo aguas arriba no
-  rompe nada aquí, simplemente **no se vigila**. Aguas arriba lo resuelven midiendo por el
-  TIPO de cada axioma; aquí, de momento, no.
+- ✅ **Deuda SALDADA el 2026-09-17**: ya no es por nombre, es por tipo (arriba).
 - **Regla general**: cuando una dependencia cambia la naturaleza de un símbolo (axioma →
   constructor), los controles que lo vigilaban **caducan en silencio**. Revisarlos forma
   parte de ponerse al día, no es opcional.

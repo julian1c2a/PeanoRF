@@ -181,7 +181,14 @@ La deuda heredada se clasifica **por procedencia, no por nombre de axioma**: un
 
 **Puntos de configuración** (todos `private`, documentados en el fichero):
 `objectClassicalAxioms`, `allowedAxioms`, `inheritedMetaDebt`, `omegaAxioms`,
-`omegaLayer`, `dependencyRoots`, `metaDebtIsError`, `baselineOwn`.
+`omegaLayer`, `dependencyRoots`, `metaDebtIsError`, `baselineOwn`,
+`classicalCtorShortNames`, `benignForeignCtors`.
+
+**Control de constructores, POR TIPO** (reescrito 2026-09-17, ADR-018). Descubre las
+relaciones de derivabilidad del entorno por su **tipo** (`List Formula → Formula → Prop`) y
+prohibe en el núcleo **todo constructor ajeno cuyo nombre corto no esté entre los de
+`Derivesᵢ`**. El silencio significa **prohibido**: un cálculo nuevo entra vigilado sin tocar
+el fichero. Publica un **inventario** en cada build.
 
 ---
 

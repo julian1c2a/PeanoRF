@@ -169,26 +169,91 @@ private def omegaAxioms : List Name :=
     Todo lo demás es núcleo finitario. -/
 private def omegaLayer : Name := `PeanoRF.Omega
 
-/-- **CONTROL DE CONSTRUCTORES** — lo que `#print axioms` no puede ver.
+/-! ### CONTROL DE CONSTRUCTORES, POR TIPO — lo que `#print axioms` no puede ver
 
-    Cada entrada es `(constructor, eje, sustituto)`. Se prohíben en todo el núcleo; los
-    del eje FINITARIO se toleran bajo `PeanoRF.Omega.*`, los del eje OBJETO **en ninguna
-    parte** (son la tesis).
+    ⚠⚠ **Reescrito el 2026-09-17 tras una auditoría.** La versión anterior era una lista
+    de nombres, y caducó **tres veces en dos días**:
 
-    ⚠️ Esta lista hay que revisarla cuando FOL cambie: un constructor nuevo en un
-    inductivo de aguas arriba no rompe nada aquí, simplemente **no se vigila**. Es la
-    misma fragilidad que `check-estratos.bash` resuelve aguas arriba midiendo por el TIPO
-    de cada axioma en vez de por una lista. Deuda declarada, no resuelta. -/
-private def forbiddenConstructors : List (Name × String × String) :=
-  [ (`Derives.gen_rule,              "FINITARIO",
-     "es la ω-regla: premisa infinitaria `∀ n : Term, Γ ⊢ A[n]`. Usar `Derivesᵢ.intro_forall`")
-  , (`Derives₀.dne_rule,             "OBJETO",
-     "eliminación de doble negación. `⊢ᵢ` no la tiene, y ése es el punto")
-  , (`Derives₀.dne_schema,           "OBJETO",
-     "¬¬A ⇒ A como esquema. Idem")
-  , (`Derives₀.forall_not_ex_not,    "OBJETO",
-     "¬∀A ⇒ ∃¬A. Clásica")
-  ]
+    1. `FOL.MetaRules.gen` pasó de axioma a constructor ⇒ el eje finitario dejó de verla.
+    2. `Derives` movió sus reglas clásicas de axiomas de `MetaRules` a **constructores
+       propios** (`Derives.dne_rule`, …) ⇒ sin vigilar.
+    3. Aparecieron `Derives₁` y `Derives₂`, cada uno con **su propia copia** de las tres
+       clásicas ⇒ sin vigilar. **9 de 12 constructores clásicos quedaron ciegos.**
+
+    El defecto no era la lista: era su **polaridad**. Una lista de prohibidos deja pasar
+    todo lo que no nombra, y aguas arriba crece más rápido de lo que se actualiza.
+
+    ## El criterio, ahora estructural
+
+    1. Se **descubren por TIPO** todas las relaciones de derivabilidad del entorno: los
+       inductivos de tipo `List Formula → Formula → Prop`. Es el mismo criterio que usa
+       `check-estratos.bash` de ROBINSON_PlusPlus — clasificar por el TIPO, no por el
+       nombre — y por eso un cálculo nuevo **aparece solo**.
+    2. Se toman los constructores de **nuestro** `Derivesᵢ` como referencia.
+    3. **Cualquier constructor de otro cálculo cuyo nombre corto NO esté entre los de
+       `Derivesᵢ` es una regla que nosotros NO tenemos** ⇒ prohibido en el núcleo.
+
+    ⇒ **El silencio significa PROHIBIDO, no permitido.** Un `Derives₃` futuro entra
+    vigilado por defecto, sin tocar este fichero.
+
+    ⚠️ Los puentes (`derivesI_to_derives0`) usan `Derives₀.hyp`, `Derives₀.intro_impl`…
+    y **pasan**, porque esos nombres cortos SÍ están en `Derivesᵢ`. Lo que no pasa es
+    justo lo que `⊢ᵢ` no tiene.-/
+
+/-- Nombres cortos de los constructores CLÁSICOS de nivel objeto. Prohibidos **en todas
+    partes, incluida la capa ω**: son la tesis (M-1), no una cuestión de efectividad.
+    Se comparan por nombre CORTO, así que cubren los cuatro cálculos a la vez y los que
+    vengan. -/
+private def classicalCtorShortNames : List Name :=
+  [`dne_rule, `dne_schema, `forall_not_ex_not]
+
+/-- Excepciones conscientes: constructores ajenos que **no** están en `Derivesᵢ` pero se
+    aceptan igualmente. **Vacía**, y cada entrada necesitará su justificación escrita.
+    Candidato previsible: las congruencias primitivas de `Derives₂`, que sustituyen a
+    `subst` y no son clásicas. -/
+private def benignForeignCtors : List Name := []
+
+/-- ¿Es `iv` una **relación de derivabilidad**? Criterio por TIPO:
+    `List Formula → Formula → Prop`. -/
+private def isDerivRelation (iv : InductiveVal) : Bool :=
+  match iv.type with
+  | .forallE _ t1 (.forallE _ t2 (.sort lvl) _) _ =>
+      lvl.isZero && t1.isAppOf `List && t2.isConstOf `Formula
+  | _ => false
+
+/-- Todas las relaciones de derivabilidad del entorno, descubiertas por tipo. -/
+private def derivRelations : CommandElabM (Array InductiveVal) := do
+  let env ← getEnv
+  let mut out : Array InductiveVal := #[]
+  for (_, info) in env.constants.toList do
+    if let .inductInfo iv := info then
+      if isDerivRelation iv then out := out.push iv
+  return out
+
+/-- Nombres CORTOS de los constructores de nuestro `Derivesᵢ`: la referencia. -/
+private def ownCtorShortNames : CommandElabM (Array Name) := do
+  let env ← getEnv
+  match env.find? `PeanoRF.Calculus.Derivesᵢ with
+  | some (.inductInfo iv) => return iv.ctors.toArray.map (fun c => c.componentsRev.head!)
+  | _ => throwError "el gate no encuentra `PeanoRF.Calculus.Derivesᵢ` — \
+      ¿se ha renombrado el cálculo? El control de constructores depende de él."
+
+/-- Constructores AJENOS prohibidos, calculados: los de cualquier otra relación de
+    derivabilidad cuyo nombre corto no esté entre los de `Derivesᵢ`. -/
+private def foreignForbiddenCtors : CommandElabM (Array (Name × Bool)) := do
+  let own ← ownCtorShortNames
+  let rels ← derivRelations
+  let mut out : Array (Name × Bool) := #[]
+  for iv in rels do
+    if iv.name == `PeanoRF.Calculus.Derivesᵢ then continue
+    for c in iv.ctors do
+      let short := c.componentsRev.head!
+      if own.contains short then continue
+      if benignForeignCtors.contains c then continue
+      -- el Bool dice si es CLÁSICO de nivel objeto (prohibido también en la capa ω)
+      out := out.push (c, classicalCtorShortNames.contains short)
+  return out
+
 
 /-- Prefijos de módulo de las dependencias sibling. Un axioma no-constructivo solo se
     considera HEREDADO si entra a través de una constante definida en uno de estos
@@ -284,9 +349,10 @@ private def inheritsFromDependency (ax : Name) (n : Name) : CommandElabM Bool :=
     Un constructor es una constante ajena (vive en el inductivo de FOL), así que cae en la
     FRONTERA del recorrido — el mismo que usa la procedencia. Por eso este control sale
     casi gratis una vez `frontierOf` existe. -/
-private def forbiddenCtorsUsed (n : Name) : CommandElabM (Array (Name × String × String)) := do
+private def forbiddenCtorsUsed (n : Name) : CommandElabM (Array (Name × Bool)) := do
   let frontier ← frontierOf n
-  return forbiddenConstructors.toArray.filter (fun e => frontier.contains e.1)
+  let forbidden ← foreignForbiddenCtors
+  return forbidden.filter (fun e => frontier.contains e.1)
 
 -- ──────────────────────────────────────────────────────────────
 -- Herramienta puntual
@@ -326,7 +392,7 @@ elab "#assert_no_forbidden_ctor " id:ident : command => do
   let name ← resolveGlobalConstNoOverload id
   let used ← forbiddenCtorsUsed name
   unless used.isEmpty do
-    throwError "'{name}' usa {used.size} constructor(es) prohibido(s): \
+    throwError "'{name}' usa {used.size} constructor(es) que `⊢ᵢ` NO tiene: \
       {used.toList.map (fun e => e.1)}. `#print axioms` NO ve esto."
 
 /-- Barrido de TODA declaración propia de `PeanoRF`:
@@ -364,10 +430,12 @@ elab "#assert_constructive_footprint" : command => do
         if inOmegaLayer then omegaLayerUses := omegaLayerUses + 1
         else omegaViolations := omegaViolations.push (name, a)
     -- CONTROL DE CONSTRUCTORES (lo que el footprint no ve)
-    for (ctor, eje, remedio) in ← forbiddenCtorsUsed name do
-      -- los del eje FINITARIO se toleran en la capa ω declarada; los del OBJETO, nunca
-      unless eje == "FINITARIO" && inOmegaLayer do
-        ctorViolations := ctorViolations.push (name, ctor, s!"[{eje}] {remedio}")
+    for (ctor, esClasico) in ← forbiddenCtorsUsed name do
+      -- Los CLÁSICOS de nivel objeto no se toleran en ninguna parte (M-1, es la tesis).
+      -- El resto —ω-reglas y cualquier regla que `⊢ᵢ` no tenga— sólo en la capa ω.
+      unless (!esClasico) && inOmegaLayer do
+        let eje := if esClasico then "OBJETO" else "FINITARIO/AJENO"
+        ctorViolations := ctorViolations.push (name, ctor, eje)
     -- eje meta
     let bad := axs.filter (fun a =>
       !allowedAxioms.contains a && !objectClassicalAxioms.contains a && !omegaAxioms.contains a)
@@ -413,6 +481,14 @@ elab "#assert_constructive_footprint" : command => do
     logWarning m!"[gate · deuda META heredada] {debtCarriers.size} declaración(es) heredan \
       `Classical.choice`/axiomas sancionados de ROBINSON_PlusPlus. Es deuda AGUAS ARRIBA, \
       no nuestra — pero cuenta: cuando RPP se sanee, poner `metaDebtIsError := true`."
+  -- INVENTARIO: que un cálculo nuevo aguas arriba se VEA, en vez de pasar inadvertido.
+  -- Ésta es la mitad del arreglo que la lista por nombre no podía dar: la otra es que el
+  -- silencio signifique prohibido.
+  let rels ← derivRelations
+  let fbd ← foreignForbiddenCtors
+  logInfo m!"[gate · inventario] {rels.size} relaciones de derivabilidad detectadas POR TIPO: \
+    {rels.toList.map (fun iv => iv.name)} ⇒ {fbd.size} constructores ajenos vigilados, \
+    de ellos {(fbd.filter (fun e => e.2)).size} clásicos de nivel objeto."
   logInfo m!"[gate] OK — {scanned} declaraciones propias verificadas. \
     Eje objeto: intuicionista puro (axiomas Y constructores). Eje finitario: núcleo r.e. \
     ({omegaLayerUses} uso(s) de ω en la capa `PeanoRF.Omega`). \

@@ -15,7 +15,10 @@ import FOL.Derives0
   ## Por qué hace falta un cálculo propio
 
   Ninguno de los dos estratos de aguas arriba sirve para la tesis de este proyecto
-  (`REFERENCE.md` §0bis de ROBINSON_PlusPlus, medido el 2026-09-16):
+  (`REFERENCE.md` §0bis de ROBINSON_PlusPlus; medido el 2026-09-16, revisado el 2026-09-17).
+  ⚠️ Aguas arriba hay ya **cinco** nociones de derivabilidad: a las de abajo se suman
+  `Derives₁` (sin `rewrite_at`) y `Derives₂` (sin `subst`), ambas **clásicas** y
+  equivalentes a `Derives₀`. Ninguna es intuicionista ⇒ `⊢ᵢ` sigue sin duplicado:
 
   | | `FOL.Derives` (`⊢`) | `FOL.Derives₀` (`⊢₀`) | **`⊢ᵢ` (aquí)** |
   |---|---|---|---|
@@ -23,7 +26,7 @@ import FOL.Derives0
   | inducción legítima (M-11) | ⛔ nunca | ✅ | ✅ |
   | finitario | ⛔ `gen_rule` es **constructor** | ✅ | ✅ |
   | solidez | ⛔ **imposible** | ✅ `derives0_soundness` | ✅ **heredada** |
-  | lógica objeto | intuicionista + clásicas aparte | ⛔ **clásica por constructor** | ✅ **intuicionista** |
+  | lógica objeto | ⛔ **clásica por constructor** (desde 2026-09-17; antes, axiomas aparte) | ⛔ **clásica por constructor** | ✅ **intuicionista** |
 
   * **`Derives` no vale**: `FOL/cuarentena/Inconsistencia.lean` demuestra
     `inconsistencia_de_cualquier_solidez` — *cualquier* testigo del enunciado de solidez

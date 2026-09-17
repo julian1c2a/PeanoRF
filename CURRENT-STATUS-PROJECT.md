@@ -1,6 +1,6 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-16
+**Última actualización:** 2026-09-17
 **Autor**: Julián Calderón Almendros
 
 > **Estado: alcance FIJADO; gate de tres ejes en producción; teoría propia por empezar.**
@@ -119,10 +119,13 @@ META heredada de la codificación `String` de RPP, no nuestra.
       una meta **fuera de su lenguaje** (de tipo `D`). Sustituido por `absurd`.
       ⇒ **`derivesI_soundness : propext, Quot.sound`** — la solidez de la lógica
       intuicionista, demostrada intuicionistamente.
-- [ ] ⚠️ **El arreglo vive en el árbol de FOL, SIN COMMITEAR** (`FOL/FOL/Semantics.lean`).
-      Decidir si se commitea allí: limpia también `derives0_soundness`… no, ése conserva su
-      `Classical` legítimo por las tres reglas clásicas, pero sí limpia toda la semántica y
-      beneficia a Henkin y a quien dependa de ella.
+- [x] ~~El arreglo de FOL~~ → aceptado y commiteado allí (`6d47e5b`), blindado en su
+      `check-footprints.bash`.
+- [x] ~~`forbiddenConstructors` por NOMBRE~~ → **reescrito POR TIPO** (ADR-018, 2026-09-17)
+      tras una auditoría que midió **9 de 12 constructores clásicos sin vigilar**. El gate
+      publica ahora un **inventario** de las relaciones de derivabilidad que detecta.
+- [ ] ⬜ Aguas arriba, sin resolver (de FOL): la causa del `Classical` en `Theorems.Eq` (3)
+      y `Tactics.tryMem` (sin medir).
 - [ ] `add_comm`, `mul_*` — ya sin incógnitas de método.
 - [x] ~~Alcance del proyecto~~ → fijado (`PLANNING.md` §1).
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.
@@ -164,6 +167,6 @@ sondeos/                   # Mediciones fuera del build (no cuentan como módulo
 ---
 
 **Autor**: Julián Calderón Almendros
-*Última actualización: 2026-09-16*
+*Última actualización: 2026-09-17*
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)

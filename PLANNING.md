@@ -140,7 +140,9 @@ Justificación completa en `DECISIONS.md` **ADR-016**; medición en `sondeos/REA
 | **H0** | Andamiaje, dependencias, build verde | ✅ 2026-09-06 |
 | **H1** | Directiva fundacional + gate de 3 ejes | ✅ 2026-09-06 |
 | **H2** | **El conjunto de axiomas de HA** sobre `⊢ᵢ`, con contextos finitos (M-8) | ✅ 2026-09-16 |
-| **H3** | **La interpretación `⟦·⟧` + soundness**. ⭐ Medio hecha aguas arriba: `derives0_soundness` está en el build y `⊢ᵢ → ⊢₀` probado ⇒ **componer** | 🔄 siguiente |
+| **H3** | **La interpretación `⟦·⟧` + soundness**, y salió **CONSTRUCTIVA**: `derivesI_soundness` mide `[propext, Quot.sound]` — no por composición, sino por inducción directa sobre los 18 constructores | ✅ 2026-09-16 |
+| **H3′** | **Consistencia SIN semántica**: `consistI_syn`, vía los secuentes sin corte de FOL. Ni un modelo en toda la cadena (ADR-020) | ✅ 2026-09-17 |
+| **H3bis** | **Propiedad de DISYUNCIÓN y de EXISTENCIA** por la barra de Kleene — el primer enunciado que **falla para `⊢₀`**, y con él la separación `⊢ᵢ ≠ ⊢₀` | 🔶 en curso |
 | **H4** | **Reflexión `⌜·⌝` + adecuación + táctica**: el espejo se genera, no se transcribe | ❌ |
 | **H5** | **Volcado del núcleo aritmético** de Peano (suma, producto, orden, divisibilidad, primos) | ❌ |
 | **H6** | **Realizabilidad explícita**: extracción de realizadores hacia Peano | ❌ |
@@ -149,6 +151,14 @@ Justificación completa en `DECISIONS.md` **ADR-016**; medición en `sondeos/REA
 **Orden y por qué**: H2 antes que H3 porque no se puede interpretar lo que no está
 axiomatizado; H3 antes que H4 porque la adecuación se enuncia con `⟦·⟧`; H4 antes que H5
 porque volcar a mano lo que luego se generará es trabajo tirado.
+
+➕ **H3bis se intercaló el 2026-09-17, y por una razón medida**: de los 22 teoremas que
+tenía el proyecto, **ninguno fallaba clásicamente**. Todos valían palabra por palabra para
+`⊢₀`, porque sólo usan los 18 constructores compartidos — sustituyendo `⊢ᵢ` por `⊢₀` en
+todo el árbol, **todo seguía compilando**. La tesis del proyecto era arquitectónica: la
+sostenían la elección de cálculo y el gate, no un teorema. Automatizar el volcado (H4)
+antes de tener un solo teorema que justifique por qué este espejo merece existir sería
+optimizar el transporte antes de saber qué se transporta.
 
 ---
 
@@ -166,7 +176,7 @@ porque volcar a mano lo que luego se generará es trabajo tirado.
 
 ## 8. Backlog
 
-- [ ] Remoto en GitHub.
+- [x] ~~Remoto en GitHub.~~ → `github.com/julian1c2a/PeanoRF`, con CI verde.
 - [ ] Activar el control `[B]` de `check-doc-sync.bash` (`SYMBOL_PREFIXES`) cuando existan
       familias de símbolos propias.
 - [ ] Abrir el árbol `doc/REFERENCE-{tema}.md` (ADR-007) cuando `REFERENCE.md` deje de

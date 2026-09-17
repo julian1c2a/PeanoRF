@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-16
+**Última actualización:** 2026-09-17
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -10,9 +10,32 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H3 — la interpretación.** Y ha quedado medio regalada por el trabajo de aguas arriba:
-`derives0_soundness : Γ ⊢₀ f → Γ ⊨ f` **está en el build**, y `derivesI_to_derives0` ya
-está probado ⇒ la solidez de `⊢ᵢ` sale de **componer**.
+**H3bis — terminar la propiedad de disyunción**, que es donde está el bloqueo y dónde
+está medido.
+
+Hecho ya (`Calculus/Slash.lean`, 🔶 parcial): `fdepth`, `fdepth_subst`, `Slash` por
+recursión bien fundada con sus ocho ecuaciones, **L1** `slash_derives` y `cut_context`.
+Todo en `[propext]` / `[propext, Quot.sound]`.
+
+**Falta L2**: `Γ ⊢ᵢ f` con `Γ` barrado ⟹ `Slash f`. El obstáculo está localizado:
+
+> el enunciado hay que generalizarlo **sobre sustituciones** —
+> `Γ ⊢ᵢ f ⟹ ∀ σ, (∀ g ∈ Γ, Slash (gσ)) → Slash (fσ)` —
+> y eso pide **SUSTITUCIÓN PARALELA** sobre la sintaxis, que **FOL no tiene** (medido).
+
+⇒ Encargado a FOL: `doc/ENCARGO-FOL-2026-09-17.md`. **Nada aplicado en su árbol.**
+
+⚠️ Al retomar, lo primero es **mirar si ha llegado**: si está, L2 cierra con inducción
+estructural y detrás vienen la propiedad de existencia y la separación `⊢ᵢ ≠ ⊢₀`. Si no
+está, la alternativa es escribir la sustitución paralela aquí como duplicado declarado —
+peor, y sólo si hay prisa.
+
+⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**. FOL se mueve rápido:
+18 commits en las 24 h del 16 al 17.
+
+➕ Mi primer diagnóstico del obstáculo —«indexar las derivaciones por ALTURA, como `LKh`
+en el Hauptsatz»— era **FALSO**. Lo descartó desarrollar los casos. Si aparece esa versión
+en alguna nota, es la equivocada.
 
 ---
 

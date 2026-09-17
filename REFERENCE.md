@@ -93,7 +93,8 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Omega/Basic.lean` | `PeanoRF.Omega` | `PeanoRF.Prelim` | ✅ Completo |
 | `Calculus/DerivesI.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim`, `FOL.Derives0` | ✅ Completo |
 | `Calculus/Eq.lean` | `PeanoRF.Calculus` | `PeanoRF.Calculus.DerivesI` | ✅ Completo |
-| `Calculus/Soundness.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Soundness0` | 🔄 In progress |
+| `Calculus/Soundness.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Semantics` | ✅ Completo |
+| `Calculus/Consistency.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Finitary0` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
 
@@ -194,7 +195,10 @@ constructor ajeno cuyo nombre corto no esté entre los de `Derivesᵢ`**, y marc
 constructor — no por cómo se llama. El silencio significa **prohibido**, también en la
 capa ω, que ya no es comodín: necesita entrada explícita en `omegaAllowedForeignCtors`.
 Publica en cada build un **inventario** con las relaciones detectadas y los
-**casi-candidatos** que el telescopio rechazó.
+**casi-candidatos** que el telescopio rechazó, y su **ALCANCE**: los módulos propios que
+tiene en el entorno. Esto último lo consume el control [E] de `check-doc-sync.bash`,
+porque los imports de este fichero son una lista a mano y un módulo que no llegue hasta
+aquí **no se vigila** sin que nada lo diga.
 
 ---
 
@@ -303,23 +307,54 @@ Las tres primeras usan la misma táctica: un testigo `f` con `#0` y `liftTerm 0 
 ### 3.3quater Calculus/Soundness.lean — H3, el teorema de transferencia
 
 **Namespace**: `PeanoRF.Calculus`
-**Dependencies**: `PeanoRF.Calculus.DerivesI`, `FOL.Soundness0`
-**Last updated**: 2026-09-16
-**Status**: 🔄 In progress (heredado; falta la versión constructiva)
+**Dependencies**: `PeanoRF.Calculus.DerivesI`, `FOL.Semantics`
+**Last updated**: 2026-09-17
+**Status**: ✅ Completo
 **@importance**: **foundational**
 
 | nombre | notación matemática | firma Lean 4 | footprint |
 |---|---|---|---|
-| `derivesI_soundness` | `Γ ⊢ᵢ f ⟹ Γ ⊨ f` | `(Γ ⊢ᵢ f) → satisfies Γ f` | `propext, Classical.choice, Quot.sound` |
-| `derivesI_consistent` | `[] ⊬ᵢ ⊥` | `([] ⊢ᵢ ⊥) → False` | idem |
+| `derivesI_soundness` | `Γ ⊢ᵢ f ⟹ Γ ⊨ f` | `(Γ ⊢ᵢ f) → satisfies Γ f` | **`propext, Quot.sound`** |
+| `derivesI_consistent` | `[] ⊬ᵢ ⊥` | `([] ⊢ᵢ ⊥) → False` | **`propext, Quot.sound`** |
 
 **Esto es el espejo hecho teorema**: de `HA ⊢ᵢ φ` se sigue que φ es verdadera en todo
 modelo, y en particular en el estándar. Es exactamente lo que `FOL.Derives` **no podía
 tener** (ADR-017).
 
-🔭 **Conjetura abierta** (ADR-019): el `Classical.choice` es probablemente el precio exacto
-de las tres reglas clásicas de `⊢₀`. Una inducción directa sobre los 18 constructores de
-`⊢ᵢ` debería dar footprint `⊆ {propext, Quot.sound}`.
+🏁 **Cerrado el 2026-09-16.** La prueba es una **inducción directa sobre los 18
+constructores**, no la composición con `derives0_soundness`. La conjetura de ADR-019 —que
+el `Classical.choice` era el precio exacto de las tres reglas clásicas— se dio primero por
+REFUTADA sobre una cadena contaminada y resultó CIERTA: el `Classical` venía de un `omega`
+en `FOL.Metamath.Semantics.shift_updateEnv_comm`, ya corregido aguas arriba (`6d47e5b`).
+
+---
+
+### 3.3quinquies Calculus/Consistency.lean — consistencia SIN semántica
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Calculus.DerivesI`, `FOL.Finitary0`
+**Last updated**: 2026-09-17
+**Status**: ✅ Completo
+**@importance**: **foundational**
+
+| nombre | notación matemática | firma Lean 4 | footprint |
+|---|---|---|---|
+| `consistI_syn` | `[] ⊬ᵢ ⊥` | `([] ⊢ᵢ ⊥) → False` | `propext, Quot.sound` |
+| `notP_syn` | `[] ⊬ᵢ P` | `([] ⊢ᵢ atom "P" []) → False` | `propext, Quot.sound` |
+
+El mismo enunciado que `derivesI_consistent`, por la vía **puramente sintáctica**: el
+puente `⊢ᵢ → ⊢₀` compuesto con `FOL.Finitary0.derives0_consistent_fin`, que aguas arriba
+sale de pasar a un cálculo de secuentes y ver que **ningún secuente sin corte concluye
+`⊥`**. En toda la cadena no aparece un modelo.
+
+⚠️ **La cifra NO mejora**: las dos rutas miden `[propext, Quot.sound]`. Lo que cambia es de
+qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de «no lo usa»
+— la misma clase de ceguera que M-11.
+
+⛔ **No es la consistencia de HA**, que es el teorema de Gentzen y pide inducción hasta
+`ε₀`: fuera del núcleo finitario (ADR-016). Aquí el contexto es **vacío**.
+
+⭐ `notP_syn` es **la mitad** de la separación `⊢ᵢ` ≠ `⊢₀` que persigue H3bis.
 
 ---
 

@@ -15,6 +15,29 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-17 (c) · la consistencia sin semántica, y el gate que no veía un módulo
+
+**`Calculus/Consistency.lean`** (ADR-020) — módulo nuevo
+- `consistI_syn : ¬([] ⊢ᵢ ⊥)` por la vía **sintáctica**: puente `⊢ᵢ → ⊢₀` compuesto con
+  `FOL.Finitary0.derives0_consistent_fin` (secuentes sin corte). **Ni un modelo en toda la
+  cadena.** ⚠️ La cifra no mejora — las dos rutas miden `[propext, Quot.sound]`— y eso se
+  dice en el módulo: `#print axioms` no distingue «usa un modelo» de «no lo usa».
+- ⛔ No es la consistencia de HA (Gentzen, `ε₀`): el contexto es vacío.
+- `notP_syn`: `⊢ᵢ` tampoco prueba un átomo. Es media separación `⊢ᵢ ≠ ⊢₀`.
+
+**El gate no veía el módulo nuevo** (ADR-021)
+- Sus imports son una lista a mano; `Consistency` entró en el build y el gate siguió
+  diciendo «80 declaraciones verificadas» sobre los ocho módulos que sí veía.
+- El gate publica ahora su **ALCANCE**, y `check-doc-sync.bash` gana el control **[E]**,
+  bloqueante, que lo compara con los ficheros del árbol y dice qué `import` falta.
+  Probado retirando el import a propósito.
+
+**Al día**: REFERENCE §1.1 y §3.3quinquies; §3.3quater estaba **desfasada** (decía
+`Classical.choice` y «conjetura abierta» sobre algo cerrado el 16). Cifras canónicas:
+**42 jobs · 9 módulos · 0 sorry · 0 axiom**. Gate: 7 relaciones de derivabilidad vigiladas.
+
+Sin tocar FOL ni ROBINSON_PlusPlus.
+
 ### 2026-09-17 (tarde) · auditoría de COBERTURA — el gate deja de reconocer una sola forma
 
 **Gate** (ADR-018 rev. b, `PeanoRF/Meta/AxiomCheck.lean`)

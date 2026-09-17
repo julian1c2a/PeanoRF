@@ -17,6 +17,8 @@
 # sueltas en la prosa de cabecera) y [B] (símbolos muertos) son AVISOS que piden juicio: hay
 # menciones legítimas de cifras y símbolos que ya no son los vigentes — históricas,
 # planificadas, descartadas. ⚠️ Y si el control NO PUEDE MEDIR, es rojo, no verde.
+# [E] comprueba que todo módulo del árbol está DENTRO del entorno del gate de pureza:
+# uno que no llegue hasta él por imports no se verifica, y el gate no lo dice.
 #
 # Uso:
 #   bash check-doc-sync.bash            # comprobación completa
@@ -58,6 +60,16 @@ SYMBOL_PREFIXES=''
 # Aquí: los árboles de las tres dependencias sibling, para que [B] no marque como
 # muerto un símbolo que vive aguas arriba.
 EXTRA_DECL_DIRS='../FOL/FOL ../ROBINSON_PlusPlus/ROBINSON_PlusPlus ../Peano/Peano'
+
+# [E] Marcador que el gate de pureza imprime con los módulos que tiene en su entorno.
+# Vacío ⇒ se salta el control [E]. Ver PeanoRF/Meta/AxiomCheck.lean.
+# ⚠️ Nace de un fallo real (2026-09-17): `Calculus/Consistency` se creó, entró en el build
+# y el gate siguió diciendo «OK» sobre los 8 módulos que sí veía. El import a AxiomCheck es
+# una LISTA A MANO, y una lista a mano que no se actualiza no da error: da silencio.
+GATE_SCOPE_MARKER='[gate · alcance]'
+# Módulos que legítimamente NO aparecen en ese alcance: el propio módulo del gate (se está
+# elaborando cuando lo imprime) y las plantillas.
+GATE_SCOPE_EXEMPT='PeanoRF.Meta.AxiomCheck PeanoRF._template'
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ─── 0. DETECCIÓN DEL PROYECTO (misma lógica que gen-root.bash) ─────────────
@@ -78,10 +90,15 @@ SORRY=$(grep -rE '(^|[^a-zA-Z_`])sorry([^a-zA-Z_`]|$)' "$LIB" --include=*.lean 2
         | grep -vE '^[^:]*:\s*(--|/-|-/|\*)' | wc -l)
 AXIOMS=$(grep -rhE '^axiom ' "$LIB" --include=*.lean 2>/dev/null | wc -l)
 
+BUILDLOG=$(mktemp)
 if [ "$QUICK" = "1" ]; then
   JOBS=""
+  : > "$BUILDLOG"
 else
-  JOBS=$(lake build 2>&1 | grep -oE "Build completed successfully \([0-9]+ jobs\)" | grep -oE "[0-9]+" || true)
+  # ⚠️ La salida del build se GUARDA, no se tira: de ella salen dos cosas, la cifra de
+  # `jobs` y el ALCANCE que publica el gate (control [E]).
+  lake build > "$BUILDLOG" 2>&1 || true
+  JOBS=$(grep -oE "Build completed successfully \([0-9]+ jobs\)" "$BUILDLOG" | grep -oE "[0-9]+" || true)
 fi
 
 echo "════ VERDAD DEL CÓDIGO ($LIB) ════"
@@ -257,6 +274,44 @@ for f in REFERENCE.md doc/REFERENCE-*.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.
     || { echo "  ✗ $f sin marca de tiempo"; D_FAIL=1; }
 done
 [ "$D_FAIL" = "0" ] && echo "  ✓ todos los docs técnicos llevan marca de tiempo" || FAIL=1
+
+# ─── 6. [E] ALCANCE DEL GATE ────────────────────────────────────────────────
+# Todo módulo del árbol tiene que estar DENTRO del entorno del gate de pureza. Si no
+# llega hasta él por imports, sus declaraciones no se verifican — y el gate no lo dice:
+# sigue anunciando «OK» sobre las que sí ve, que es la peor forma de fallar.
+echo
+echo "════ [E] ALCANCE DEL GATE ════"
+if [ -z "$GATE_SCOPE_MARKER" ]; then
+  echo "  — desactivado (GATE_SCOPE_MARKER vacío en la CONFIGURACIÓN de este script)"
+elif [ "$QUICK" = "1" ]; then
+  echo "  ⚠️  NO COMPROBADO (--quick: sin build no hay salida del gate que leer)"
+else
+  SCOPE=$(sed -n "/$(printf '%s' "$GATE_SCOPE_MARKER" | sed 's/[][\.*^$/]/\\&/g')/,/\[gate\] OK/p" "$BUILDLOG" || true)
+  if [ -z "$SCOPE" ]; then
+    echo "  ✗ el gate NO publicó su alcance ('$GATE_SCOPE_MARKER' no aparece en el build)."
+    echo "      O el gate no corrió, o se le quitó la línea. CONTROL VACÍO, no verde."
+    FAIL=1
+  else
+    E_FAIL=0
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      M=$(echo "${f%.lean}" | sed 's|/|.|g')
+      case " $GATE_SCOPE_EXEMPT " in *" $M "*) continue ;; esac
+      echo "$SCOPE" | grep -qF "$M" || {
+        echo "  ✗ $M está en el árbol pero FUERA del alcance del gate"
+        echo "      → añade 'import $M' en PeanoRF/Meta/AxiomCheck.lean"
+        E_FAIL=1
+      }
+    done <<< "$(find "$LIB" -name '*.lean' ! -name '_template.lean' 2>/dev/null | sed 's|^\./||')"
+    if [ "$E_FAIL" = "0" ]; then
+      N=$(find "$LIB" -name '*.lean' ! -name '_template.lean' 2>/dev/null | wc -l)
+      echo "  ✓ los $N módulos del árbol están dentro del alcance del gate"
+    else
+      FAIL=1
+    fi
+  fi
+fi
+rm -f "$BUILDLOG"
 
 # ─── RESUMEN ────────────────────────────────────────────────────────────────
 echo

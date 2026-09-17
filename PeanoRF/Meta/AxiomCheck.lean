@@ -87,8 +87,14 @@ import Lean.Util.CollectAxioms
 -- El barrido necesita ver TODAS las declaraciones propias: se importa aquí cada
 -- módulo de la librería MENOS el barrel raíz `PeanoRF.lean` — que importa a este el
 -- último — para evitar el ciclo. Añadir aquí cada módulo nuevo.
+-- ⚠⚠ ESTA LISTA ES EL ALCANCE DEL GATE. Un módulo del proyecto que no llegue hasta aquí
+-- por imports **no se vigila**, y el gate no lo dice: sigue anunciando «OK» sobre los que
+-- sí ve. Pasó el 2026-09-17 con `Calculus/Consistency`, recién creado. Ahora hay un
+-- control que lo caza: el gate publica su ALCANCE y `check-doc-sync.bash` [E] lo compara
+-- con los ficheros del árbol.
 import PeanoRF.Prelim
 import PeanoRF.Calculus.DerivesI
+import PeanoRF.Calculus.Consistency
 import PeanoRF.Calculus.Eq
 import PeanoRF.Calculus.Soundness
 import PeanoRF.Omega.Basic
@@ -630,6 +636,11 @@ elab "#assert_constructive_footprint" : command => do
     logInfo m!"[gate · inventario] ⚠️ {near.size} casi-candidato(s) que el telescopio \
       RECHAZÓ — recursivos, acaban en `Prop` y hablan de fórmulas: {near.toList}. \
       Revisar si alguno es de verdad un cálculo."
+  -- ALCANCE: qué módulos propios están de verdad en el entorno del gate. Lo consume el
+  -- control [E] de `check-doc-sync.bash`, que lo compara con los ficheros del árbol: un
+  -- módulo sin import hasta aquí NO se vigila, y sin esta línea no se notaría.
+  let ownMods := (mods.filter (fun m => (`PeanoRF).isPrefixOf m)).qsort (fun a b => a.toString < b.toString)
+  logInfo m!"[gate · alcance] {ownMods.size + 1} módulos propios vigilados:     {ownMods.toList} + PeanoRF.Meta.AxiomCheck (este)."
   logInfo m!"[gate] OK — {scanned} declaraciones propias verificadas. \
     Eje objeto: intuicionista puro (axiomas Y constructores). Eje finitario: núcleo r.e. \
     ({omegaLayerUses} uso(s) de ω en la capa `PeanoRF.Omega`). \

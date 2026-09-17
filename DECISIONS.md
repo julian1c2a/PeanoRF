@@ -760,6 +760,88 @@ las dicotomías de `Nat`) eran todos inocentes: el culpable no aparecía porque 
 
 ---
 
+## ADR-020: La consistencia de `⊢ᵢ`, también por la vía SINTÁCTICA
+
+**Fecha**: 2026-09-17
+**Estado**: Aceptado
+
+**Contexto**: `derivesI_consistent` (ADR-019) sale de la solidez: si `[] ⊢ᵢ ⊥`, entonces
+`⊥` sería verdadera en todo modelo. Funciona y mide limpio — pero para llegar **necesita un
+modelo**, es decir, presupone justamente la clase de objeto de la que la teoría formal
+pretende hablar. Para un proyecto cuyo cometido es fundacional, eso es una dependencia que
+conviene poder evitar, aunque no se note en el footprint.
+
+El 2026-09-17 aguas arriba cerró `FOL.Finitary0.derives0_consistent_fin` (su ADR-053): la
+consistencia de `⊢₀` por la vía sintáctica — pasar a un cálculo de secuentes y comprobar
+que ningún secuente **sin corte** concluye `⊥`.
+
+**Decisión**: añadir `Calculus/Consistency.lean` con `consistI_syn`, el mismo enunciado por
+composición del puente `⊢ᵢ → ⊢₀` con ese teorema. Las dos rutas conviven; ninguna sustituye
+a la otra.
+
+**Justificación**: son **dos hechos distintos** aunque el enunciado coincida. Uno dice «no
+hay derivación de ⊥ porque ⊥ no es verdadera en ningún modelo»; el otro, «no hay derivación
+de ⊥, y punto, mirando sólo la forma de las derivaciones». Para el espejo de PeanoRF importa
+tener el segundo.
+
+**Consecuencias**:
+- ⚠️ **La cifra no mejora**: ambas miden `[propext, Quot.sound]`. Se documenta así, y
+  explícitamente, porque la tentación de vender el módulo como una mejora de footprint
+  sería exactamente el tipo de afirmación que este proyecto mide antes de escribir.
+  `#print axioms` **no distingue** «usa un modelo» de «no lo usa» — misma ceguera que M-11.
+- ⛔ **No es la consistencia de HA.** Es la de la lógica, con contexto **vacío**. La de HA
+  es Gentzen y pide inducción hasta `ε₀`, fuera del núcleo finitario (ADR-016). Decirlo en
+  el módulo no es pedantería: confundirlas sería demostrar de más justo donde M-9 vigila.
+- El import de `FOL.Finitary0` mete en el entorno `LK₀`, `LKc`, `LKh`, `Derives₁` y
+  `Derives₂`. El inventario del gate pasa de 3 relaciones a **7**, y las vigila todas: es
+  exactamente para esto que el descubrimiento es por telescopio (ADR-018 rev. b).
+- El build pasa de 30 a **42 jobs**.
+- ⭐ `notP_syn` (que `⊢ᵢ` no prueba un átomo) es **la mitad** de la separación que persigue
+  H3bis: con la propiedad de disyunción, mata una de las dos ramas de `P ∨ ¬P`.
+
+---
+
+## ADR-021: El gate publica su ALCANCE, porque su lista de imports es una lista a mano
+
+**Fecha**: 2026-09-17
+**Estado**: Aceptado
+
+**Contexto**: el gate barre toda declaración cuyo módulo empiece por `PeanoRF`, pero
+**sólo las que están en su entorno**, y su entorno lo fijan los `import` escritos a mano en
+la cabecera de `Meta/AxiomCheck.lean` (no puede importar el barrel raíz: sería un ciclo).
+
+Medido el 2026-09-17: al crear `Calculus/Consistency.lean` el build pasó a 42 jobs y todo
+salió verde — y el gate siguió diciendo **«80 declaraciones propias verificadas»** sobre los
+ocho módulos que sí veía. Las dos declaraciones nuevas **no las vigilaba nadie**, y nada
+lo dijo.
+
+🔑 Es la patología del día otra vez: una lista mantenida a mano cuyo **silencio significa
+«no vigilado»**, y encima con el gate anunciando OK.
+
+**Decisión**: dos piezas, porque una sola no cierra.
+
+1. El gate **publica su ALCANCE** en cada build: cuántos módulos propios tiene en el
+   entorno, y cuáles.
+2. `check-doc-sync.bash` gana el control **[E]**, BLOQUEANTE: cada `.lean` del árbol
+   (menos plantillas y el propio módulo del gate) tiene que aparecer en ese alcance; si no,
+   dice exactamente qué `import` falta.
+
+**Justificación**: la alternativa «acordarse de añadir el import» es la que acaba de fallar.
+Publicar el alcance sin comprobarlo tampoco basta: sería una cifra más que nadie lee. El
+que manda es [E], y lo que el gate publica es su **entrada**.
+
+**Consecuencias**:
+- Probado (ADR-015) retirando el import a propósito: [E] responde
+  `✗ PeanoRF.Calculus.Consistency está en el árbol pero FUERA del alcance del gate`.
+- [E] **no funciona con `--quick`** — sin build no hay salida del gate que leer — y lo dice
+  en vez de callarse, como el resto de controles desde esta mañana.
+- `check-doc-sync.bash` guarda ahora la salida del build en un temporal en vez de tirarla:
+  de ahí salen la cifra de `jobs` y el alcance.
+- ⚠️ Es un control **propio de este proyecto**: va tras `GATE_SCOPE_MARKER`, vacío en la
+  plantilla, y ahí el control se anuncia como desactivado.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

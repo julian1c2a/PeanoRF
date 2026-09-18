@@ -337,3 +337,72 @@ un módulo temporal usando `Derives.gen_rule` dentro de `PeanoRF.Omega`:
 
 `Derives₀` conserva sus 21 constructores ⇒ `⊢ᵢ` sigue siendo exactamente `⊢₀` menos las
 tres clásicas, y el puente sigue en pie.
+
+
+---
+
+## Medición del 2026-09-18 — ¿es viable **H3ter** (la DP para HA) por la vía barata?
+
+Ficheros: `numerals_probe.lean` (footprints de la capa de numerales de RPP) y
+`numeralI_spike.lean` (el port de `numeral_add` a `⊢ᵢ`).
+
+### La pregunta
+
+H3ter —la propiedad de disyunción **para HA**, no sólo para la lógica— se reduce a **un
+lema**: `ha_ctx_slashed`, porque L2 ya está enunciada para contexto arbitrario. Su caso
+duro, las instancias de inducción, pide que **todo término cerrado sea demostrablemente
+igual a un numeral**, y eso pide los homomorfismos `numeral_add`/`numeral_mul`/`numeral_pow`.
+¿Se pueden reusar los de ROBINSON_PlusPlus?
+
+### ⛔ Reusar: IMPOSIBLE, y no por el footprint
+
+Todos están enunciados sobre **`⊢`** (`FOL.Derives`):
+
+```lean
+theorem numeral_add (a b : Nat) : axioms ⊢ (add (numeral a) (numeral b) =eq numeral (a + b))
+```
+
+`⊢` es la HERRAMIENTA, no el SUJETO (ADR-017), y el puente va `⊢ᵢ → ⊢₀ → ⊢` **en un solo
+sentido**. Lo suyo no baja a lo nuestro. La vía barata no existe, y no por contaminación
+sino por el cálculo.
+
+### 📏 Los footprints, que sí dicen algo útil
+
+| símbolo (RPP) | footprint | ¿ω? |
+|---|---|---|
+| `numeral` / `numeralM` (def) | **ningún axioma** — es sintaxis pura | — |
+| `numeral_add` | `propext, Classical.choice, Quot.sound` | **no** |
+| `numeral_mul` | idem | **no** |
+| `numeral_pow` | idem | **no** |
+| `numeral_lt` | idem | **no** |
+| `numeral_ne` | **+ `ex_elim, imp_intro, raa, ax_induction_prim`** | ⛔ **sí** |
+
+⭐ Los tres homomorfismos que hacen falta van por **inducción META**, no por `ax_induction`,
+y salen limpios de ω. El único contaminado es `numeral_ne` —la **distinción** de numerales—
+y **no está en el camino**: para «término cerrado = numeral» no hace falta.
+
+El `Classical.choice` es la deuda heredada de siempre (viene de `axioms`, por la
+codificación `String`), no de las pruebas.
+
+### ✅ Portar: BARATO, y esto está medido, no estimado
+
+`numeralI_spike.lean` porta `numeral_add` a `⊢ᵢ`. **22 líneas, a la primera**, copiando el
+patrón de `HA/Arith.lean`:
+
+```
+'PeanoRF.HA.numeralI_add' depends on axioms: [propext, Classical.choice, Quot.sound]
+```
+
+El **mismo** footprint que la versión de RPP sobre `⊢`. Los ingredientes ya estaban todos:
+`ax'` da cualquier axioma de Q⁺⁺, `specI` instancia, y `eqI_trans`/`eqI_congr_succ` cierran.
+Y `numeralM` vive en la capa **Minimal**, que ya importábamos — coste de import **cero**.
+
+### Veredicto
+
+**H3ter es viable por el port.** El lenguaje de Q⁺⁺ tiene cinco símbolos de función
+(`zero`, `succ`, `add`, `mul`, `pow`; `one`/`two` son abreviaturas), así que son **tres
+homomorfismos** que portar, los tres del mismo patrón que el spike.
+
+⚠️ Lo que sigue siendo incógnita es `closed_term_eq_numeral` —inducción sobre la estructura
+del término—, que es nuestra y nueva. Pero **no tiene bloqueo aguas arriba**, que era
+justo lo que esta medición venía a decidir.

@@ -3,7 +3,7 @@
 **Última actualización:** 2026-09-17
 **Autor**: Julián Calderón Almendros
 
-> **Estado: alcance FIJADO; gate de tres ejes en producción; teoría propia por empezar.**
+> **Estado: H3bis cerrado — la separación `⊢ᵢ ≠ ⊢₀` es un TEOREMA; siguiente, H4.**
 > PeanoRF vuelca Peano al lenguaje FOL⁼ + ROB++ de forma constructiva: un **espejo** donde
 > lo demostrado se conserva en Peano (`PLANNING.md` §1). El **núcleo es HA finitaria** y la
 > ω-lógica vive aislada y contada en `PeanoRF.Omega.*` (**ADR-016**).
@@ -31,9 +31,15 @@
 > una demostración. Ya no.
 >
 > Detrás van la **propiedad de disyunción** (`disjunction_property`) y la **de existencia**
-> (`existence_property`) — las dos marcas que separan HA de PA, y la sombra sintáctica de la
-> realizabilidad: el testigo de un existencial demostrado **es** el cálculo que el lado
-> Peano del espejo tendría que ejecutar.
+> (`existence_property`), y la segunda es la sombra sintáctica de la realizabilidad: el
+> testigo de un existencial demostrado **es** el cálculo que el lado Peano del espejo
+> tendría que ejecutar.
+>
+> ⛔ **Las dos son de la LÓGICA `⊢ᵢ`, sobre contexto VACÍO — no son las de HA.** Son las
+> marcas que en general separan HA de PA, pero **para HA no se siguen**: las instancias de
+> inducción viven en `HA.ctx`, y barrar el esquema de inducción es el caso difícil y está
+> sin hacer. Misma reserva que lleva `consistI_syn`; se corrigió el 2026-09-18 al
+> reauditar, porque el listón sube igual para los resultados que gustan.
 >
 > ⚠️ Al construirlo, el gate cazó un `Classical.choice` **propio** — un `simp` en
 > `upS_singleS` — que contaminaba siete declaraciones. Reescrito con `if_pos`/`if_neg`

@@ -642,11 +642,31 @@ theorem slash_of_derives {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) :
                         | zero => exact absurd rfl hn
                         | succ m => rfl) heq).mp h1
 
-/-! ## 🏁 Las dos propiedades, y la separación -/
+/-! ## 🏁 Las dos propiedades, y la separación
 
-/-- 🏁 **LA PROPIEDAD DE DISYUNCIÓN.**
+    ## ⛔ Lo que esto NO es, y decirlo importa
 
-    `⊢₀` **no la tiene**: prueba `P ∨ ¬P` sin probar ninguna de las dos ramas. -/
+    Las dos propiedades se demuestran sobre **CONTEXTO VACÍO**: son las de la **lógica**
+    `⊢ᵢ`, no las de **HA**.
+
+    Para HA **no se siguen**. Las instancias de inducción viven en `HA.ctx` (ADR-016), y L2
+    sólo da la barra de la conclusión **si cada hipótesis del contexto está barrada**. Barrar
+    el esquema de inducción es precisamente el caso difícil, y no está hecho.
+
+    ⚠️ Es la misma reserva que lleva escrita `Calculus/Consistency.lean` para `consistI_syn`
+    — y esa se escribió el mismo día que ésta se olvidó. Queda anotado: **el listón sube
+    igual para los resultados que gustan.** De un enunciado sobre `[]` a uno sobre `HA.ctx`
+    hay exactamente el trabajo que separa M-9 de una afirmación de más.
+
+    Lo que SÍ queda demostrado, y es lo que sostiene la tesis: **`⊢ᵢ` y `⊢₀` no son el
+    mismo cálculo** (`derivesI_ne_derives0`). Eso sí es sobre contexto vacío y sí es un
+    teorema. -/
+
+/-- 🏁 **LA PROPIEDAD DE DISYUNCIÓN — de la LÓGICA `⊢ᵢ`, sobre contexto vacío.**
+
+    `⊢₀` **no la tiene**: prueba `P ∨ ¬P` sin probar ninguna de las dos ramas.
+
+    ⛔ **No es la de HA**: ver la reserva de la sección. -/
 theorem disjunction_property {A B : Formula}
     (h : ([] : List Formula) ⊢ᵢ Formula.or A B) :
     (([] : List Formula) ⊢ᵢ A) ∨ (([] : List Formula) ⊢ᵢ B) := by
@@ -656,7 +676,8 @@ theorem disjunction_property {A B : Formula}
   · exact Or.inl (slash_derives A ha)
   · exact Or.inr (slash_derives B hb)
 
-/-- 🏁 **LA PROPIEDAD DE EXISTENCIA**: de un existencial demostrado sale un TESTIGO.
+/-- 🏁 **LA PROPIEDAD DE EXISTENCIA** — también sobre contexto vacío: de un existencial
+    demostrado sale un TESTIGO.
 
     Es la sombra sintáctica de la realizabilidad (ADR-016): el testigo `t` es el cómputo
     que el lado Peano del espejo tendría que ejecutar. -/

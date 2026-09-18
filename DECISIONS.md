@@ -893,7 +893,10 @@ existía. Se abstrae la variable `k` al índice 0 con
 
 **Consecuencias**:
 - ✅ El encargo a FOL se queda sólo con la sustitución paralela y `formulaComplexity`.
-  **La regla de Leibniz indexada ya no se pide**: se resta del encargo.
+  ⚠️ **Corrección del 2026-09-18**: la primera redacción decía «se resta del encargo», y
+  eso era falso — la regla de Leibniz indexada **nunca estuvo** en
+  `doc/ENCARGO-FOL-2026-09-17.md`. Nunca llegó a pedirse porque se derivó antes. El
+  encargo se actualiza por otra razón: lo que pedía **ya está implementado aquí**.
 - ⚠️ Y queda la observación aprovechable para ellos: cuando quieran la propiedad de
   disyunción para su cálculo, `Derives₀.subst` les planteará exactamente el mismo problema,
   y la misma solución sirve.

@@ -385,10 +385,16 @@ ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teo
 
 | **`slash_eq_congr`** | la barra no distingue términos demostrablemente iguales | `propext, Quot.sound` |
 | **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
-| 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` | `propext, Quot.sound` |
-| 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` | `propext, Quot.sound` |
+| 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
+| 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
 | `notNotP_syn` | `[] ⊬ᵢ ¬P` | `propext, Quot.sound` |
 | 🏁🏁🏁 **`derivesI_ne_derives0`** | `∃φ, [] ⊢₀ φ ∧ [] ⊬ᵢ φ` | `propext, Quot.sound` |
+
+⛔ **Las dos propiedades son de la LÓGICA, sobre contexto VACÍO.** Para **HA** no se
+siguen: las instancias de inducción viven en `HA.ctx` y L2 exige que cada hipótesis del
+contexto esté barrada — barrar el esquema de inducción es el caso difícil, y está sin
+hacer. (Reserva añadida el 2026-09-18 al reauditar: faltaba, y la análoga de `consistI_syn`
+se había escrito el mismo día.)
 
 🏁 **Cerrado el 2026-09-17.** El testigo de la separación es `P ∨ ¬P`: `⊢₀` lo prueba
 (`FOL.Propositional0.derives0_em_ctx`, y **sin `Classical.choice`**) y `⊢ᵢ` no, porque por la

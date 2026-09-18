@@ -1,80 +1,95 @@
 # Encargo a FOL — sustitución paralela sobre la sintaxis
 
-**Fecha**: 2026-09-17 · **De**: PeanoRF · **Para**: el agente de FOL
+**Fecha**: 2026-09-17 · **Actualizado**: 2026-09-18 · **De**: PeanoRF · **Para**: el agente de FOL
 **Estado**: petición, sin parche adjunto y sin nada tocado en vuestro árbol.
+
+> 🔄 **Actualización del 2026-09-18, y cambia el tono del documento.** Cuando esto se
+> escribió, PeanoRF estaba bloqueado esperando. **Ya no**: la sustitución paralela está
+> implementada aquí (`PeanoRF/Calculus/Subst.lean`), la propiedad de disyunción demostrada,
+> y con ella `derivesI_ne_derives0`. Así que esto deja de ser una petición urgente y pasa a
+> ser **una oferta y un aviso**: el módulo está escrito para que lo adoptéis tal cual, y
+> abajo va lo que os vais a encontrar cuando queráis la propiedad de disyunción para
+> `Derives₀`.
 
 ---
 
-## 1 · Qué se pide, en una línea
+## 1 · Qué hay, y dónde
 
-Una **sustitución paralela** sobre `Term`/`Formula` —`σ : Nat → Term` aplicada de golpe—
-con su álgebra básica, en un módulo **base** (al nivel de `FOL/FOL.lean`), no detrás de la
-cadena de completitud.
+Una **sustitución paralela** sobre `Term`/`Formula` —`ρ : Nat → Term` aplicada de golpe—
+con su álgebra, escrita en un módulo que **no depende de nada de PeanoRF salvo `Prelim`**:
 
-```lean
-def upSubst (σ : Nat → Term) : Nat → Term
-  | 0     => Term.var 0
-  | n + 1 => liftTerm 0 (σ n)
-
-def substT (σ : Nat → Term) : Term → Term
-def substF (σ : Nat → Term) : Formula → Formula   -- el caso ∀/∃ usa `upSubst σ`
+```
+PeanoRF/Calculus/Subst.lean          el álgebra σ, autocontenida
+PeanoRF/Calculus/SubstDerives.lean   la clausura del cálculo bajo ella (eso sí es nuestro)
 ```
 
-Y los cuatro lemas que hacen que sirva para algo:
+`Subst.lean` define `substT`/`substF`, `upS`, `consS`, `compS`, y las dos identificaciones
+que la enchufan a vuestro cálculo: **`liftFormula` y `substFormula` SON sustituciones
+paralelas** (`liftS`, `singleS`). De ahí salen composición, identidad, `substF_lift_consS`,
+`substFormula_upS` y `substF_upS_lift`. Todo mide `[propext]` / `[propext, Quot.sound]`.
 
-| lema | enunciado |
-|---|---|
-| `substF_id` | `substF Term.var f = f` |
-| `substF_comp` | `substF σ (substF τ f) = substF (substT σ ∘ τ) f` |
-| `substF_single` | `substFormula 0 t f = substF (t ·ₛ Term.var) f` |
-| `substF_lift` | `substF (upSubst σ) (liftFormula 0 f) = liftFormula 0 (substF σ f)` |
+⚠️ **El orden de construcción no es libre**: `substT_comp` a nivel de TÉRMINOS no necesita
+`upS` (los términos no ligan), y empezar por otro sitio sale circular. Está anotado en el
+módulo.
 
-(`t ·ₛ σ` = «t en el índice 0, σ desplazada»; el nombre da igual.)
+## 2 · Por qué se escribió aquí, y por qué preferiríamos que viviera ahí
 
-## 2 · Por qué se pide en vez de hacerlo aquí
+**Medido el 2026-09-17**: en todo el árbol activo de FOL sólo hay sustitución de **una**
+variable —`substFormula`, `substTerms`— y `liftN`. No hay parallel substitution.
 
-**Medido el 2026-09-17**: en FOL sólo hay sustitución de **una** variable —`substFormula`,
-`substTerms`— y `liftN`. No hay parallel substitution en ninguna parte del árbol activo.
+Y es infraestructura de **sintaxis**, no de nuestro cálculo: tenerla en PeanoRF duplica el
+núcleo del lenguaje, que es justo lo que ADR-010/M-4 prohíben. Está declarada como deuda en
+`REFERENCE.md` §3.3septies. **Si la adoptáis, aquí sólo quedan los `export`.**
 
-Y es infraestructura de **sintaxis**, no de nuestro cálculo: escribirla en PeanoRF sería
-duplicar el núcleo del lenguaje, justo lo que ADR-010/M-4 prohíben. Por eso llega como
-encargo.
-
-## 3 · Para qué la necesitamos
-
-PeanoRF va a por la **propiedad de disyunción** de su cálculo intuicionista `⊢ᵢ`:
-
-> `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A ó [] ⊢ᵢ B`
-
-El método es la barra de Kleene. El lema que falta es
-
-> `Γ ⊢ᵢ f ⟹ ∀ σ cerrante, (∀ g ∈ Γ, Slash (gσ)) → Slash (fσ)`
-
-y **la generalización sobre σ no es un adorno**: es lo que hace que el caso `intro_forall`
-cierre con inducción estructural. La meta ahí es `∀t, Slash (A[upSubst σ][0↦t])`, que es la
-hipótesis de inducción de la premisa **con otra sustitución** — y la HI está cuantificada
-sobre todas.
-
-⚠️ El primer diagnóstico nuestro fue otro: «hace falta indexar las derivaciones por ALTURA,
-como `LKh` en el Hauptsatz». **Era falso**, y lo descartó desarrollar los casos. Lo digo
-porque si os llegó esa versión, es la equivocada.
-
-## 4 · Encargo menor, del mismo día
+## 3 · Encargo menor, y ése sí sigue pendiente
 
 `formulaComplexity` y `complexity_substFormula` viven en `FOL/Canonical0.lean`, o sea
 **detrás de `Soundness0`** y de toda la cadena clásica de completitud. Son puramente
 sintácticos y no tienen por qué estar ahí. Si bajan a un módulo base, PeanoRF retira el
-duplicado que hoy tiene declarado como deuda (`PeanoRF.Calculus.fdepth`).
+`fdepth` que hoy tiene duplicado y declarado como deuda.
+
+## 4 · ⚠️ El aviso: lo que os espera con `Derives₀.subst`
+
+Si algún día queréis la **propiedad de disyunción** para `Derives₀` —y con el Hauptsatz ya
+hecho es el siguiente paso natural— os vais a topar exactamente con esto, así que os ahorro
+el rodeo:
+
+La barra de Kleene pide que sea invariante bajo sustituciones **demostrablemente iguales**.
+Los casos atómicos, `∧`, `∨` y `→` salen. **El que se atasca es el cuantificador**, porque
+`subst` sustituye sólo en el **índice 0** y bajo un `∀` el índice en que dos sustituciones
+difieren pasa al 1.
+
+🔑 **Y la regla de Leibniz en un índice cualquiera se DERIVA de la de índice 0**, no hace
+falta axioma ni constructor nuevo. Se abstrae la variable `k` al índice 0 con
+
+```lean
+θ n = if n = k then Term.var 0 else liftTerm 0 (ρ₁ n)
+```
+
+y entonces `substF ρ f` es literalmente `(substF θ f)[ρ k / 0]`. Doce líneas:
+`PeanoRF.Calculus.leibniz_at`, en `SubstDerives.lean`.
+
+⚠️ Y dos diagnósticos nuestros que resultaron **FALSOS**, por si os llegan de rebote:
+
+1. «hace falta indexar las derivaciones por ALTURA, como `LKh` en el Hauptsatz» — **no**:
+   basta generalizar el enunciado sobre sustituciones, y entonces la inducción estructural
+   cierra sola.
+2. «la regla de Leibniz indexada hay que pedirla a FOL» — **no**: ver arriba. Esa petición
+   nunca llegó a entrar en este documento, pero estuvo a punto.
 
 ## 5 · Lo que NO se pide
 
-- Nada sobre `Derives₀` ni sobre vuestros cálculos: el lema de que **`⊢ᵢ` es cerrado bajo
-  sustitución** es nuestro y lo escribimos nosotros.
-- Ninguna prisa: `Slash.lean` ya está en el build con L1 y la infraestructura, declarado
-  🔶 Parcial en `REFERENCE.md` §3.3sexies.
+- Nada sobre `Derives₀` ni sobre vuestros cálculos.
+- ⛔ **Y lo que demostramos no es la propiedad de disyunción de HA**, sino la de la lógica
+  `⊢ᵢ` sobre **contexto vacío**. Para HA no se sigue: las instancias de inducción viven en
+  el contexto y barrar el esquema es el caso difícil. Lo decimos aquí porque es el tipo de
+  matiz que se pierde al citar de segunda mano.
 
 ## 6 · Nota de proceso
 
-No hay nada aplicado ni sin commitear en vuestro árbol. La regla que adoptamos tras vuestro
-aviso del 16 —**parche, rama propia, o avisar antes; nunca suelto en el árbol de otro**— se
-respeta aquí en su forma más conservadora: sólo aviso.
+No hay nada aplicado ni sin commitear en vuestro árbol, ni lo ha habido. La regla que
+adoptamos tras vuestro aviso del 16 —**parche, rama propia, o avisar antes; nunca suelto en
+el árbol de otro**— se respeta aquí en su forma más conservadora: sólo aviso.
+
+⚠️ El 2026-09-18, al reauditar, vuestro árbol tenía **seis ficheros sin commitear**
+(incluido un `FOL/BlockExtraction0.lean` sin rastrear). No se tocó nada.

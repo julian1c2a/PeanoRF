@@ -643,7 +643,15 @@ elab "#assert_constructive_footprint" : command => do
   -- control [E] de `check-doc-sync.bash`, que lo compara con los ficheros del árbol: un
   -- módulo sin import hasta aquí NO se vigila, y sin esta línea no se notaría.
   let ownMods := (mods.filter (fun m => (`PeanoRF).isPrefixOf m)).qsort (fun a b => a.toString < b.toString)
-  logInfo m!"[gate · alcance] {ownMods.size + 1} módulos propios vigilados:     {ownMods.toList} + PeanoRF.Meta.AxiomCheck (este)."
+  -- ⚠️ El `+1` es CONDICIONAL, y no lo era. En el build, este módulo se está elaborando y
+  -- **no** aparece en su propio header, así que hay que sumarlo; en un sondeo que lo
+  -- importa, sí aparece, y sumarlo daba **13 donde había 12** (medido el 2026-09-18). El
+  -- control [E] compara por NOMBRE, así que no estaba roto — pero una cifra que miente no
+  -- sirve de control, y en este proyecto las cifras son controles.
+  let selfIn := ownMods.contains `PeanoRF.Meta.AxiomCheck
+  let total := if selfIn then ownMods.size else ownMods.size + 1
+  let sufijo := if selfIn then "" else " + PeanoRF.Meta.AxiomCheck (este)"
+  logInfo m!"[gate · alcance] {total} módulos propios vigilados: {ownMods.toList}{sufijo}."
   logInfo m!"[gate] OK — {scanned} declaraciones propias verificadas. \
     Eje objeto: intuicionista puro (axiomas Y constructores). Eje finitario: núcleo r.e. \
     ({omegaLayerUses} uso(s) de ω en la capa `PeanoRF.Omega`). \

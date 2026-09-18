@@ -947,6 +947,54 @@ es `coreAxioms` más la inducción, y ahora el código lo dice.
 
 ---
 
+## ADR-025: La barra es relativa a la TEORÍA — y `ha_ctx_slashed` no sale con la barra actual
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado (etapa 1 de H3ter)
+
+**Contexto**: al cerrar H3bis anuncié que la DP **para HA** quedaba «a un lema»,
+`ha_ctx_slashed`, porque L2 ya estaba enunciada para contexto arbitrario. **Era falso, y el
+error fue mirar la firma de L2 sin mirar qué significaba `Slash` sobre un axioma.**
+
+`Slash` estaba clavada a `[]`: `Slash g` para un axioma de HA significa «derivable desde
+nada». Con eso, `ha_ctx_slashed` no es difícil — es **falso**.
+
+Y al parametrizar aparece el obstáculo de verdad: la cláusula `∀` de nuestra barra
+cuantifica sobre **todos los términos**. En `coreAxioms` está
+`ax19_lt_trichotomy : ∀a∀b (a<b ∨ a=b ∨ b<a)`, y barrarlo exigiría una rama derivable
+para cada par de términos — para dos variables libres no hay ninguna, y si la hubiera
+`derivesI_soundness` daría el absurdo.
+
+**Decisión** (etapa 1): `Slash T f` toma la teoría como parámetro, y los resultados de
+H3bis pasan a ser **instancias `T = []`** de teoremas generales:
+
+```lean
+disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
+```
+
+**Justificación**: la parametrización es requisito de cualquier variante de H3ter, no tiene
+decisión de diseño pendiente, y **conserva H3bis exactamente** (la hipótesis es vacía para
+`T = []`). Deja el hito en **una hipótesis con tipo exacto** en vez de en una intuición.
+
+**Consecuencias**:
+- ✅ H3bis intacto: `disjunction_property`, `existence_property` y `derivesI_ne_derives0`
+  miden lo mismo y dicen lo mismo.
+- ⚠️ El caso base de `cut_context` deja de ser la identidad: con `T` arbitraria hace falta
+  **debilitar** de `[]` a `T`. Con `T = []` era `id`, y por eso no se veía.
+- ⏳ **Etapa 2 pendiente, y con decisión de diseño**: restringir las cláusulas `∀`/`∃` a
+  **numerales**, que es la barra de Kleene de verdad. Hacerlo con un parámetro de dominio
+  (`Slash T D`) conserva el H3bis actual en toda su fuerza; hacerlo a secas lo debilita a
+  sentencias del lenguaje.
+- 📏 **Etapa 3, medida**: de los 34 axiomas de `coreAxioms`, **25** tienen matriz atómica
+  (barra = derivabilidad, `specI`), ~4 son `⇒`/`⇔` con partes atómicas, y **5** piden
+  decidir en el meta y construir la derivación: `ax19_lt_trichotomy`, `ax21_mod2_range`,
+  `ax13_lt_def`, `ax_L3_in_concat`, `ax29_sub_witness`. Más el esquema de inducción.
+- 🔑 La lección: **una firma que encaja no es un teorema que sale.** L2 aceptaba contexto
+  arbitrario, y de ahí concluí que la DP de HA estaba a un lema. Faltaba mirar el
+  *significado* del predicado sobre los elementos de ese contexto.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

@@ -386,6 +386,7 @@ ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teo
 
 | **`slash_eq_congr`** | la barra no distingue términos demostrablemente iguales | `propext, Quot.sound` |
 | **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
+| **`disjunction_property_of_slashed`** | DP relativa a una teoría barrada — H3bis es su caso `T = []` | `propext, Quot.sound` |
 | 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
 | 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
 | `notNotP_syn` | `[] ⊬ᵢ ¬P` | `propext, Quot.sound` |

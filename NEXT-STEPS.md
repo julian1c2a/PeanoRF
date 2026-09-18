@@ -10,38 +10,52 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H3ter — cerrar la propiedad de disyunción para HA. Queda UN lema.**
+**H3ter, etapa 2 — y tiene una DECISIÓN DE DISEÑO que conviene tomar antes de escribir.**
 
-L2 ya está enunciada para contexto arbitrario, así que la DP de HA se reduce a:
+✅ **Etapa 1 hecha** (ADR-025): la barra es relativa a la teoría. El hito se reduce a una
+hipótesis con tipo exacto:
 
-> **`ha_ctx_slashed`** : `∀ g ∈ ctx insts, Slash (substF ρ g)`
+```lean
+disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
+```
 
-y `ctx insts = axioms ++ insts.map inductionFormula`, o sea **dos familias**:
+H3bis es la instancia `T = []` (hipótesis vacía). H3ter es `T = ctx insts`, y le falta
+**`ha_ctx_slashed`**.
 
-1. **Los axiomas de Q⁺⁺** — finitos, de cabeza atómica o universal-atómica. Deberían salir
-   de la propia derivabilidad, como los casos atómicos de `slash_eq_congr`.
-2. **Las instancias de inducción** — el caso clásico difícil. Dado el antecedente barrado
-   salen `Slash φ(0)` y el paso, y por inducción meta sobre `n` sale `Slash φ(σⁿ0)`. Pero la
-   cláusula `∀` de la barra cuantifica sobre **todos** los términos cerrados ⇒
-   ✅ **`closed_term_eq_numeral` (hecho el 2026-09-18)** + `slash_eq_congr` (H3bis) cierran
-   ese paso.
+⛔ **Pero no sale con la barra actual**, y esto está medido, no supuesto: su `∀` cuantifica
+sobre TODOS los términos, y `ax19_lt_trichotomy` exigiría una rama derivable para dos
+variables libres. Hace falta la barra de Kleene de verdad: `∀`/`∃` sobre **numerales**.
 
-### ✅ Hecho y medido el 2026-09-18
+### La decisión de la etapa 2
 
-| pieza | dónde |
-|---|---|
-| congruencia genérica por símbolo de función | `Calculus/Eq.lean` |
-| `numeralI_add` / `_mul` / `_pow` (inducción META, sin ω) | `HA/Numerals.lean` |
-| ⭐ `closed_term_eq_numeral` | `HA/Numerals.lean` |
+| opción | qué cuesta | qué conserva |
+|---|---|---|
+| **parámetro de dominio** `Slash T D` | más código, condiciones de clausura sobre `D` | H3bis en toda su fuerza (D = todo) |
+| **numerales a secas** | más simple | debilita `disjunction_property` a sentencias del lenguaje |
 
-⚠️ **Medido antes de escribir**: reusar la capa de RPP era imposible — está sobre `⊢` y el
-puente va en un solo sentido —, pero el port sale limpio de ω. Ver `sondeos/README.md`.
+### Etapa 3, ya medida
+
+De los **34 axiomas de `coreAxioms`**:
+
+| forma | cuántos | qué cuesta |
+|---|---|---|
+| matriz atómica | **25** | nada: barra = derivabilidad ⇒ `specI` |
+| `⇒`/`⇔` con partes atómicas | ~4 | poco: `elim_impl` |
+| `∨` o `∃` | **5** | decidir en el meta y construir la derivación |
+
+Los cinco: `ax19_lt_trichotomy`, `ax21_mod2_range`, `ax13_lt_def`, `ax_L3_in_concat`,
+`ax29_sub_witness`. Necesitan comparar numerales, evaluar `mod2`, decidir pertenencia en
+listas. `numeral_lt` existe aguas arriba y es ω-limpio; `numeral_ne` —el contaminado— sigue
+fuera del camino. **Más el esquema de inducción.**
+
+⚠️ H3ter es un hito del tamaño de H3bis, no el remate que anuncié el 17. La lección queda
+en ADR-025: **una firma que encaja no es un teorema que sale.**
 
 ### ⚠️ Deudas vivas
 
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
-- ✅ ~~`metaDebtIsError := true`~~ **hecho el 2026-09-18** (ADR-024). Deuda heredada: **0**.
+- ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.
 - `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
 
 ⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**.

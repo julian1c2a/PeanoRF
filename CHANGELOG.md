@@ -15,6 +15,30 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (d) · H3ter etapa 1: la barra, relativa a la TEORÍA
+
+**`Slash T f`** — la teoría pasa a ser parámetro (ADR-025). Estaba clavada a `[]`, lo que
+bastaba para H3bis pero **hacía imposible enunciar la DP para HA**: `Slash g` para un
+axioma significaba «derivable desde nada».
+
+```lean
+disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
+```
+
+✅ **H3bis intacto**: `disjunction_property`, `existence_property` y `derivesI_ne_derives0`
+son ahora instancias `T = []` — hipótesis vacía — y miden lo mismo.
+
+⚠️ Un detalle que sólo aparece al parametrizar: el caso base de `cut_context` deja de ser
+la identidad y necesita **debilitamiento** de `[]` a `T`.
+
+⛔ **Y destapó que `ha_ctx_slashed` no sale con esta barra.** Su cláusula `∀` cuantifica
+sobre todos los términos, y `ax19_lt_trichotomy : ∀a∀b (a<b ∨ a=b ∨ b<a)` exigiría una
+rama derivable para dos variables libres. No es difícil: es **falso**. La barra de Kleene
+para una teoría va sobre **numerales** — y ahí entra `closed_term_eq_numeral`.
+
+📏 Medido sobre los 34 axiomas de `coreAxioms`: **25** con matriz atómica (barra =
+derivabilidad), ~4 `⇒`/`⇔` con partes atómicas, y **5** que piden decidir en el meta.
+
 ### ⭐⭐ 2026-09-18 (c) · deuda META heredada: de 14 declaraciones a CERO
 
 `HA.ctx` pasa de `axioms` a **`coreAxioms`** (ADR-024). Lo destapó el agente de RPP

@@ -176,11 +176,11 @@ theorem derivesI_subst {Γ : List Formula} {φ : Formula} (h : Γ ⊢ᵢ φ) :
     se abstrae con `θ`, que manda `k ↦ #0` y levanta todo lo demás, y entonces `substF ρ f`
     es literalmente `(substF θ f)[ρ k / 0]` — con lo que la regla de índice 0 ya vale. Todo
     el trabajo lo hace el álgebra de `Subst.lean`. -/
-theorem leibniz_at (k : Nat) (f : Formula) (ρ₁ ρ₂ : Subst)
+theorem leibniz_at (T : List Formula) (k : Nat) (f : Formula) (ρ₁ ρ₂ : Subst)
     (hagree : ∀ n, n ≠ k → ρ₁ n = ρ₂ n)
-    (heq : ([] : List Formula) ⊢ᵢ Formula.eq (ρ₁ k) (ρ₂ k))
-    (hd : ([] : List Formula) ⊢ᵢ substF ρ₁ f) :
-    ([] : List Formula) ⊢ᵢ substF ρ₂ f := by
+    (heq : T ⊢ᵢ Formula.eq (ρ₁ k) (ρ₂ k))
+    (hd : T ⊢ᵢ substF ρ₁ f) :
+    T ⊢ᵢ substF ρ₂ f := by
   -- `θ` abstrae la variable `k` al índice 0 y levanta el resto.
   let θ : Subst := fun n => if n = k then Term.var 0 else liftTerm 0 (ρ₁ n)
   have key : ∀ ρ : Subst, (∀ n, n ≠ k → ρ₁ n = ρ n) → compS (singleS 0 (ρ k)) θ = ρ := by
@@ -203,6 +203,6 @@ theorem leibniz_at (k : Nat) (f : Formula) (ρ₁ ρ₂ : Subst)
   have e2 : substFormula 0 (ρ₂ k) (substF θ f) = substF ρ₂ f := by
     rw [← substF_singleS _ 0 (ρ₂ k), substF_comp, h2]
   rw [← e2]
-  exact Derivesᵢ.subst [] (ρ₁ k) (ρ₂ k) (substF θ f) heq (by rw [e1]; exact hd)
+  exact Derivesᵢ.subst T (ρ₁ k) (ρ₂ k) (substF θ f) heq (by rw [e1]; exact hd)
 
 end PeanoRF.Calculus

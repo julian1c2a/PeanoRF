@@ -15,6 +15,41 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (h) · ⭐ `Slash T D` — la barra con parámetro de DOMINIO
+
+La pieza (1) de la etapa 2 de H3ter. Las cláusulas de `∀` y `∃` de la barra cuantifican
+sobre `D`, no sobre todos los términos:
+
+```lean
+| .forall a => (T ⊢ᵢ ∀a) ∧ (∀ t, D t → Slash T D (a[t]))
+| .ex a     => ∃ t, D t ∧ Slash T D (a[t])
+```
+
+Sin eso **`ax19_lt_trichotomy` no se puede barrar**: su `∀` recorre términos de los que HA
+no sabe nada, y la DP de HA no se podía ni enunciar.
+
+✅ **H3bis intacto**: `disjunction_property`, `existence_property` y
+`derivesI_ne_derives0` salen como la instancia `D = fun _ => True`, con el mismo
+`[propext, Quot.sound]`.
+
+⚠️ **`D` entra en L2 como una CLAUSURA, no como una lista** (ADR-027):
+
+```lean
+hDsub : ∀ ρ, (∀ n, D (ρ n)) → ∀ t, D (substT ρ t)
+```
+
+que es exactamente lo que piden `elim_forall` e `intro_ex`. Con `D = ClosedQTerm` esa
+clausura es **FALSA** —`t` puede llevar símbolos ajenos—, y eso **no es un defecto**: es lo
+que obliga a la **forma (c)**, que L2 afirme la barra de la instancia COLAPSADA. La versión
+verdadera, `closed_collapse_subst`, ya está en `HA/Domain.lean`.
+
+⚠️ `existence_property_of_slashed` devuelve ahora el testigo **con** su pertenencia a `D`.
+
+⏳ Hasta que esté la forma (c), `D = ClosedQTerm` **no se puede instanciar**. Queda dicho
+para que no se lea de más.
+
+**48 jobs · 15 módulos · 0 sorry.**
+
 ### 2026-09-18 (g) · la signatura del colapso lleva la ARIDAD, y el dominio ya está cerrado
 
 **`collapseT` pasa de `L : String → Bool` a `L : String → Nat → Bool`**, con el predicado

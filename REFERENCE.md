@@ -376,18 +376,29 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 |---|---|---|---|
 | `fdepth` | complejidad lógica | `Formula → Nat` | — |
 | `fdepth_subst` | `‖f[t/v]‖ = ‖f‖` | `fdepth (substFormula v t f) = fdepth f` | `propext` |
-| `Slash` | `∣ f` | `Formula → Prop` (recursión en `fdepth`) | `propext, Quot.sound` |
+| `Slash` | `∣_{T,D} f` | `List Formula → (Term → Prop) → Formula → Prop` (recursión en `fdepth`) | `propext, Quot.sound` |
 | `slash_derives` (**L1**) | `∣ f ⟹ ⊢ᵢ f` | `Slash f → ([] ⊢ᵢ f)` | `propext, Quot.sound` |
 | `cut_context` | `Γ` derivable ⟹ `Γ` sobra | `(∀ g ∈ Γ, [] ⊢ᵢ g) → (Γ ⊢ᵢ f) → ([] ⊢ᵢ f)` | `propext` |
 | **`slash_rewrite`** | la barra sobrevive a `rewrite_at` | — | `propext, Quot.sound` |
 | `derives_empty_of_slashed` | contexto barrado ⇒ sin contexto | — | `propext, Quot.sound` |
+
+⚠️ **Los DOS parámetros.** `T` es la teoría (etapa 1 de H3ter); `D` es el **dominio**
+(etapa 2, 2026-09-18): las cláusulas de `∀` y `∃` cuantifican sobre `D`, no sobre todos los
+términos. Sin `D`, **`ax19_lt_trichotomy` no se puede barrar** — su `∀` recorre términos de
+los que HA no sabe nada. H3bis es la instancia `T = []`, `D = fun _ => True`.
+
+⚠️ `D` entra en L2 como una **clausura**, `hDsub : ∀ ρ, (∀n, D (ρ n)) → ∀t, D (substT ρ t)`,
+que es lo que piden `elim_forall` e `intro_ex`. Con `D = ClosedQTerm` esa clausura es
+**FALSA**, y por eso falta aún la **forma (c)** — que L2 demuestre la barra de la instancia
+COLAPSADA. Las obligaciones están medidas en `HA/Domain.lean` y en
+`sondeos/collapse_parallel_probe.lean`.
 
 **El objetivo**: la propiedad de disyunción, `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A ó [] ⊢ᵢ B`. Es el
 **primer enunciado del proyecto que falla para `⊢₀`** — que prueba `P ∨ ¬P` sin probar
 ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teorema.
 
 | **`slash_eq_congr`** | la barra no distingue términos demostrablemente iguales | `propext, Quot.sound` |
-| **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
+| **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `ρ` valuada en `D` y `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
 | **`disjunction_property_of_slashed`** | DP relativa a una teoría barrada — H3bis es su caso `T = []` | `propext, Quot.sound` |
 | 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
 | 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |

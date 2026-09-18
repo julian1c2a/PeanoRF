@@ -35,16 +35,45 @@ disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B 
 
 ### Etapa 2 — decidida, y con DOS piezas, no una
 
-1. **Parámetro de dominio `Slash T D`** — elegido: conserva H3bis en toda su fuerza. `D`
-   serán los términos cerrados del lenguaje (`ClosedQTerm`, ya definido).
+1. ✅ **Parámetro de dominio `Slash T D` — HECHO** (`Calculus/Slash.lean`). Las cláusulas
+   de `∀` y `∃` cuantifican sobre `D`. H3bis sobrevive como la instancia
+   `D = fun _ => True`, con el mismo footprint `[propext, Quot.sound]`.
+   Y con él, las **dos clausuras del dominio** ya medidas en `HA/Domain.lean`.
 2. ✅ **Restringir las derivaciones al lenguaje — HECHO** (`Calculus/Collapse.lean`):
    **`derivesI_collapse`**. No hizo falta ni un `DerivesL` paralelo ni esperar a Craig: se
    **transforma** la derivación en vez de restringirla. Y la espera habría sido mala
    apuesta — el ADR-065 de RPP mide que el puente a `LKp` no tiene camino barato.
 
-⇒ **Lo que queda de la etapa 2 es la pieza (1)**, el parámetro de dominio `Slash T D`, ya
-decidido. Con `D = ClosedQTerm` y `derivesI_collapse` en la mano, el caso `elim_forall` de
-L2 deja de pedir `D` de un término arbitrario.
+⇒ **Lo que queda de la etapa 2 es la FORMA (c) de L2.** Las dos piezas están, pero **no
+encajan aún**: con `D = ClosedQTerm` la clausura que L2 pide hoy,
+
+```lean
+hDsub : ∀ ρ, (∀ n, D (ρ n)) → ∀ t, D (substT ρ t)
+```
+
+es **FALSA** — `t` puede llevar símbolos ajenos, y entonces `substT ρ t` también. Y
+`derivesI_collapse` **no lo arregla por sí solo**: actúa sobre derivaciones enteras, y L2 por
+dentro no sabe que la derivación venga colapsada.
+
+⭐ La salida, medida el 2026-09-18 (`sondeos/collapse_parallel_probe.lean`): que L2 demuestre
+la barra de la instancia **COLAPSADA**,
+
+```lean
+slash_of_derives : Γ ⊢ᵢ f → ∀ ρ, (…) → Slash T D (collapseF L (substF ρ f))
+```
+
+y entonces la obligación pasa a ser `D (collapseT L (substT ρ t))`, que **sí sale**
+(`closed_collapse_subst`). Las tres obligaciones están medidas antes de escribir el lema:
+
+| lo que pide L2 | quién lo da | footprint |
+|---|---|---|
+| `intro_forall` | `collapse_fix_closed` | `propext` |
+| `elim_forall` / `intro_ex` | ⭐⭐ `closed_collapse_subst` | `propext, Quot.sound` |
+| la conmutación paralela, si hace falta | `collapseF_substF` (en el sondeo) | `propext, Quot.sound` |
+
+⚠️ Y el nivel de arriba **cambia de enunciado**: la DP de HA se afirmará de una `A ∨ B`
+**cerrada y del lenguaje**, instanciando con `ρ = fun _ => zero` (`closed_zeroS`). No es una
+pérdida: es el teorema de Kleene, que siempre fue sobre SU lenguaje.
 
 ### Etapa 3 — ya medida
 

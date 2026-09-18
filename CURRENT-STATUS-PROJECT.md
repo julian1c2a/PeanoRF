@@ -59,10 +59,19 @@
 > misma conclusión colapsados. `[propext, Quot.sound]`, y las conmutaciones en `[propext]`.
 > ⇒ El contraejemplo deja de ser obstáculo y pasa a ser **lo que justifica la restricción**.
 >
-> 🔶 **Etapa 2**, decidida y con una pieza nueva: parámetro de dominio `Slash T D`
-> (conserva H3bis en toda su fuerza) **más** la restricción de las derivaciones al lenguaje,
-> que el contraejemplo obliga a añadir. Dos rutas para lo segundo: un `DerivesL` propio, o
-> **eliminación de símbolos ajenos** — preguntado a FOL, que acaba de cerrar Craig.
+> ✅ **Etapa 2, pieza (1) HECHA** (2026-09-18): **`Slash T D`**, la barra con parámetro de
+> **dominio**. Las cláusulas de `∀` y `∃` cuantifican sobre `D`, no sobre todos los términos
+> — sin eso `ax19_lt_trichotomy` no se puede barrar. H3bis **sobrevive** como la instancia
+> `D = fun _ => True`, **intacto y con el mismo footprint**.
+>
+> ⚠️ `D` entra en L2 como una **CLAUSURA**, `hDsub : ∀ ρ, (∀n, D (ρ n)) → ∀t, D (substT ρ t)`,
+> que es lo que piden `elim_forall` e `intro_ex`. Con `D = ClosedQTerm` esa clausura es
+> **FALSA**, y por eso hace falta el colapso delante: `HA/Domain.lean` demuestra
+> `closed_collapse_subst`, su versión con `collapseT LQ`.
+>
+> 🔶 **Lo que queda de la etapa 2 es la FORMA (c) de L2**: que demuestre la barra de la
+> instancia **colapsada**, `Slash T D (collapseF L (substF ρ f))`. Medido antes de escribirla
+> (`sondeos/collapse_parallel_probe.lean`): las tres obligaciones salen.
 >
 > ⏳ **Etapa 3**, medida: de los 34 axiomas de `coreAxioms`, **25** salen con `specI`, ~4 con
 > `elim_impl`, y **5** piden decidir en el meta (`ax19`, `ax21`, `ax13`, `ax_L3`, `ax29`).

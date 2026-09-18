@@ -1048,6 +1048,76 @@ lectura, no un grep, y por eso el paso 3 está en el comando y no en la buena vo
 
 ---
 
+## ADR-027: El dominio de la barra es una CLAUSURA, no una lista de términos
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado
+
+**Contexto**: la barra `Slash T` cuantificaba sus cláusulas de `∀`/`∃` sobre **todos** los
+términos. Para H3bis (`T = []`) eso basta, pero para la DP de **HA** no: `ax19_lt_trichotomy`
+afirma la tricotomía para todo `x`, `y`, y barrarla exigiría decidir `x < y` para términos de
+los que HA no sabe nada. Hacía falta un parámetro de dominio, `Slash T D`.
+
+**Decisión**: `D : Term → Prop`, y en L2 **no se pide que `D` sea nada en concreto**: se pide
+una sola propiedad, la **clausura bajo sustitución**
+
+```lean
+hDsub : ∀ ρ, (∀ n, D (ρ n)) → ∀ t : Term, D (substT ρ t)
+```
+
+**Justificación**: es exactamente lo que los casos `elim_forall` e `intro_ex` necesitan, y
+nada más. Fijar `D = ClosedQTerm` dentro de `Slash.lean` habría metido la capa HA dentro de
+la capa lógica —y, de paso, `Numerals` se construye DESPUÉS de `Slash`, así que ni se
+podía—. Con el parámetro, `Slash.lean` no sabe qué es Q⁺⁺ y **H3bis sobrevive intacto** como
+la instancia `D = fun _ => True`, donde la clausura es trivial.
+
+⚠️ **Y la clausura, tal cual, es FALSA para `ClosedQTerm`**: `t` puede llevar símbolos ajenos
+o aridades erróneas, y entonces `substT ρ t` también. Eso **no es un defecto del diseño**:
+es la misma verdad que midió `junk_probe`, y lo que obliga a la **forma (c)** de L2 — que la
+barra se afirme de la instancia COLAPSADA. La versión verdadera,
+`closed_collapse_subst : (∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))`, está demostrada
+en `HA/Domain.lean`.
+
+**Consecuencias**:
+- ✅ H3bis (`disjunction_property`, `existence_property`, `derivesI_ne_derives0`) intacto y
+  con el mismo footprint `[propext, Quot.sound]`.
+- `existence_property_of_slashed` ahora devuelve **el testigo CON su pertenencia a `D`**;
+  `existence_property` la descarta, porque en `D = fun _ => True` no dice nada.
+- ⚠️ El dominio obligó a meter la **aridad** en la signatura del colapso (ADR-028).
+- ⏳ Falta la forma (c). Hasta que esté, `D = ClosedQTerm` **no se puede instanciar**: la
+  hipótesis `hDsub` no se cumple. Queda dicho aquí para que nadie lo lea de más.
+
+---
+
+## ADR-028: La signatura del colapso lleva la ARIDAD
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado
+
+**Contexto**: `collapseT` tomaba `L : String → Bool` — sólo el **nombre** del símbolo.
+
+**Decisión**: `L : String → Nat → Bool`, aplicado a `ts.length`.
+
+**Justificación**: medido, no argumentado. `Term.func add_sym [zero]` —`+` con UN
+argumento— es un término legítimo de la sintaxis, es cerrado y lleva sólo símbolos de Q⁺⁺,
+pero **no es un `ClosedQTerm`**: sus constructores fijan la aridad. Y con razón, porque Q⁺⁺
+**no tiene ningún axioma sobre él** y por tanto no es demostrablemente igual a ningún
+numeral — que es lo único que la etapa 3 le pide al dominio. El colapso anterior lo dejaba
+pasar intacto.
+
+El contraejemplo vive en **producción** (`HA.not_closed_add_unary`), no en el cuaderno de
+sondeos, porque es lo que justifica el diseño.
+
+**Consecuencias**:
+- Precio **medido**: tres lemas de longitud (`collapseTs_length`, `liftTerms_length`,
+  `substTerms_length`) más `substTs_length` en `Subst.lean`. Las conmutaciones **no cambian
+  de forma** y `derivesI_collapse` conserva su `[propext, Quot.sound]`.
+- ⚠️ Una signatura sin aridad es un control que **da verde sin comprobar** aplicado a la
+  sintaxis: deja pasar lo que dice filtrar. Misma familia que
+  [[feedback-polaridad-de-los-controles]].
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

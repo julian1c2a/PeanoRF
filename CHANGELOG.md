@@ -15,6 +15,40 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (j) · ⭐⭐ etapa 3 — Harrop tumba 28 de 34, y `ax19` cae por medición
+
+**La pieza**: `slash_of_isHarrop`. Para una fórmula de **Harrop**, estar barrada no es más
+que ser derivable. La clase se lee de los casos de la barra, mirando cuáles NO piden testigo:
+`atom`/`eq` sí, `a ∧ b` si ambas, **`a ⇒ b` si lo es `b` — el antecedente da igual**, `∀a` si
+lo es `a`, y `⊥` **si `T` es consistente**. `∨` y `∃`, no.
+
+Medido sobre `coreAxioms`: **28 de los 34**. Y con ellos, `haDisjunctionProperty`: la DP de
+HA reducida a **tres obligaciones** — consistencia, los 6 no-Harrop, y el esquema de
+inducción.
+
+⭐⭐ **Y uno de los seis ya está**: `slash_ax19`, el axioma que motivó todo el parámetro de
+dominio. `hNum` baja los términos a numerales, `Nat.lt_trichotomy` decide **en el meta**, y
+`numeralI_lt` + la reescritura dentro de un PREDICADO suben la decisión al objeto.
+
+⭐ **`numeralI_ne` constructivo**: aguas arriba `numeral_ne` arrastra `Classical`. Éste se
+construye con `ax2` y `ax3` y mide `[propext, Quot.sound]`.
+
+⚠️ **DOS CORRECCIONES que salieron de medir, no de estimar**:
+
+* La lista dura es de **SEIS**, no de cinco, y no es la que estaba escrita:
+  `ax29_sub_witness` **sí** es de Harrop, y `ax14_sqrt_le` y `ax_L2_in_cons` **no** lo son.
+* ⛔ **`LQ` no servía para HA**: tiene los 5 símbolos de los numerales y los axiomas usan
+  **trece**. Colapsar con `LQ` los mutila ⇒ `hT` sería insatisfacible y el teorema, cierto y
+  vacío. Cazado porque `coreAxioms.map (collapseF LQ ∘ substF zeroS) = coreAxioms` **no
+  cerraba por `rfl`**.
+
+⇒ El dominio se rediseñó: **`Grounded L t` se define POR SUS DOS CLAUSURAS** —el colapso lo
+fija, ninguna sustitución lo toca— en vez de por un inductivo por lenguaje. Así
+`grounded_fix` y `grounded_collapse_subst` son literalmente lo que L2 pide, para cualquier
+signatura.
+
+**49 jobs · 16 módulos · 0 sorry · 248 declaraciones · deuda heredada 0.**
+
 ### 2026-09-18 (i) · 🏁🏁 la FORMA (c) — la etapa 2 de H3ter, CERRADA
 
 L2 demuestra ahora la barra de la instancia **COLAPSADA**:

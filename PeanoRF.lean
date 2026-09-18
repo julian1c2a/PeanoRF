@@ -21,5 +21,6 @@ import PeanoRF.HA.Arith
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Domain
 import PeanoRF.HA.Numerals
+import PeanoRF.HA.SlashAxioms
 import PeanoRF.Meta.AxiomCheck
 import PeanoRF.Omega.Basic

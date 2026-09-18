@@ -17,7 +17,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **48 jobs · 15 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **49 jobs · 16 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -94,7 +94,7 @@
 > ```
 >
 > 1. la **consistencia** de la teoría — el precio clásico de la barra, no demostrable aquí;
-> 2. los **6** axiomas que no son de Harrop;
+> 2. los **6** axiomas que no son de Harrop — ⭐ **`ax19` ya está** (`HA/SlashAxioms.lean`);
 > 3. el **esquema de inducción**.
 >
 > ⚠️ Dos correcciones que salió de medir: (a) la lista dura es de **6**, no de 5, y no es la
@@ -136,13 +136,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 15 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain}`) |
-| Módulos con 0 `sorry` | 15 / 15 |
-| Teoremas propios | 121 |
+| Módulos propios | 16 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms}`) |
+| Módulos con 0 `sorry` | 16 / 16 |
+| Teoremas propios | 128 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 48 jobs (ver la reserva del banner) |
+| Build | ✅ 49 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

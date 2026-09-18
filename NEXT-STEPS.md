@@ -68,13 +68,36 @@ salen con el enunciado literal de antes y el mismo `[propext, Quot.sound]`.
 está enunciada sobre `substF`, hay que mover el colapso al otro lado ⇒ **`collapseF_substF`**,
 la conmutación con la sustitución PARALELA, que el sondeo (g) ya había medido.
 
-### Etapa 3 — ya medida
+### Etapa 3 — EN MARCHA: 29 de 34
 
-De los **34 axiomas de `coreAxioms`**: **25** con matriz atómica (barra = derivabilidad
-⇒ `specI`), ~4 `⇒`/`⇔` con partes atómicas, y **5** que piden decidir en el meta y construir
-la derivación: `ax19_lt_trichotomy`, `ax21_mod2_range`, `ax13_lt_def`, `ax_L3_in_concat`,
-`ax29_sub_witness`. `numeral_lt` existe aguas arriba y es ω-limpio; `numeral_ne` —el
-contaminado— sigue fuera del camino. **Más el esquema de inducción.**
+✅ **28 de golpe, por HARROP** (`slash_of_isHarrop`). Para una fórmula de Harrop, estar
+barrada no es más que ser derivable. Y con ellos, `haDisjunctionProperty`: la DP de HA
+reducida a **tres obligaciones** — consistencia, los 6 no-Harrop, y el esquema de inducción.
+
+✅ **`ax19_lt_trichotomy`**, el que motivó todo el parámetro de dominio. Y de paso
+`numeralI_lt` y un **`numeralI_ne` constructivo**, que aguas arriba sólo existe contaminado.
+
+⚠️ **La lista dura es de SEIS, no de cinco**, y no era la que estaba escrita:
+`ax29_sub_witness` sí es de Harrop; `ax14_sqrt_le` y `ax_L2_in_cons` no.
+
+#### Lo que queda, con su receta
+
+| axioma | qué necesita | estado |
+|---|---|---|
+| `ax21_mod2_range` | `hNum` + `numeralI_ne` + consistencia | 🔶 receta completa |
+| `ax_L2_in_cons` | `hNum` + `numeralI_ne` | 🔶 receta completa |
+| `ax13_lt_def` | además `numeralI_not_lt` ⇐ transitividad de `<` | ⏳ |
+| `ax14_sqrt_le` | idem, y evaluar `√` sobre numerales | ⏳ |
+| `ax_L3_in_concat` | decidir `∈` sobre términos anclados | ⛔ sin atajo |
+
+#### Y las dos obligaciones de fondo
+
+* **`hNum`**: que todo término anclado sea demostrablemente igual a un numeral.
+  `closed_term_eq_numeral` la da para los **cinco** símbolos de los numerales; el lenguaje
+  tiene **trece**. Falta evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##` y `Π_p`, y algunas
+  de esas evaluaciones necesitan instancias del esquema de inducción.
+* **La consistencia de la teoría**, que es el precio clásico de la barra de Kleene y **no es
+  demostrable aquí** (Gödel). Va como hipótesis, dicha en el enunciado.
 
 ### ⚠️ Deudas vivas
 

@@ -205,4 +205,54 @@ theorem eqI_congr_fun2 (s : String) {t₁ t₂ u₁ u₂ : Term}
   eqI_trans (eqI_congr_fun2_l s u₁ h1) (eqI_congr_fun2_r s t₂ h2)
 
 
+/-! ## Reescritura dentro de un PREDICADO
+
+    Las congruencias de arriba son para símbolos de FUNCIÓN: de `t₁ = t₂` sacan
+    `f(t₁) = f(t₂)`. Para un predicado no hay ecuación que sacar — hay que **transportar la
+    derivación**, que es lo que hace la regla `subst` directamente. Lo pide la etapa 3:
+    decidido en el meta que `n < m`, se obtiene `⊢ᵢ n̄ < m̄` y hay que llevarlo a `⊢ᵢ t < u`
+    sabiendo `⊢ᵢ t = n̄` y `⊢ᵢ u = m̄`. -/
+
+/-- Reescritura en el argumento IZQUIERDO de un predicado binario. -/
+theorem eqI_rw_atom2_l (p : String) {t₁ t₂ : Term} (u : Term)
+    (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) (hb : Γ ⊢ᵢ Formula.atom p [t₁, u]) :
+    Γ ⊢ᵢ Formula.atom p [t₂, u] := by
+  have hS1 : substFormula 0 t₁ (Formula.atom p [Term.var 0, liftTerm 0 u])
+           = Formula.atom p [t₁, u] := by
+    change Formula.atom p [substTerm 0 t₁ (Term.var 0), substTerm 0 t₁ (liftTerm 0 u)]
+         = Formula.atom p [t₁, u]
+    rw [substTerm_liftTerm u 0 t₁]
+    rfl
+  have hS2 : substFormula 0 t₂ (Formula.atom p [Term.var 0, liftTerm 0 u])
+           = Formula.atom p [t₂, u] := by
+    change Formula.atom p [substTerm 0 t₂ (Term.var 0), substTerm 0 t₂ (liftTerm 0 u)]
+         = Formula.atom p [t₂, u]
+    rw [substTerm_liftTerm u 0 t₂]
+    rfl
+  have hbase : Γ ⊢ᵢ substFormula 0 t₁ (Formula.atom p [Term.var 0, liftTerm 0 u]) := by
+    rw [hS1]; exact hb
+  have := Derivesᵢ.subst Γ t₁ t₂ (Formula.atom p [Term.var 0, liftTerm 0 u]) h hbase
+  rwa [hS2] at this
+
+/-- Reescritura en el argumento DERECHO de un predicado binario. -/
+theorem eqI_rw_atom2_r (p : String) (t : Term) {u₁ u₂ : Term}
+    (h : Γ ⊢ᵢ (Formula.eq u₁ u₂)) (hb : Γ ⊢ᵢ Formula.atom p [t, u₁]) :
+    Γ ⊢ᵢ Formula.atom p [t, u₂] := by
+  have hS1 : substFormula 0 u₁ (Formula.atom p [liftTerm 0 t, Term.var 0])
+           = Formula.atom p [t, u₁] := by
+    change Formula.atom p [substTerm 0 u₁ (liftTerm 0 t), substTerm 0 u₁ (Term.var 0)]
+         = Formula.atom p [t, u₁]
+    rw [substTerm_liftTerm t 0 u₁]
+    rfl
+  have hS2 : substFormula 0 u₂ (Formula.atom p [liftTerm 0 t, Term.var 0])
+           = Formula.atom p [t, u₂] := by
+    change Formula.atom p [substTerm 0 u₂ (liftTerm 0 t), substTerm 0 u₂ (Term.var 0)]
+         = Formula.atom p [t, u₂]
+    rw [substTerm_liftTerm t 0 u₂]
+    rfl
+  have hbase : Γ ⊢ᵢ substFormula 0 u₁ (Formula.atom p [liftTerm 0 t, Term.var 0]) := by
+    rw [hS1]; exact hb
+  have := Derivesᵢ.subst Γ u₁ u₂ (Formula.atom p [liftTerm 0 t, Term.var 0]) h hbase
+  rwa [hS2] at this
+
 end PeanoRF.Calculus

@@ -446,4 +446,15 @@ theorem grounded_collapse_subst (L : String → Nat → Bool) (ρ : Subst)
     exact (hρ n).2 τ
   rw [collapseT_substT, substT_comp, hfix, ← collapseT_substT]
 
+/-- Un término anclado no se levanta. -/
+theorem grounded_liftTerm (L : String → Nat → Bool) {t : Term} (h : Grounded L t) (c : Nat) :
+    liftTerm c t = t := by
+  rw [← substT_liftS c t]; exact h.2 (liftS c)
+
+/-- Ni se sustituye. Las dos son la segunda componente vista con otras gafas, y son las que
+    hacen manejables los cálculos de de Bruijn sobre términos del dominio. -/
+theorem grounded_substTerm (L : String → Nat → Bool) {t : Term} (h : Grounded L t)
+    (v : Nat) (s : Term) : substTerm v s t = t := by
+  rw [← substT_singleS v s t]; exact h.2 (singleS v s)
+
 end PeanoRF.Calculus

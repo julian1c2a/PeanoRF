@@ -99,6 +99,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo |
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo |
+| `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | 🔶 1 de 6 |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
@@ -535,6 +536,45 @@ producción, no en el cuaderno.
 
 ⚠️ Aquí **no se pueden escribir `∧`, `∨` ni `g ∈ T`**: `open FOL` tiene tomadas las dos primeras por `FormulaG`, y `∈` está sobrecargada de forma que elabora su lado derecho como un TIPO. Se escriben `And`/`Or` y `List.Mem g T`. La familia del `σ` de `peanolib`.
 `(s = zero_sym ∧ n = 0)` da `unexpected token =` — la familia del `σ` de `peanolib`.
+
+---
+
+### 3.3undecies HA/SlashAxioms.lean — los axiomas que NO son de Harrop
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.HA.Domain`
+**Last updated**: 2026-09-18
+**Status**: 🔶 1 de 6
+
+| nombre | enunciado | footprint |
+|---|---|---|
+| `ctx_weaken` | lo demostrado sin inducción vale con ella | `propext` |
+| `numeralI_lt` | `a < b ⟹ ⊢ᵢ ā < b̄` — por la dirección ⇐ de `ax13` | `propext, Quot.sound` |
+| ⭐ `numeralI_ne` | `a ≠ b ⟹ ⊢ᵢ ¬(ā = b̄)` — **constructivo** | `propext, Quot.sound` |
+| ⭐⭐ `slash_ax19` | `ax19_lt_trichotomy` barrado bajo `hNum` | `propext, Quot.sound` |
+
+**El patrón de los seis**: barrar una disyunción pide **elegir rama**, y eso es una decisión
+en el META. `hNum` baja los términos del dominio a numerales, se decide sobre números, y la
+decisión sube al objeto por Leibniz (`eqI_rw_atom2_l`/`_r`, la reescritura dentro de un
+PREDICADO, que no existía).
+
+⚠️ **`hNum` va como hipótesis y no se esconde**: `closed_term_eq_numeral` la da para los
+cinco símbolos de los numerales, pero el lenguaje tiene trece. Falta evaluar `√`, `/₂`,
+`%₂`, `τ`, `−`, `::`, `##` y `Π_p` sobre numerales dentro de Q⁺⁺.
+
+⭐ **`numeralI_ne` es nuestro**: aguas arriba `numeral_ne` arrastra `Classical` (medido el
+2026-09-16). Éste se construye con `ax2` (`σx ≠ 0`) en las bases y `ax3` (`σ` inyectiva) en
+el paso, y mide `[propext, Quot.sound]`.
+
+**Lo que falta, con su receta**:
+
+| axioma | qué necesita |
+|---|---|
+| `ax21_mod2_range` | `hNum` + `numeralI_ne` + consistencia — **receta ya completa** |
+| `ax_L2_in_cons` | `hNum` + `numeralI_ne` — **receta ya completa** |
+| `ax13_lt_def` | además `numeralI_not_lt`, que pide transitividad de `<` |
+| `ax14_sqrt_le` | idem, y evaluar `√` |
+| `ax_L3_in_concat` | ⛔ decidir `∈` sobre términos anclados: no hay atajo |
 
 ---
 

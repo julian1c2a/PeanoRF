@@ -15,6 +15,24 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (b) · H3ter arranca: los numerales sobre `⊢ᵢ`, y `closed_term_eq_numeral`
+
+**`Calculus/Eq.lean`** — congruencia GENÉRICA por símbolo de función
+- `eqI_congr_fun1`, `eqI_congr_fun2_l`, `eqI_congr_fun2_r`, `eqI_congr_fun2`. Las
+  operaciones son `Term.func s […]`, así que **una prueba por aridad** cubre `add`, `mul`,
+  `pow` y las que vengan, en vez de seis copias del patrón de `eqI_congr_succ`.
+  Footprint `[propext, Quot.sound]`.
+
+**`HA/Numerals.lean`** — módulo nuevo
+- `numeralI_add`, `numeralI_mul`, `numeralI_pow` — los tres homomorfismos, por inducción
+  META: contexto `ctx []`, **ni una instancia de inducción objeto, ni una ω-regla**.
+- `ClosedQTerm` + ⭐ **`closed_term_eq_numeral`**: todo término del lenguaje sin variables
+  es demostrablemente un numeral. Es el ingrediente que le falta a H3ter.
+- ⚠️ Reprobado, no reusado: la capa de RPP está sobre `⊢` y el puente va en un solo
+  sentido. Medido antes (`sondeos/numerals_probe.lean`), no supuesto.
+
+**46 jobs · 13 módulos · 0 sorry · 180 declaraciones vigiladas.** Sin tocar FOL ni RPP.
+
 ### 🏁🏁🏁 2026-09-17 (f) · H3bis CERRADO — `⊢ᵢ` no es `⊢₀`, y ahora es un teorema
 
 ```

@@ -103,6 +103,7 @@ import PeanoRF.Calculus.Soundness
 import PeanoRF.Omega.Basic
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Arith
+import PeanoRF.HA.Numerals
 
 set_option autoImplicit false
 

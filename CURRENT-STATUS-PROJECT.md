@@ -17,7 +17,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **45 jobs · 12 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **46 jobs · 13 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -34,6 +34,12 @@
 > (`existence_property`), y la segunda es la sombra sintáctica de la realizabilidad: el
 > testigo de un existencial demostrado **es** el cálculo que el lado Peano del espejo
 > tendría que ejecutar.
+>
+> 🔧 **H3ter en marcha** (2026-09-18): el ingrediente que faltaba para la DP **de HA**
+> está puesto — `closed_term_eq_numeral`, y con él los tres homomorfismos de numerales
+> sobre `⊢ᵢ`. **Medido antes de escribirlo**: reusar los de RPP era imposible (están sobre
+> `⊢`, y el puente va en un solo sentido), pero portarlos sale limpio de ω porque van por
+> inducción META. Falta `ha_ctx_slashed`, que es el lema que cierra H3ter.
 >
 > ⛔ **Las dos son de la LÓGICA `⊢ᵢ`, sobre contexto VACÍO — no son las de HA.** Son las
 > marcas que en general separan HA de PA, pero **para HA no se siguen**: las instancias de
@@ -64,13 +70,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 12 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith}`) |
-| Módulos con 0 `sorry` | 12 / 12 |
-| Teoremas propios | 67 |
+| Módulos propios | 13 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals}`) |
+| Módulos con 0 `sorry` | 13 / 13 |
+| Teoremas propios | 75 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 45 jobs (ver la reserva del banner) |
+| Build | ✅ 46 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

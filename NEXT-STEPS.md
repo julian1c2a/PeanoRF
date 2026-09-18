@@ -10,32 +10,42 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H4 — reflexión `⌈·⌉` + adecuación + táctica.** Ahora sí toca: el espejo ya tiene un
-teorema que justifica su existencia (`derivesI_ne_derives0`, H3bis), así que automatizar el
-volcado deja de ser optimizar el transporte antes de saber qué se transporta.
+**H3ter — cerrar la propiedad de disyunción para HA. Queda UN lema.**
 
-La alternativa sigue siendo el volcado a mano de `add_comm`/`mul_*` (H5), que **no tiene
-incógnitas de método**; PLANNING pone H4 antes por la razón de siempre — volcar a mano lo
-que luego se generará es trabajo tirado.
+L2 ya está enunciada para contexto arbitrario, así que la DP de HA se reduce a:
 
-### Lo que quedó cerrado el 2026-09-17
+> **`ha_ctx_slashed`** : `∀ g ∈ ctx insts, Slash (substF ρ g)`
 
-| | |
+y `ctx insts = axioms ++ insts.map inductionFormula`, o sea **dos familias**:
+
+1. **Los axiomas de Q⁺⁺** — finitos, de cabeza atómica o universal-atómica. Deberían salir
+   de la propia derivabilidad, como los casos atómicos de `slash_eq_congr`.
+2. **Las instancias de inducción** — el caso clásico difícil. Dado el antecedente barrado
+   salen `Slash φ(0)` y el paso, y por inducción meta sobre `n` sale `Slash φ(σⁿ0)`. Pero la
+   cláusula `∀` de la barra cuantifica sobre **todos** los términos cerrados ⇒
+   ✅ **`closed_term_eq_numeral` (hecho el 2026-09-18)** + `slash_eq_congr` (H3bis) cierran
+   ese paso.
+
+### ✅ Hecho y medido el 2026-09-18
+
+| pieza | dónde |
 |---|---|
-| H3′ | consistencia SIN semántica (`consistI_syn`) |
-| **H3bis** | **propiedad de disyunción, de existencia, y `derivesI_ne_derives0`** |
-| infraestructura | álgebra σ, `derivesI_subst`, `leibniz_at`, la barra entera |
+| congruencia genérica por símbolo de función | `Calculus/Eq.lean` |
+| `numeralI_add` / `_mul` / `_pow` (inducción META, sin ω) | `HA/Numerals.lean` |
+| ⭐ `closed_term_eq_numeral` | `HA/Numerals.lean` |
+
+⚠️ **Medido antes de escribir**: reusar la capa de RPP era imposible — está sobre `⊢` y el
+puente va en un solo sentido —, pero el port sale limpio de ω. Ver `sondeos/README.md`.
 
 ### ⚠️ Deudas vivas
 
-- **`Calculus/Subst.lean` es infraestructura de SINTAXIS duplicada** (ADR-010). Sigue
-  pedida en `doc/ENCARGO-FOL-2026-09-17.md`. ✅ Del encargo **se resta** la regla de Leibniz
-  indexada: resultó derivable (ADR-023).
-- `formulaComplexity` detrás de la cadena clásica ⇒ `fdepth` duplicado. Mismo encargo.
-- `metaDebtIsError := true` cuando RPP sanee su nivel meta (hoy 10 decls).
+- `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
+  ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
+- `metaDebtIsError := true` cuando RPP sanee su nivel meta (hoy **14** decls; subía de 10
+  porque los numerales tocan `axioms`).
 - `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
 
-⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**. FOL se mueve rápido.
+⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**.
 
 ---
 

@@ -100,6 +100,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
+| `HA/Numerals.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | ✅ Completo |
 
 *Status codes*: ✅ Complete · 🧊 Frozen · 🔶 Partial · 🔄 In progress · ❌ Pending
 
@@ -501,6 +502,42 @@ parámetro **abierto** no hay generalización finitaria: haría falta meter en e
 finitaria (`Derives.intro_forall`), luego **la ω-regla `gen` no hace falta**. Lo que `gen`
 obtiene de infinitas premisas `Γ ⊢ A[n]`, esto lo obtiene de una prueba uniforme con la
 variable libre. Su footprint es `[propext]`.
+
+---
+
+### 3.4bis HA/Numerals.lean — numerales, y el puente sintaxis ↔ `ℕ`
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.HA.Axioms`
+**Last updated**: 2026-09-18
+**Status**: ✅ Completo
+**@importance**: **foundational**
+
+| nombre | notación matemática | footprint |
+|---|---|---|
+| `numeralI_add` | `̃a + ̃b = (a+b)̃` | `propext, Classical.choice, Quot.sound` |
+| `numeralI_mul` | `̃a · ̃b = (a·b)̃` | idem |
+| `numeralI_pow` | `̃a ^ ̃b = (a^b)̃` | idem |
+| `ClosedQTerm` | los términos del lenguaje **sin variables** | — |
+| ⭐ **`closed_term_eq_numeral`** | `t` cerrado `⟹ ∃n, ctx [] ⊢ᵢ t = ̃n` | idem |
+
+**Por qué se reprobó en vez de reusar** (medido el 2026-09-18, `sondeos/numerals_probe.lean`):
+la capa de RPP está enunciada sobre **`⊢`**, la HERRAMIENTA, y el puente va `⊢ᵢ → ⊢₀ → ⊢`
+**en un solo sentido** (ADR-017). No es contaminación — `numeral_add`/`mul`/`pow` salen
+limpios de ω allí también — es el cálculo.
+
+⭐ El port es barato porque las tres van por **inducción META**: el contexto es `ctx []`, los
+axiomas de Q⁺⁺ y nada más. **Ni una instancia de inducción objeto, ni una ω-regla.**
+
+⚠️ Se usa `numeralM` de la capa **Minimal**, no `Full.numeral`: el segundo arrastraría
+`Full/Induction.lean` y con él `ax_induction` a la superficie de import.
+
+⚠️ `ClosedQTerm` no es «cerrado» a secas: un `Term.func "foo" []` no tiene variables y **no
+es de este lenguaje**. Son los cinco símbolos de Q⁺⁺.
+
+▶ **Para qué**: la cláusula `∀` de la barra de Kleene cuantifica sobre **todos** los
+términos cerrados, y la inducción meta sólo alcanza a los numerales. Este lema cierra ese
+hueco, y `slash_eq_congr` (H3bis) transporta la barra a través de la igualdad.
 
 ---
 

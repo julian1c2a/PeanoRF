@@ -15,6 +15,29 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (e) · un control para lo que los otros cinco no miran
+
+**`check-coherencia.bash`** + el comando **`/armoniza`** (ADR-026, AI-GUIDE §28).
+
+§27 comprueba que los documentos cuadren con el CÓDIGO. Esto comprueba que cuadren ENTRE
+SÍ. El 2026-09-18, con los cinco controles en verde, había tres contradicciones vivas.
+
+* **[F] REGISTRO DE HITOS**, bloqueante: todo hito mencionado tiene fila en el roadmap.
+* **[G] ESTADO CONTRA PROSA**, aviso: un hito ✅ del que la prosa dice «falta», o al revés.
+* **La pasada de lectura**, en el comando, porque *una afirmación puede ser falsa sin
+  contradecir a ninguna otra* — y eso no lo caza un grep. El script **imprime siempre lo
+  que NO mira**.
+
+⭐ **Cazó un hallazgo real en su primera ejecución**: la sección «H3 ❌ Pendiente» de
+`NEXT-STEPS.md`, del plan del 6 de septiembre, cuyo plan incluía «soundness por inducción
+sobre los constructores de `Derives`» — que **ADR-017 declaró imposible**. Doce días de
+deriva que la pasada de lectura de esa misma tarde no había visto.
+
+Probado (ADR-015) mencionando un identificador de hito sin fila en el roadmap: exit 1.
+⚠️ Y cazó acto seguido su propio ADR, que escribía ese identificador literalmente.
+Y [G] calibrado el mismo día excluyendo
+`DECISIONS.md`, porque un ADR narra su contexto histórico por diseño.
+
 ### 2026-09-18 (d) · H3ter etapa 1: la barra, relativa a la TEORÍA
 
 **`Slash T f`** — la teoría pasa a ser parámetro (ADR-025). Estaba clavada a `[]`, lo que

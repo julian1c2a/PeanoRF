@@ -84,18 +84,31 @@ contexto — eso es exactamente lo que compraba la ω-regla.
 
 ---
 
-## H3 · La interpretación en ℕ₀  ❌ Pendiente
+## H3 · La interpretación  ✅ CERRADO (2026-09-16)
 
-**Objetivo**: `⟦·⟧ : Formula → Env ℕ₀ → Prop` y `soundness` **del fragmento finitario**
-(M-9). Aquí el espejo deja de ser metáfora y pasa a ser teorema de transferencia.
+🏁 **`derivesI_soundness` mide `[propext, Quot.sound]`**: la solidez de la lógica
+intuicionista, demostrada intuicionistamente. Y `derivesI_consistent` con ella.
 
-- [ ] `⟦·⟧` para `Term` y `Formula`, constructiva, sin tocar `FOL.Semantics` (M-5).
-- [ ] Interpretación de los axiomas de Q⁺⁺ como verdades sobre `ℕ₀`.
-- [ ] `soundness` por inducción **sobre los constructores de `Derives`**.
-- [ ] ⚠️ **Enunciarla de modo que NO cubra `raa`/`imp_intro`** (M-9): con ellas, un testigo
-      de no-derivabilidad daría una contradicción. Ver ADR-016 §«El peligro concreto».
+⚠️ **Esta sección decía otra cosa hasta el 2026-09-18**, y la decía desde el plan original
+del 6 de septiembre: «❌ Pendiente», con las casillas sin marcar y un plan que incluía
+«soundness por inducción **sobre los constructores de `Derives`**» — que **ADR-017 declaró
+imposible**: `FOL.Derives` no puede tener solidez. Doce días de deriva que ningún control
+veía, y la cazó `check-coherencia.bash` [G] en su primera ejecución.
 
-**Dependencias**: H2. **Complejidad**: media-alta.
+Cómo salió de verdad:
+
+- [x] La interpretación es la de `FOL.Metamath.Semantics`, no una propia: M-5 se enmendó
+      **con una medición** (ADR-019) — `satisfies` no tiene footprint; lo clásico estaba en
+      la *prueba* de `Soundness0`.
+- [x] **Inducción directa sobre los 18 constructores de `⊢ᵢ`**, no sobre `Derives`.
+- [x] El último `Classical` era **un `omega`** en `shift_updateEnv_comm`, corregido aguas
+      arriba (`6d47e5b`).
+- [x] ➕ **H3′** (2026-09-17): `consistI_syn`, la consistencia **sin semántica**, por los
+      secuentes sin corte de FOL (ADR-020).
+
+**Y el peligro de M-9 sigue vigente**: la solidez se enuncia sobre `⊢ᵢ`, que **no tiene**
+`raa` ni `imp_intro`. Con ellas, un testigo de no-derivabilidad daría una contradicción
+(ADR-016 §«El peligro concreto»). Es la razón de que el eje finitario del gate exista.
 
 ---
 
@@ -141,3 +154,4 @@ Ver [PLANNING.md](PLANNING.md) §6.
 | H5 | Volcado del núcleo aritmético | ❌ |
 | H6 | Realizabilidad explícita | ❌ |
 | H7 | Metateoría / checker verificado | ❌ |
+

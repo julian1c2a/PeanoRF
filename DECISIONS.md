@@ -995,6 +995,59 @@ decisión de diseño pendiente, y **conserva H3bis exactamente** (la hipótesis 
 
 ---
 
+## ADR-026: Un control para lo que los otros cinco no miran — la coherencia ENTRE documentos
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado
+
+**Contexto**: el 2026-09-18, tras una pasada de ARMONIZA hecha a mano, los cinco controles
+de `check-doc-sync.bash` daban **verde** mientras había tres contradicciones vivas:
+
+* `CURRENT-STATUS-PROJECT.md` se contradecía **a sí mismo** sobre H3ter;
+* `PLANNING.md` no tenía el hito **en el roadmap**, con un día de trabajo hecho;
+* `NEXT-STEPS.md` conservaba, del plan del 2026-09-06, una sección «H3 ❌ Pendiente» cuyo
+  plan incluía «soundness por inducción sobre los constructores de `Derives`» — que
+  **ADR-017 declaró imposible**. Doce días de deriva.
+
+Los cinco miran **cifras, catálogo, marcas de tiempo y alcance**: la relación de los
+documentos con el **código**. Ninguno mira la relación de los documentos **entre sí**.
+
+**Decisión**: `check-coherencia.bash` + el comando `/armoniza`, con la división **declarada**
+entre lo mecanizable y lo que no lo es.
+
+* **[F] REGISTRO DE HITOS — BLOQUEANTE**: todo hito mencionado en el corpus tiene fila en el
+  roadmap. Es el control [C] (todo módulo en su catálogo) aplicado a los hitos.
+* **[G] ESTADO CONTRA PROSA — AVISO**: un hito ✅ del que la prosa dice «falta», o uno no
+  cerrado que la prosa da por hecho.
+* **La pasada de LECTURA**, en el comando, con cinco preguntas y su arquetipo real.
+
+**Justificación**: de los tres descuadres, **dos eran mecanizables y uno no**. La tentación
+era escribir un script que pareciera cubrirlos todos; eso habría producido exactamente lo
+que este proyecto lleva dos días cazando: **un control que da verde sin comprobar**. La
+alternativa honesta es cubrir lo que se puede y **declarar en la salida lo que no** — por
+eso el script imprime siempre su lista de puntos ciegos.
+
+🔑 **Una afirmación puede ser FALSA sin contradecir a ninguna otra.** Eso lo caza una
+lectura, no un grep, y por eso el paso 3 está en el comando y no en la buena voluntad.
+
+**Consecuencias**:
+- ⭐ **Cazó un hallazgo real en su PRIMERA ejecución**: la sección H3 de `NEXT-STEPS.md`,
+  que llevaba doce días contradiciendo a ADR-017 y que la pasada de lectura de esa misma
+  tarde **no había visto**.
+- Probado (ADR-015) mencionando en un documento un identificador de hito **sin fila en el
+  roadmap**: el control lo caza y sale con 1.
+- ⚠️ Y cazó acto seguido **este mismo ADR**, porque la primera redacción escribía el
+  identificador de prueba **literalmente**. Reformulado. Es el mismo bucle de calibración de
+  siempre: un control recién nacido primero muerde lo que no debe.
+- ⚠️ [G] calibrado el mismo día: `DECISIONS.md` queda **fuera** de su barrido, porque un ADR
+  narra su contexto histórico por diseño — igual que el CHANGELOG. De 3 avisos, 2 eran ADRs
+  contando el pasado. **Un control que grita en falso deja de leerse**, y entonces da igual
+  que funcione.
+- ⚠️ Queda un falso positivo conocido: la co-ocurrencia en una misma línea
+  («H3bis cerrado; siguiente, H4»). Se adjudica a mano; es el precio de que [G] sea aviso.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

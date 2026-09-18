@@ -337,6 +337,7 @@ Transición: 🔄 → 🔶 → ✅ → 🧊 (el estado 🧊 es final).
 | `bash gen-root.bash` | Regenera el fichero de importación raíz |
 | `bash check-sorry.bash` | Localiza todos los `sorry` (excluyendo comentarios) |
 | `bash check-doc-sync.bash` | **Comprueba que la documentación cuadra con el código** (§27). `--quick` omite el build |
+| `bash check-coherencia.bash` | **Comprueba que los documentos no se contradigan ENTRE SÍ** (§28). [F] rompe, [G] avisa |
 | `bash update-toolchain.bash vX.Y.Z` | Actualiza el toolchain de Lean con verificación de build |
 | `make help` | Lista los targets del Makefile |
 
@@ -420,6 +421,30 @@ funcione.
 ⚠️ **Y la regla de oro que ningún script sustituye: NO basta con arreglar el banner.** Al corregir,
 recorrer también las tablas resumen, las secciones de «Próximos pasos» y las notas de auditoría
 antiguas.
+
+### (28.) Coherencia ENTRE documentos — `check-coherencia.bash` y `/armoniza`
+
+§27 comprueba que los documentos cuadren con el **código**. Esto comprueba que cuadren
+**entre sí**, que no es lo mismo y no lo ve ninguno de sus cinco controles.
+
+Nace del 2026-09-18: con `check-doc-sync` en verde, `CURRENT-STATUS` se contradecía a sí
+mismo sobre un hito, `PLANNING` no tenía ese hito en el roadmap, y `NEXT-STEPS` conservaba
+una sección del plan original cuyo contenido un ADR había declarado **imposible** doce días
+antes.
+
+* **[F] REGISTRO DE HITOS**, bloqueante: todo hito mencionado tiene fila en el roadmap. Es
+  §1/§14 («todo módulo en su catálogo») aplicado a los hitos.
+* **[G] ESTADO CONTRA PROSA**, aviso: un hito ✅ del que la prosa dice «falta», o al revés.
+
+⚠️ **Y la parte que ningún script cubre va escrita en la salida del script**, no callada:
+*una afirmación puede ser FALSA sin contradecir a ninguna otra*. Por eso `/armoniza` termina
+con una **pasada de lectura obligatoria** y cinco preguntas con su arquetipo real. Escribir
+un script que *pareciera* cubrirlo todo habría producido justo lo que §27.1 prohibe: un
+control que da verde sin comprobar.
+
+⚠️ Calibración que conviene no deshacer: **`DECISIONS.md` queda fuera del barrido de [G]**,
+porque un ADR narra su contexto histórico por diseño. Sin esa exclusión, dos de cada tres
+avisos eran ruido — y un control que grita en falso deja de leerse.
 
 ### (22.) Marcas de tiempo
 

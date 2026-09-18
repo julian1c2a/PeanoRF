@@ -15,6 +15,42 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (k) · 🏁🏁 los SEIS duros, y con ellos los 34 axiomas de `coreAxioms`
+
+Por orden de la tabla, y todos en `[propext, Quot.sound]`:
+
+* **`ax21_mod2_range`** — `hNum` da `k̄` con `⊢ᵢ %₂t = k̄`, pero no dice que `k` sea 0 ó 1: si
+  `k ≥ 2`, las dos ramas del axioma dan `⊥`. Aquí la **consistencia deja de ser decorativa**.
+* **`ax_L2_in_cons`** — y **sin** consistencia: una de las dos ramas es una IGUALDAD,
+  refutable con `numeralI_ne`, y la disyunción del objeto entrega la otra.
+* **`ax13_lt_def`** — el primero que exige **construir** y no sólo elegir: si `n < m` el
+  testigo es `m-n-1`; si no, `numeralI_not_lt` refuta.
+* **`ax14_sqrt_le`** — `≤` es `< ∨ =`, por eso no era de Harrop pese a parecer atómico.
+* **`ax_L3_in_concat`** — bajo `hIn`, la decidibilidad de `∈`. ⚠️ **Hipótesis, no teorema.**
+
+⭐⭐ **La pieza que costó**: `addI_succ_ne` — *ningún numeral es `x + σy`*. Q⁺⁺ no prueba la
+cancelación de la suma (eso pide inducción en el objeto), pero **para un numeral concreto la
+recursión META la sustituye**: `σc̄ + σj = σc̄` se reduce por conmutatividad, `ax5` y la
+inyectividad de `σ` a `c̄ + σj = c̄`, que es la hipótesis de inducción. La base la cierra `ax2`.
+De ahí sale `numeralI_not_lt`, que es lo que `ax13` y `ax14` pedían.
+
+🏁🏁 **`slash_coreAxioms`**: los 34 axiomas barrados. Y **`haDisjunctionProperty_core`**: la
+DP de HA con `coreAxioms` YA DESCARGADO. Lo que queda va como hipótesis, todas dichas:
+
+| | qué es | ¿aquí? |
+|---|---|---|
+| `hcon` | consistencia de la teoría | ⛔ no (Gödel) |
+| `hlift` | contexto invariante bajo levantamiento | ✅ si las instancias son cerradas |
+| `hNum` | todo anclado es demostrablemente un numeral | ⏳ faltan 8 de los 13 símbolos |
+| `hIn` | `∈` decidible sobre anclados | ⛔ pide inducción sobre listas |
+| `hInd` | el esquema de inducción barrado | ⏳ |
+
+⚠️ `hlift` apareció sola: dentro de `elim_ex` el contexto **se levanta**, y los axiomas
+tienen que seguir estando. `coreAxioms` lo es (`axioms_lift`); las instancias, sólo si son
+cerradas. Por eso los lemas de instancia van parametrizados por `hΓ` y no fijados a `ctx`.
+
+**49 jobs · 16 módulos · 0 sorry · 267 declaraciones · deuda heredada 0.**
+
 ### 2026-09-18 (j) · ⭐⭐ etapa 3 — Harrop tumba 28 de 34, y `ax19` cae por medición
 
 **La pieza**: `slash_of_isHarrop`. Para una fórmula de **Harrop**, estar barrada no es más

@@ -94,9 +94,20 @@
 > ```
 >
 > 1. la **consistencia** de la teoría — el precio clásico de la barra, no demostrable aquí;
-> 2. los **6** axiomas que no son de Harrop — ⭐ **3 ya están**: `ax19`, `ax21` y `ax_L2`
->    (`HA/SlashAxioms.lean`). **31 de 34.**
+> 2. 🏁 **LOS 6 YA ESTÁN** (`HA/SlashAxioms.lean`): `ax13`, `ax14`, `ax19`, `ax21`,
+>    `ax_L2` y `ax_L3`. ⇒ **34 de 34.**
 > 3. el **esquema de inducción**.
+>
+> 🏁🏁 `haDisjunctionProperty_core`: **la DP de HA con `coreAxioms` YA DESCARGADO**.
+> Lo que queda va como hipótesis, **todas dichas y ninguna escondida**:
+>
+> | hipótesis | qué es | ¿se puede demostrar aquí? |
+> |---|---|---|
+> | `hcon` | la consistencia de la teoría | ⛔ no (Gödel) |
+> | `hlift` | el contexto invariante bajo levantamiento | ✅ si las instancias son cerradas |
+> | `hNum` | todo término anclado es demostrablemente un numeral | ⏳ faltan 8 de los 13 símbolos |
+> | `hIn` | `∈` decidible sobre términos anclados | ⛔ pide inducción sobre listas |
+> | `hInd` | el esquema de inducción barrado | ⏳ |
 >
 > ⚠️ Dos correcciones que salió de medir: (a) la lista dura es de **6**, no de 5, y no es la
 > que estaba escrita — `ax29_sub_witness` SÍ es de Harrop, y `ax14_sqrt_le` y
@@ -139,7 +150,7 @@
 |--------|-------|
 | Módulos propios | 16 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms}`) |
 | Módulos con 0 `sorry` | 16 / 16 |
-| Teoremas propios | 132 |
+| Teoremas propios | 147 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

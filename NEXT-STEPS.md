@@ -68,36 +68,24 @@ salen con el enunciado literal de antes y el mismo `[propext, Quot.sound]`.
 está enunciada sobre `substF`, hay que mover el colapso al otro lado ⇒ **`collapseF_substF`**,
 la conmutación con la sustitución PARALELA, que el sondeo (g) ya había medido.
 
-### Etapa 3 — EN MARCHA: 29 de 34
+### Etapa 3 — 🏁 LOS 34, HECHA
 
-✅ **28 de golpe, por HARROP** (`slash_of_isHarrop`). Para una fórmula de Harrop, estar
-barrada no es más que ser derivable. Y con ellos, `haDisjunctionProperty`: la DP de HA
-reducida a **tres obligaciones** — consistencia, los 6 no-Harrop, y el esquema de inducción.
+✅ **28 por HARROP** (`slash_of_isHarrop`) y ✅ **los 6 duros uno a uno**: `ax13`, `ax14`,
+`ax19`, `ax21`, `ax_L2`, `ax_L3`. De ahí `slash_coreAxioms` y
 
-✅ **`ax19_lt_trichotomy`**, el que motivó todo el parámetro de dominio. Y de paso
-`numeralI_lt` y un **`numeralI_ne` constructivo**, que aguas arriba sólo existe contaminado.
+```lean
+haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
+```
 
-⚠️ **La lista dura es de SEIS, no de cinco**, y no era la que estaba escrita:
-`ax29_sub_witness` sí es de Harrop; `ax14_sqrt_le` y `ax_L2_in_cons` no.
+#### Lo que queda, y es lo único
 
-#### Lo que queda, con su receta
-
-| axioma | qué necesita | estado |
+| hipótesis | qué es | siguiente paso |
 |---|---|---|
-| `ax21_mod2_range` | `hNum` + `numeralI_ne` + consistencia | 🔶 receta completa |
-| `ax_L2_in_cons` | `hNum` + `numeralI_ne` | 🔶 receta completa |
-| `ax13_lt_def` | además `numeralI_not_lt` ⇐ transitividad de `<` | ⏳ |
-| `ax14_sqrt_le` | idem, y evaluar `√` sobre numerales | ⏳ |
-| `ax_L3_in_concat` | decidir `∈` sobre términos anclados | ⛔ sin atajo |
-
-#### Y las dos obligaciones de fondo
-
-* **`hNum`**: que todo término anclado sea demostrablemente igual a un numeral.
-  `closed_term_eq_numeral` la da para los **cinco** símbolos de los numerales; el lenguaje
-  tiene **trece**. Falta evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##` y `Π_p`, y algunas
-  de esas evaluaciones necesitan instancias del esquema de inducción.
-* **La consistencia de la teoría**, que es el precio clásico de la barra de Kleene y **no es
-  demostrable aquí** (Gödel). Va como hipótesis, dicha en el enunciado.
+| `hInd` | el esquema de inducción barrado | ⭐ **lo más próximo**: `inductionFormula φ` es `(φ[0] ⇒ (∀(φ ⇒ φ[σ])) ⇒ ∀φ)`, y su consecuente es `∀φ` ⇒ **si `φ` es de Harrop, el esquema también lo es** |
+| `hNum` | todo anclado es demostrablemente un numeral | evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` sobre numerales; algunas piden inducción |
+| `hlift` | contexto invariante bajo levantamiento | ✅ trivial para instancias cerradas; conviene un lema que lo diga |
+| `hIn` | `∈` decidible sobre anclados | ⛔ pide inducción sobre listas; puede que nunca salga de Q⁺⁺ sola |
+| `hcon` | la consistencia de la teoría | ⛔ Gödel. Se queda como hipótesis **para siempre**, y está bien que se vea |
 
 ### ⚠️ Deudas vivas
 

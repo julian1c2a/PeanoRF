@@ -99,7 +99,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo |
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo |
-| `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | 🔶 3 de 6 |
+| `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | ✅ 6 de 6 |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
@@ -544,7 +544,7 @@ producción, no en el cuaderno.
 **Namespace**: `PeanoRF.HA`
 **Dependencies**: `PeanoRF.HA.Domain`
 **Last updated**: 2026-09-18
-**Status**: 🔶 3 de 6
+**Status**: ✅ 6 de 6
 
 | nombre | enunciado | footprint |
 |---|---|---|
@@ -554,6 +554,12 @@ producción, no en el cuaderno.
 | ⭐⭐ `slash_ax19` | `ax19_lt_trichotomy` barrado bajo `hNum` | `propext, Quot.sound` |
 | ⭐ `slash_ax21` | `ax21_mod2_range` — bajo `hNum` **y consistencia** | `propext, Quot.sound` |
 | ⭐ `slash_axL2` | `ax_L2_in_cons` — bajo `hNum`, **sin consistencia** | `propext, Quot.sound` |
+| ⭐ `numeralI_not_lt` | `b ≤ a ⟹ ⊢ᵢ ¬(ā < b̄)` — pide `hlift` | `propext, Quot.sound` |
+| ⭐⭐ `addI_succ_ne` | **ningún numeral es `x + σy`** — inducción META | `propext, Quot.sound` |
+| ⭐ `slash_ax13` / `slash_ax14` | los dos que pedían refutar una desigualdad | `propext, Quot.sound` |
+| `slash_axL3` | `ax_L3_in_concat` — bajo `hIn` | `propext, Quot.sound` |
+| 🏁🏁 **`slash_coreAxioms`** | **los 34 axiomas barrados** | `propext, Quot.sound` |
+| 🏁🏁🏁 **`haDisjunctionProperty_core`** | la DP de HA con `coreAxioms` descargado | `propext, Quot.sound` |
 
 **El patrón de los seis**: barrar una disyunción pide **elegir rama**, y eso es una decisión
 en el META. `hNum` baja los términos del dominio a numerales, se decide sobre números, y la
@@ -568,13 +574,18 @@ cinco símbolos de los numerales, pero el lenguaje tiene trece. Falta evaluar `�
 2026-09-16). Éste se construye con `ax2` (`σx ≠ 0`) en las bases y `ax3` (`σ` inyectiva) en
 el paso, y mide `[propext, Quot.sound]`.
 
-**Lo que falta, con su receta**:
+**Lo que falta, y es lo único**:
 
-| axioma | qué necesita |
-|---|---|
-| `ax13_lt_def` | `numeralI_not_lt`, que pide «ningún numeral es `x + σy`» |
-| `ax14_sqrt_le` | idem, y evaluar `√` |
-| `ax_L3_in_concat` | ⛔ decidir `∈` sobre términos anclados: no hay atajo |
+| hipótesis | qué es | ¿se puede demostrar aquí? |
+|---|---|---|
+| `hcon` | la consistencia de la teoría | ⛔ no (Gödel) |
+| `hlift` | el contexto invariante bajo levantamiento | ✅ si las instancias son cerradas |
+| `hNum` | todo término anclado es demostrablemente un numeral | ⏳ faltan `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` |
+| `hIn` | `∈` decidible sobre términos anclados | ⛔ pide inducción sobre listas |
+
+⚠️ **`hIn` es hipótesis, no teorema.** `ax_L2_in_cons` se pudo cerrar sin ella porque una de
+sus dos ramas es una IGUALDAD, refutable con `numeralI_ne`; en `ax_L3_in_concat` las dos
+ramas son `∈` y no hay nada que refutar bajando a numerales.
 
 ---
 

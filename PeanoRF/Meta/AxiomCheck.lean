@@ -94,6 +94,7 @@ import Lean.Util.CollectAxioms
 -- con los ficheros del árbol.
 import PeanoRF.Prelim
 import PeanoRF.Calculus.DerivesI
+import PeanoRF.Calculus.Collapse
 import PeanoRF.Calculus.Consistency
 import PeanoRF.Calculus.Slash
 import PeanoRF.Calculus.Subst

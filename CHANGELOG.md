@@ -15,6 +15,30 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (f) · ⭐ `derivesI_collapse` — la etapa 2 de H3ter pierde su pieza cara
+
+```
+derivesI_collapse : Γ ⊢ᵢ f → Γ.map (collapseF L) ⊢ᵢ collapseF L f   [propext, Quot.sound]
+```
+
+De una derivación que instancia con símbolos **ajenos al lenguaje** sale otra que no lo hace,
+con el mismo contexto y la misma conclusión colapsados. Las cinco conmutaciones previas, en
+**`[propext]`**.
+
+⇒ El contraejemplo del `junk_probe` deja de ser un obstáculo y pasa a ser **lo que justifica
+restringir al lenguaje**. La ruta cara —un cálculo paralelo `DerivesL`— **no hace falta**.
+
+⭐ Sale más barato que `derivesI_subst` porque el colapso **no cambia al entrar bajo una
+ligadura**, así que su navegación de `rewrite_at` no va indexada por `posDepth`.
+
+⚠️ **Nota de aguas arriba**: FOL migró hoy la sintaxis a `inductive FormulaG (S : Type)` con
+`abbrev Formula := FormulaG String` (su ADR-065/066, el parámetro genérico de símbolos). Es
+**compatible hacia atrás** y nuestro build no se enteró — 47 jobs verdes —, pero conviene
+saberlo: `Formula.impl` sigue resolviendo por el `abbrev`, y el constructor real es
+`FormulaG.impl`.
+
+**47 jobs · 14 módulos · 0 sorry · 201 declaraciones · deuda heredada 0.**
+
 ### 2026-09-18 (e) · un control para lo que los otros cinco no miran
 
 **`check-coherencia.bash`** + el comando **`/armoniza`** (ADR-026, AI-GUIDE §28).

@@ -97,6 +97,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Consistency.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI`, `FOL.Finitary0` | ✅ Completo |
 | `Calculus/Subst.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim` | ✅ Completo |
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
+| `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
@@ -453,6 +454,36 @@ escrito para que puedan adoptarlo tal cual.
 Hermano de `FOL.Lift0.derives0_lift`, con `ρ` donde ellos llevan `k`. ⚠️ El `∀ ρ` va
 **dentro** de la inducción: en `intro_forall`, `elim_ex` y `rewrite_at` la hipótesis
 inductiva se usa con otra sustitución.
+
+---
+
+### 3.3nonies Calculus/Collapse.lean — el colapso de símbolos ajenos
+
+**Namespace**: `PeanoRF.Calculus`
+**Dependencies**: `PeanoRF.Calculus.DerivesI`
+**Last updated**: 2026-09-18
+**Status**: ✅ Completo
+**@importance**: **foundational**
+
+| nombre | notación matemática | footprint |
+|---|---|---|
+| `collapseT` / `collapseF` | todo símbolo fuera de `L` ↦ `zero` | — |
+| `collapseF_lift` / `collapseF_subst` | conmuta con lift y subst | `propext` |
+| `collapse_getAt?` / `collapse_replaceAt` / `collapse_localRule` | navegación | `propext` |
+| ⭐⭐ **`derivesI_collapse`** | `Γ ⊢ᵢ f ⟹ Γᴸ ⊢ᵢ fᴸ` | `propext, Quot.sound` |
+
+**El obstáculo que retira**: `Term` es genérica y `elim_forall` instancia con cualquier
+término, así que HA deriva instancias de sus axiomas sobre símbolos ajenos
+(`sondeos/junk_probe.lean`) ⇒ **la DP falla sobre la sintaxis ambiente**. El colapso
+**transforma** la derivación en vez de restringirla: una instanciación con basura pasa a ser
+una con `collapseT L t`, que sí es del lenguaje.
+
+⭐ **Sale más barato que `derivesI_subst`** porque el colapso **no cambia al entrar bajo una
+ligadura**: `collapseF L (∀a) = ∀ (collapseF L a)`, con la misma `L`. Por eso su navegación
+no va indexada por `posDepth` y la de la sustitución sí.
+
+⚠️ Parametrizado por la signatura `L : String → Bool`, no clavado a Q⁺⁺. Y los **predicados**
+ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, sin testigo.
 
 ---
 

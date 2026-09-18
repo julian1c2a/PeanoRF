@@ -37,16 +37,14 @@ disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B 
 
 1. **Parámetro de dominio `Slash T D`** — elegido: conserva H3bis en toda su fuerza. `D`
    serán los términos cerrados del lenguaje (`ClosedQTerm`, ya definido).
-2. **Restringir las derivaciones al lenguaje** — pieza nueva que el contraejemplo obliga a
-   añadir. `D` dice sobre qué cuantifica la barra; esto dice qué usa la derivación por
-   dentro, y son cosas distintas. Dos rutas:
-   * un `DerivesL` paralelo con su puente — trabajo nuestro, sin bloqueo;
-   * ⭐ **eliminación de símbolos ajenos** (`Γ ⊢ φ` con todo en `L` ⇒ hay derivación sin
-     términos fuera de `L`) — **preguntado a FOL**, que cerró Maehara + Craig el 17
-     (`LKp`, su ADR-063). Si se lo da su maquinaria, nos ahorra un cálculo entero.
+2. ✅ **Restringir las derivaciones al lenguaje — HECHO** (`Calculus/Collapse.lean`):
+   **`derivesI_collapse`**. No hizo falta ni un `DerivesL` paralelo ni esperar a Craig: se
+   **transforma** la derivación en vez de restringirla. Y la espera habría sido mala
+   apuesta — el ADR-065 de RPP mide que el puente a `LKp` no tiene camino barato.
 
-⚠️ **Primero mirar si han contestado** (`doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`).
-Si no, la ruta del `DerivesL` no depende de nadie.
+⇒ **Lo que queda de la etapa 2 es la pieza (1)**, el parámetro de dominio `Slash T D`, ya
+decidido. Con `D = ClosedQTerm` y `derivesI_collapse` en la mano, el caso `elim_forall` de
+L2 deja de pedir `D` de un término arbitrario.
 
 ### Etapa 3 — ya medida
 

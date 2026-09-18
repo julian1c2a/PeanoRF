@@ -17,7 +17,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **46 jobs · 13 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **47 jobs · 14 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -53,6 +53,11 @@
 > ✅ **Etapa 1 hecha** (ADR-025): la barra es **relativa a la teoría**, `Slash T f`, y H3bis
 > queda como su instancia `T = []` — intacto. El teorema general es
 > `disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B`.
+>
+> ✅ **Etapa 2, pieza (b) HECHA** (2026-09-18): **`derivesI_collapse`**. De una derivación
+> que instancia con símbolos ajenos sale otra que no lo hace, con el mismo contexto y la
+> misma conclusión colapsados. `[propext, Quot.sound]`, y las conmutaciones en `[propext]`.
+> ⇒ El contraejemplo deja de ser obstáculo y pasa a ser **lo que justifica la restricción**.
 >
 > 🔶 **Etapa 2**, decidida y con una pieza nueva: parámetro de dominio `Slash T D`
 > (conserva H3bis en toda su fuerza) **más** la restricción de las derivaciones al lenguaje,
@@ -92,13 +97,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 13 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals}`) |
-| Módulos con 0 `sorry` | 13 / 13 |
-| Teoremas propios | 75 |
+| Módulos propios | 14 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals}`) |
+| Módulos con 0 `sorry` | 14 / 14 |
+| Teoremas propios | 88 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 46 jobs (ver la reserva del banner) |
+| Build | ✅ 47 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

@@ -381,4 +381,69 @@ theorem collapseF_trivial (L : String → Nat → Bool) (hL : ∀ s n, L s n = t
   | «forall» a ih => simp only [collapseF, ih]
   | ex a ih => simp only [collapseF, ih]
 
+/-! ## 7 · Términos ANCLADOS — el dominio de la barra, definido por sus clausuras
+
+    ⭐ La forma (c) de L2 no pide que el dominio sea una lista de términos: pide **dos
+    clausuras**. Así que lo más barato es definir el dominio POR ellas — y entonces valen
+    para cualquier signatura, sin una inducción por lenguaje.
+
+    `Grounded L t` dice las dos cosas a la vez: `t` no tiene símbolos fuera de `L` (el
+    colapso lo fija) y no tiene variables libres (ninguna sustitución lo toca). -/
+
+/-- El colapso es **idempotente**. Sale sin hipótesis sobre `L`: en la rama negativa los dos
+    lados dan `zero` se conserve `0` o no. -/
+theorem collapseT_zero (L : String → Nat → Bool) : collapseT L zero = zero := by
+  by_cases h : L zero_sym 0
+  · simp only [zero, collapseT, List.length_nil, if_pos h, collapseTs]
+  · simp only [zero, collapseT, List.length_nil, if_neg h]
+
+mutual
+theorem collapseT_idem (L : String → Nat → Bool) : ∀ t : Term,
+    collapseT L (collapseT L t) = collapseT L t := by
+  intro t
+  cases t with
+  | var n => rfl
+  | func s ts =>
+      by_cases h : L s ts.length
+      · simp only [collapseT, if_pos h, collapseTs_length]
+        exact congrArg _ (collapseTs_idem L ts)
+      · simp only [collapseT, if_neg h]
+        exact collapseT_zero L
+
+theorem collapseTs_idem (L : String → Nat → Bool) : ∀ ts : List Term,
+    collapseTs L (collapseTs L ts) = collapseTs L ts := by
+  intro ts
+  cases ts with
+  | nil => rfl
+  | cons t ts0 =>
+      simp only [collapseTs, List.cons.injEq]
+      exact ⟨collapseT_idem L t, collapseTs_idem L ts0⟩
+end
+
+/-- **El dominio, definido por sus clausuras.** Sin símbolos fuera de `L` y sin variables
+    libres, dicho de la única manera que L2 va a usar. -/
+def Grounded (L : String → Nat → Bool) (t : Term) : Prop :=
+  And (collapseT L t = t) (∀ ρ : Subst, substT ρ t = t)
+
+theorem grounded_zero (L : String → Nat → Bool) : Grounded L zero :=
+  ⟨collapseT_zero L, fun _ => rfl⟩
+
+/-- Lo que L2 pide en `intro_forall`. Es la primera componente, tal cual. -/
+theorem grounded_fix (L : String → Nat → Bool) {u : Term} (h : Grounded L u) :
+    collapseT L u = u := h.1
+
+/-- ⭐⭐ **Lo que L2 pide en `elim_forall`.** Con `ρ` anclada, el colapso de `substT ρ t` está
+    anclado **para `t` arbitrario**: el colapso mata los símbolos ajenos y `ρ` mata las
+    variables. -/
+theorem grounded_collapse_subst (L : String → Nat → Bool) (ρ : Subst)
+    (hρ : ∀ n, Grounded L (ρ n)) : ∀ t : Term, Grounded L (collapseT L (substT ρ t)) := by
+  intro t
+  refine ⟨collapseT_idem L _, fun τ => ?_⟩
+  have hfix : compS τ (collapseS L ρ) = collapseS L ρ := by
+    funext n
+    show substT τ (collapseT L (ρ n)) = collapseT L (ρ n)
+    rw [(hρ n).1]
+    exact (hρ n).2 τ
+  rw [collapseT_substT, substT_comp, hfix, ← collapseT_substT]
+
 end PeanoRF.Calculus

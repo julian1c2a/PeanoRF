@@ -218,6 +218,89 @@ decreasing_by
   all_goals simp only [fdepth, fdepth_subst]
   all_goals omega
 
+/-! ## ⭐ Las fórmulas de HARROP — donde la barra COINCIDE con la derivabilidad
+
+    La etapa 3 de H3ter pide barrar los 33 axiomas de `coreAxioms`, y hacerlo uno a uno
+    sería absurdo. Casi todos caen de un solo lema, y la razón es clásica: **para una fórmula
+    de Harrop, estar barrada no es más que ser derivable.**
+
+    La clase se lee de los casos de la barra, mirando cuáles NO piden testigo:
+
+    | conectiva | la barra pide | ¿vale? |
+    |---|---|---|
+    | `atom`, `eq` | la derivabilidad, y nada más | ✅ |
+    | `a ∧ b` | las dos barradas | ✅ si lo son `a` y `b` |
+    | `a ⇒ b` | derivable, y `∣a → ∣b` | ✅ si lo es **`b`** — el antecedente da igual |
+    | `∀a` | derivable, y `∣a[t]` para todo `t` del dominio | ✅ si lo es `a` |
+    | `a ∨ b` | **una rama barrada** | ⛔ |
+    | `∃a` | **un testigo** | ⛔ |
+    | `⊥` | `False` | ✅ **si `T` es consistente** — y ése es todo el precio |
+
+    ⭐ Que el antecedente de `⇒` sea libre es lo que hace la clase grande: se usa L1 para
+    bajar de `∣a` a `⊢ᵢ a`, y de ahí `elim_impl`. Es el único sitio donde L1 trabaja.
+
+    ⛔ **Lo que esto NO cubre**, y es exactamente la lista dura que la medición anunció:
+    `ax19_lt_trichotomy` (una `∨`), `ax21_mod2_range` (otra), `ax13_lt_def`,
+    `ax_L3_in_concat` y `ax29_sub_witness` (un `∃`). Esos piden decidir en el meta. -/
+
+/-- La clase de Harrop, como PREDICADO DECIDIBLE: así cada axioma se comprueba con `decide`
+    en vez de con una prueba a mano. -/
+def isHarrop : Formula → Bool
+  | .bottom    => true
+  | .atom _ _  => true
+  | .eq _ _    => true
+  | .and a b   => isHarrop a && isHarrop b
+  | .impl _ b  => isHarrop b
+  | .forall a  => isHarrop a
+  | .or _ _    => false
+  | .ex _      => false
+
+/-- Sustituir no saca de la clase. Hace falta en el caso `∀`, que baja a `a[t]`. -/
+@[simp] theorem isHarrop_subst (v : Nat) (t : Term) : ∀ f : Formula,
+    isHarrop (substFormula v t f) = isHarrop f := by
+  intro f
+  induction f generalizing v t with
+  | bottom => rfl
+  | atom _ _ => rfl
+  | eq _ _ => rfl
+  | impl _ _ _ ih2 => simp only [substFormula, isHarrop, ih2]
+  | and _ _ ih1 ih2 => simp only [substFormula, isHarrop, ih1, ih2]
+  | or _ _ _ _ => rfl
+  | «forall» _ ih => simp only [substFormula, isHarrop, ih]
+  | ex _ _ => rfl
+
+/-- ⭐⭐ **Para una fórmula de Harrop, derivable ⟹ barrada.**
+
+    Va por complejidad, como la barra misma: el caso `∀` baja a `a[t]`, que no es subtérmino.
+    El dominio `D` no interviene — la cláusula `∀ t, D t → …` sólo se hace más fácil cuanto
+    menor sea `D`. -/
+theorem slash_of_isHarrop (T : List Formula) (D : Term → Prop)
+    (hcon : ¬ (T ⊢ᵢ Formula.bottom)) :
+    ∀ f : Formula, isHarrop f = true → (T ⊢ᵢ f) → Slash T D f
+  | .bottom,    _,  hd => absurd hd hcon
+  | .or _ _,    hH, _  => Bool.noConfusion hH
+  | .ex _,      hH, _  => Bool.noConfusion hH
+  | .atom p ts, _,  hd => (slash_atom T D p ts).mpr hd
+  | .eq t u,    _,  hd => (slash_eq T D t u).mpr hd
+  | .and a b,   hH, hd => by
+      simp only [isHarrop, Bool.and_eq_true] at hH
+      exact (slash_and T D a b).mpr
+        ⟨slash_of_isHarrop T D hcon a hH.1 (Derivesᵢ.elim_and_l _ a b hd),
+         slash_of_isHarrop T D hcon b hH.2 (Derivesᵢ.elim_and_r _ a b hd)⟩
+  | .impl a b,  hH, hd => by
+      simp only [isHarrop] at hH
+      exact (slash_impl T D a b).mpr ⟨hd, fun ha =>
+        slash_of_isHarrop T D hcon b hH (Derivesᵢ.elim_impl _ a b hd (slash_derives T D a ha))⟩
+  | .forall a,  hH, hd => by
+      simp only [isHarrop] at hH
+      exact (slash_forall T D a).mpr ⟨hd, fun t _ =>
+        slash_of_isHarrop T D hcon (substFormula 0 t a) (by rw [isHarrop_subst]; exact hH)
+          (Derivesᵢ.elim_forall _ a t hd)⟩
+termination_by f => fdepth f
+decreasing_by
+  all_goals simp only [fdepth, fdepth_subst]
+  all_goals omega
+
 /-! ## El corte del contexto -/
 
 /-- **Corte del contexto.** Si cada hipótesis es derivable DESDE LA TEORÍA, el contexto

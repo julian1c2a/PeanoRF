@@ -50,6 +50,7 @@ namespace PeanoRF.HA
 open FOL
 open ROBINSON_PlusPlus.Minimal.Axioms
 open PeanoRF.Calculus
+open ROBINSON_PlusPlus.Full (inductionFormula)
 
 set_option autoImplicit false
 
@@ -173,83 +174,153 @@ theorem closed_collapse_substs (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
       · exact closed_collapse_substs ρ hρ ts0 u hu0
 end
 
-/-! ## 3 · 🏁 La propiedad de disyunción de una teoría de Q⁺⁺
+/-! ## 3 · La signatura COMPLETA de Q⁺⁺, y el dominio sobre ella
 
-    Aquí se junta todo: la forma (c) de L2 instanciada con `D = ClosedQTerm` y `L = LQ`. Las
-    dos clausuras que L2 pide son **exactamente** los dos teoremas de arriba, sin adaptador
-    ninguno.
+    ⛔ **`LQ` no sirve para HA, y está medido.** `LQ` tiene los cinco símbolos de los
+    numerales, pero los 34 axiomas de `coreAxioms` usan **trece**:
 
-    ⏳ Lo que queda para la DP de **HA** es una sola hipótesis: `hT`, que cada axioma de
-    `coreAxioms` esté barrado. Eso es la etapa 3, y está medida: 25 de los 34 salen con
-    `specI`, ~4 con `elim_impl`, y 5 piden decidir en el meta. -/
+    ```
+    0/0  []/0  σ/1  √/1  /₂/1  %₂/1  τ/1  Π_p/1  +/2  */2  ^/2  −/2  ::/2  ##/2
+    ```
+
+    (y dos predicados, `</2` y `∈/2`, que no se colapsan). Colapsar con `LQ` **mutila** casi
+    todos los axiomas, así que la hipótesis `hT` sobre `LQ` sería insatisfacible para HA y el
+    teorema, cierto y vacío. Por eso el dominio de trabajo va sobre `LQpp`.
+
+    ⭐ Y el dominio ya no es un inductivo por lenguaje sino **sus dos clausuras**
+    (`Calculus.Grounded`), que es todo lo que L2 mira. Así vale para cualquier signatura sin
+    volver a demostrar nada. -/
+
+/-- La signatura COMPLETA de Q⁺⁺, con aridades. Medida sobre `coreAxioms`, no supuesta. -/
+def LQpp (s : String) (n : Nat) : Bool :=
+  (s == zero_sym && n == 0) || (s == nil_sym && n == 0) ||
+  ((s == succ_sym || s == sqrt_sym || s == div2_sym || s == mod2_sym
+     || s == pred_sym || s == prodp_sym) && n == 1) ||
+  ((s == add_sym || s == mul_sym || s == pow_sym || s == sub_sym
+     || s == cons_sym || s == concat_sym) && n == 2)
 
 /-- La sustitución que cierra: todo índice a `zero`. Es la que instancia el nivel de arriba,
     donde la fórmula es una **sentencia** y por tanto ninguna variable llega a usarse.
 
     ⚠️ **`g ∈ T` no se puede escribir en este módulo**: en este ámbito `∈` está sobrecargada
-    y elabora el lado derecho como un TIPO (`type expected, got (T : List Formula)`). Se
-    escribe `List.Mem g T`, que es a lo que reduce y encaja por defeq con lo que
-    `Slash.lean` pide. Misma familia que el `σ` de `peanolib` y que el `∧`/`∨` de `FOL`. -/
-
+    —es el predicado `In` de Q⁺⁺, uno de los dos que se miden arriba— y elabora el lado
+    derecho como un TIPO (`type expected, got (T : List Formula)`). Se escribe
+    `List.Mem g T`, que es a lo que reduce. La tercera de la familia, tras el `σ` de
+    `peanolib` y el `∧`/`∨` de `FOL`. -/
 def zeroS : Subst := fun _ => zero
 
-theorem zeroS_closed : ∀ n, ClosedQTerm (zeroS n) := fun _ => ClosedQTerm.zero
+theorem zeroS_grounded : ∀ n, Grounded LQpp (zeroS n) := fun _ => grounded_zero LQpp
+
+/-- Todo `ClosedQTerm` está anclado en la signatura completa. Es el puente con
+    `closed_term_eq_numeral`, que sólo habla de los cinco símbolos de los numerales. -/
+theorem closed_grounded : ∀ {t : Term}, ClosedQTerm t → Grounded LQpp t := by
+  intro t h
+  induction h with
+  | zero => exact grounded_zero LQpp
+  | succ a _ ih =>
+      exact ⟨by simp only [succ, collapseT, List.length_cons, List.length_nil,
+              if_pos (by decide : LQpp succ_sym 1 = true), collapseTs, ih.1],
+             fun ρ => by simp only [succ, substT, substTs, ih.2 ρ]⟩
+  | add a b _ _ iha ihb =>
+      exact ⟨by simp only [add, collapseT, List.length_cons, List.length_nil,
+              if_pos (by decide : LQpp add_sym 2 = true), collapseTs, iha.1, ihb.1],
+             fun ρ => by simp only [add, substT, substTs, iha.2 ρ, ihb.2 ρ]⟩
+  | mul a b _ _ iha ihb =>
+      exact ⟨by simp only [mul, collapseT, List.length_cons, List.length_nil,
+              if_pos (by decide : LQpp mul_sym 2 = true), collapseTs, iha.1, ihb.1],
+             fun ρ => by simp only [mul, substT, substTs, iha.2 ρ, ihb.2 ρ]⟩
+  | pow a b _ _ iha ihb =>
+      exact ⟨by simp only [pow, collapseT, List.length_cons, List.length_nil,
+              if_pos (by decide : LQpp pow_sym 2 = true), collapseTs, iha.1, ihb.1],
+             fun ρ => by simp only [pow, substT, substTs, iha.2 ρ, ihb.2 ρ]⟩
+
+/-! ## 4 · 🏁 La propiedad de disyunción para una teoría de Q⁺⁺ -/
 
 /-- 🏁 **La DP para cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados.**
 
-    La hipótesis `hAB` dice, en una sola ecuación, que `A ∨ B` es una **sentencia del
-    lenguaje**: cerrada (la sustitución no la toca) y sin símbolos ajenos (el colapso no la
-    toca). ⛔ Sin ella el enunciado es FALSO — `sondeos/junk_probe.lean`. -/
+    `hAB` dice, en una sola ecuación, que `A ∨ B` es una **sentencia del lenguaje**: cerrada
+    (la sustitución no la toca) y sin símbolos ajenos (el colapso no la toca). ⛔ Sin ella el
+    enunciado es FALSO — `sondeos/junk_probe.lean`. -/
 theorem qDisjunctionProperty (T : List Formula)
-    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
+    (hT : ∀ g, List.Mem g T → Slash T (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : T ⊢ᵢ Formula.or A B) :
     (T ⊢ᵢ A) ∨ (T ⊢ᵢ B) :=
-  disjunction_property_of_slashed T ClosedQTerm LQ
-    (fun _ hu => collapse_fix_closed hu) closed_collapse_subst
-    zeroS zeroS_closed hT hAB h
+  disjunction_property_of_slashed T (Grounded LQpp) LQpp
+    (fun _ hu => grounded_fix LQpp hu) (grounded_collapse_subst LQpp)
+    zeroS zeroS_grounded hT hAB h
 
-/-! ### Que las hipótesis no sean vacías, medido
-
-    `hAB` dice «`A ∨ B` es una sentencia del lenguaje». Conviene comprobar que **hay
-    fórmulas que la cumplen**, porque una hipótesis insatisfacible haría el teorema cierto
-    y vacío — la misma trampa que este proyecto lleva dos semanas cazando en los controles. -/
-
-example :
-    collapseF LQ (substF zeroS
-        (Formula.or (Formula.eq zero zero) (Formula.eq (succ zero) zero)))
-      = Formula.or (Formula.eq zero zero) (Formula.eq (succ zero) zero) := by
-  rfl
-
-/-- 🏁 **La propiedad de existencia para una teoría de Q⁺⁺** — y el testigo sale **en el
-    dominio**, o sea: un término cerrado del lenguaje, que por `closed_term_eq_numeral` es
-    demostrablemente igual a un NUMERAL. Ésa es la sombra sintáctica del cómputo. -/
+/-- 🏁 **La propiedad de existencia**, con el testigo **anclado**: cerrado y del lenguaje. -/
 theorem qExistenceProperty (T : List Formula)
-    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
+    (hT : ∀ g, List.Mem g T → Slash T (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
     {A : Formula}
-    (hA : collapseF LQ (substF zeroS (Formula.ex A)) = Formula.ex A)
+    (hA : collapseF LQpp (substF zeroS (Formula.ex A)) = Formula.ex A)
     (h : T ⊢ᵢ Formula.ex A) :
-    ∃ t : Term, And (ClosedQTerm t) (T ⊢ᵢ substFormula 0 t A) :=
-  existence_property_of_slashed T ClosedQTerm LQ
-    (fun _ hu => collapse_fix_closed hu) closed_collapse_subst
-    zeroS zeroS_closed hT hA h
+    ∃ t : Term, And (Grounded LQpp t) (T ⊢ᵢ substFormula 0 t A) :=
+  existence_property_of_slashed T (Grounded LQpp) LQpp
+    (fun _ hu => grounded_fix LQpp hu) (grounded_collapse_subst LQpp)
+    zeroS zeroS_grounded hT hA h
 
-/-- ⭐ Y el testigo, por ser del dominio, **es un numeral salvo demostración**. Es lo que
-    convierte la propiedad de existencia en una afirmación sobre NÚMEROS. -/
-theorem qExistenceProperty_numeral (T : List Formula)
-    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
-    {A : Formula}
-    (hA : collapseF LQ (substF zeroS (Formula.ex A)) = Formula.ex A)
-    (h : T ⊢ᵢ Formula.ex A) :
-    ∃ t : Term, And (ClosedQTerm t)
-      (And (∃ n : Nat, ctx [] ⊢ᵢ (t =eq numeralM n)) (T ⊢ᵢ substFormula 0 t A)) := by
-  rcases qExistenceProperty T hT hA h with ⟨t, hDt, ht⟩
-  exact ⟨t, hDt, closed_term_eq_numeral hDt, ht⟩
+/-! ## 5 · 🏁 HA: la DP reducida a TRES obligaciones, y ni una más
 
-/-- El dominio **no es vacío**: la sustitución constante `zero` lo valúa. Es la que instancia
-    L2 en el nivel de arriba, donde la fórmula es una sentencia. -/
-theorem closed_zeroS : ∀ n : Nat, ClosedQTerm ((fun _ => zero : Subst) n) :=
-  fun _ => ClosedQTerm.zero
+    Aquí se ve qué queda de verdad. `ctx insts = coreAxioms ++ insts.map inductionFormula`,
+    y de los 34 axiomas de `coreAxioms` **28 caen solos** por ser de Harrop. Lo que resta va
+    como hipótesis explícitas:
+
+    1. **la consistencia de la teoría** — el precio clásico de la barra de Kleene, y no es
+       demostrable aquí (Gödel);
+    2. **los 6 axiomas que no son de Harrop**, medidos: `ax13_lt_def`, `ax14_sqrt_le`,
+       `ax19_lt_trichotomy`, `ax21_mod2_range`, `ax_L2_in_cons`, `ax_L3_in_concat`;
+    3. **el esquema de inducción**.
+
+    ⚠️ La lista de (2) **corrige la estimación anterior**, que decía cinco y nombraba
+    `ax29_sub_witness`: `ax29` sí es de Harrop, y en cambio `ax14_sqrt_le` y `ax_L2_in_cons`
+    no lo son. La medición manda. -/
+
+theorem eq_of_map_self {f : Formula → Formula} : ∀ (l : List Formula), l.map f = l →
+    ∀ g, List.Mem g l → f g = g := by
+  intro l
+  induction l with
+  | nil => intro _ g hg; cases hg
+  | cons a l0 ih =>
+      intro h g hg
+      simp only [List.map_cons, List.cons.injEq] at h
+      cases hg with
+      | head => exact h.1
+      | tail _ hg0 => exact ih h.2 g hg0
+
+/-- ⭐ **Los 34 axiomas son sentencias del lenguaje de Q⁺⁺**: ni variables libres ni símbolos
+    ajenos. Comprobado por `rfl`, no supuesto. -/
+theorem coreAxioms_sentence (g : Formula) (hg : List.Mem g coreAxioms) :
+    collapseF LQpp (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF LQpp (substF zeroS g)) coreAxioms (by rfl) g hg
+
+/-- ⭐⭐ **28 de los 34: los de Harrop caen solos.** Sólo hace falta la consistencia. -/
+theorem slash_coreAxioms_harrop {insts : List Formula}
+    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
+    (g : Formula) (hg : List.Mem g coreAxioms) (hH : isHarrop g = true) :
+    Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)) := by
+  rw [coreAxioms_sentence g hg]
+  exact slash_of_isHarrop (ctx insts) (Grounded LQpp) hcon g hH (ax' hg)
+
+/-- 🏁🏁 **LA PROPIEDAD DE DISYUNCIÓN PARA HA**, con lo que falta puesto como hipótesis y
+    nada escondido. -/
+theorem haDisjunctionProperty (insts : List Formula)
+    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
+    (hHard : ∀ g, List.Mem g coreAxioms → isHarrop g = false →
+      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+    (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
+      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+    {A B : Formula}
+    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctx insts ⊢ᵢ Formula.or A B) :
+    (ctx insts ⊢ᵢ A) ∨ (ctx insts ⊢ᵢ B) := by
+  refine qDisjunctionProperty (ctx insts) (fun g hg => ?_) hAB h
+  rcases List.mem_append.mp hg with hcore | hind
+  · by_cases hH : isHarrop g = true
+    · exact slash_coreAxioms_harrop hcon g hcore hH
+    · exact hHard g hcore (by simpa using hH)
+  · exact hInd g hind
 
 end PeanoRF.HA

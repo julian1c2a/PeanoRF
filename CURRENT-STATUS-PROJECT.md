@@ -86,8 +86,22 @@
 > del lenguaje porque el colapso no la toca. Comprobado que **no es vacía**, con un ejemplo
 > que la cumple por `rfl`.
 >
-> ⏳ **Queda SÓLO la etapa 3**: la hipótesis `hT`, que cada axioma de `coreAxioms` esté
-> barrado. Ahí ya no hay incógnita de método, sólo trabajo.
+> 🏁 **ETAPA 3, primera mitad** (2026-09-18): **28 de los 34 axiomas caen de un solo
+> lema** — los de **HARROP**, donde la barra COINCIDE con la derivabilidad. Y con ellos,
+>
+> ```
+> haDisjunctionProperty : la DP de HA reducida a TRES obligaciones, y ni una más
+> ```
+>
+> 1. la **consistencia** de la teoría — el precio clásico de la barra, no demostrable aquí;
+> 2. los **6** axiomas que no son de Harrop;
+> 3. el **esquema de inducción**.
+>
+> ⚠️ Dos correcciones que salió de medir: (a) la lista dura es de **6**, no de 5, y no es la
+> que estaba escrita — `ax29_sub_witness` SÍ es de Harrop, y `ax14_sqrt_le` y
+> `ax_L2_in_cons` NO lo son; (b) **`LQ` no servía**: tiene 5 símbolos y los axiomas usan
+> **13**, así que colapsar con ella los mutila. El dominio pasó a `Grounded LQpp`, definido
+> **por sus dos clausuras** en vez de por un inductivo, y así vale para cualquier signatura.
 >
 > ⏳ **Etapa 3**, medida: de los 34 axiomas de `coreAxioms`, **25** salen con `specI`, ~4 con
 > `elim_impl`, y **5** piden decidir en el meta (`ax19`, `ax21`, `ax13`, `ax_L3`, `ax29`).
@@ -124,7 +138,7 @@
 |--------|-------|
 | Módulos propios | 15 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain}`) |
 | Módulos con 0 `sorry` | 15 / 15 |
-| Teoremas propios | 109 |
+| Teoremas propios | 121 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

@@ -1,6 +1,6 @@
 # Guía Maestra de la IA — Estándares de Documentación y Desarrollo
 
-**Última actualización:** 2026-09-06
+**Última actualización:** 2026-09-19
 **Autor:** Julián Calderón Almendros
 
 > Este documento define lo **universal**: aplica a cualquier proyecto Lean 4 que nazca
@@ -453,6 +453,15 @@ Todos los ficheros de documentación técnica (`REFERENCE.md` y sus nodos, `CHAN
 incluir una marca de tiempo bajo el título en formato `2026-09-06 HH:MM` (ISO 8601
 abreviado) — **no solo `2026-09-06`**: la hora permite detectar desincronización
 incluso dentro de una misma sesión de trabajo.
+
+⚠️ **Y la marca tiene que ser CIERTA, no sólo estar.** Hasta el 2026-09-19 el control [D] de
+`check-doc-sync.bash` comprobaba que existiera, y daba verde con **SEIS documentos** fechados
+hasta trece días antes de su último cambio commiteado — incluido un `DECISIONS.md` que decía
+`2026-09-06` con cuatro ADR nuevos dentro. Desde entonces [D] compara la marca con
+`git log -1 --date=short -- <fichero>` y **rompe** si la marca es anterior.
+
+🔑 Es la cuarta forma de dar verde sin comprobar, y la más sutil de las cuatro: las otras
+tres callan o no miden; ésta **mira, pero mira la forma en vez del contenido**.
 
 ### (23.) Autoría y licencia
 

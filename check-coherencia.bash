@@ -120,12 +120,15 @@ echo
 echo "════ ⚠️  LO QUE ESTE CONTROL NO MIRA ════"
 cat <<'NOTA'
   Una afirmación puede ser FALSA sin contradecir a ninguna otra, y eso NO lo caza un grep.
-  Del 2026-09-18, esto se le escapa y hay que leerlo:
+  ARQUETIPOS ya cazados — ejemplos de lo que se le escapa, NO hallazgos vigentes:
 
-    · una sección de `sondeos/README.md` que contesta bien a una pregunta que resultó
-      demasiado estrecha («H3ter es viable por el port»);
-    · un `NEXT-STEPS.md` que presenta como abierta una decisión ya tomada;
-    · un `REFERENCE.md` que deja leer que una pieza cierra algo que sólo cierra a medias.
+    · una medición que contesta bien a una pregunta que resultó demasiado estrecha;
+    · una decisión ya tomada que el plan sigue presentando como abierta (2026-09-19: la
+      tabla de riesgos de `PLANNING.md` ofrecía `DerivesL` o Craig, resueltos el 09-18);
+    · un texto que deja leer que una pieza cierra algo que sólo cierra a medias;
+    · un BANNER que se quedó en el hito anterior (2026-09-19: decía «siguiente, H4» con
+      tres etapas de H3ter hechas). ⚠️ Ése lo señalaba [G], y se despachó DOS VECES como
+      «falso positivo conocido»: lo era el 09-17 y dejó de serlo después.
 
   ⇒ Tras este script, la PASADA DE LECTURA del comando /armoniza no es opcional.
 NOTA

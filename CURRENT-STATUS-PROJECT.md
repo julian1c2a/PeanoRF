@@ -1,9 +1,11 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-17
+**Última actualización:** 2026-09-19
 **Autor**: Julián Calderón Almendros
 
-> **Estado: H3bis cerrado — la separación `⊢ᵢ ≠ ⊢₀` es un TEOREMA; siguiente, H4.**
+> **Estado: H3bis cerrado — la separación `⊢ᵢ ≠ ⊢₀` es un TEOREMA.**
+> **H3ter en curso: los 34 axiomas de `coreAxioms` ya están BARRADOS; falta el esquema
+> de inducción.**
 > PeanoRF vuelca Peano al lenguaje FOL⁼ + ROB++ de forma constructiva: un **espejo** donde
 > lo demostrado se conserva en Peano (`PLANNING.md` §1). El **núcleo es HA finitaria** y la
 > ω-lógica vive aislada y contada en `PeanoRF.Omega.*` (**ADR-016**).
@@ -25,7 +27,8 @@
 > derivesI_ne_derives0 : ∃ φ, ([] ⊢₀ φ) ∧ ¬([] ⊢ᵢ φ)      [propext, Quot.sound]
 > ```
 >
-> Hasta hoy los 22 teoremas del proyecto valían **palabra por palabra** para `⊢₀`:
+> Hasta el 2026-09-17 los 22 teoremas que el proyecto tenía entonces valían **palabra por
+> palabra** para `⊢₀`:
 > sustituyendo `⊢ᵢ` por `⊢₀` en todo el árbol, todo seguía compilando. La tesis —«PeanoRF
 > es HA y no PA»— era **arquitectónica**: la sostenían la elección de cálculo y el gate, no
 > una demostración. Ya no.
@@ -301,6 +304,6 @@ sondeos/                   # Mediciones fuera del build (no cuentan como módulo
 ---
 
 **Autor**: Julián Calderón Almendros
-*Última actualización: 2026-09-17*
+*Última actualización: 2026-09-19*
 
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)

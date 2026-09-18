@@ -1,6 +1,6 @@
 # Technical Reference — PeanoRF
 
-**Last updated:** 2026-09-16
+**Last updated:** 2026-09-19
 **Author**: Julián Calderón Almendros
 **Lean version**: v4.31.0
 

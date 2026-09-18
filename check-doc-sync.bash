@@ -268,12 +268,30 @@ done < <(find "$LIB" -name '*.lean' ! -name '_template.lean' 2>/dev/null | sort)
 echo
 echo "════ [D] MARCAS DE TIEMPO ════"
 D_FAIL=0
-for f in REFERENCE.md doc/REFERENCE-*.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.md; do
+# ⚠️ Comprobar que la marca EXISTA no es comprobar que sea CIERTA. El 2026-09-19 este
+# control daba verde con SEIS documentos fechados hasta trece días antes de su último
+# cambio commiteado — REFERENCE, PLANNING, DECISIONS, AI-GUIDE, CURRENT-STATUS y
+# NEXT-STEPS —, incluido un DECISIONS.md que decía 09-06 con cuatro ADR nuevos dentro.
+# Un control que mira la FORMA y no el CONTENIDO es un control que da verde sin comprobar.
+for f in REFERENCE.md doc/REFERENCE-*.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.md \
+         PLANNING.md NEXT-STEPS.md DECISIONS.md AI-GUIDE.md; do
   [ -e "$f" ] || continue
-  grep -qE '\*\*(Last updated|Última actualización):\*\*' "$f" \
-    || { echo "  ✗ $f sin marca de tiempo"; D_FAIL=1; }
+  if ! grep -qE '\*\*(Last updated|Última actualización):\*\*' "$f"; then
+    echo "  ✗ $f sin marca de tiempo"; D_FAIL=1; continue
+  fi
+  MARK=$(grep -oE '\*\*(Last updated|Última actualización):\*\* *[0-9]{4}-[0-9]{2}-[0-9]{2}' "$f" \
+         | head -1 | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+  [ -n "$MARK" ] || continue          # marca sin fecha ISO: no se puede medir
+  LAST=$(git log -1 --format=%ad --date=short -- "$f" 2>/dev/null || true)
+  [ -n "$LAST" ] || continue          # sin historia todavía
+  if [ "$MARK" \< "$LAST" ]; then
+    echo "  ✗ $f dice $MARK, pero su último cambio commiteado es $LAST"
+    D_FAIL=1
+  fi
 done
-[ "$D_FAIL" = "0" ] && echo "  ✓ todos los docs técnicos llevan marca de tiempo" || FAIL=1
+[ "$D_FAIL" = "0" ] \
+  && echo "  ✓ marca de tiempo presente y NO anterior al último cambio" \
+  || FAIL=1
 
 # ─── 6. [E] ALCANCE DEL GATE ────────────────────────────────────────────────
 # Todo módulo del árbol tiene que estar DENTRO del entorno del gate de pureza. Si no

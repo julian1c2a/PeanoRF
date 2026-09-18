@@ -1,6 +1,6 @@
 # Project Planning — PeanoRF
 
-**Última actualización:** 2026-09-16
+**Última actualización:** 2026-09-19
 **Autor**: Julián Calderón Almendros
 
 > Extensión de [NEXT-STEPS.md](NEXT-STEPS.md). Allí van las fases accionables a corto
@@ -143,7 +143,7 @@ Justificación completa en `DECISIONS.md` **ADR-016**; medición en `sondeos/REA
 | **H3** | **La interpretación `⟦·⟧` + soundness**, y salió **CONSTRUCTIVA**: `derivesI_soundness` mide `[propext, Quot.sound]` — no por composición, sino por inducción directa sobre los 18 constructores | ✅ 2026-09-16 |
 | **H3′** | **Consistencia SIN semántica**: `consistI_syn`, vía los secuentes sin corte de FOL. Ni un modelo en toda la cadena (ADR-020) | ✅ 2026-09-17 |
 | **H3bis** | **Propiedad de DISYUNCIÓN y de EXISTENCIA** por la barra de Kleene, y con ellas **`derivesI_ne_derives0`**: el primer teorema del proyecto que **falla clásicamente** | ✅ 2026-09-17 |
-| **H3ter** | **La DP para HA**, no sólo para la lógica. ⛔ El enunciado ingenuo es **falso** sobre la sintaxis genérica (medido, `sondeos/junk_probe.lean`); etapa 1 ✅, etapas 2–3 abiertas | 🔶 en curso |
+| **H3ter** | **La DP para HA**, no sólo para la lógica. ⛔ El enunciado ingenuo es **falso** sobre la sintaxis genérica (medido, `sondeos/junk_probe.lean`)). **Etapas 1–3 HECHAS** (2026-09-18): barra con teoría y dominio, forma (c) de L2, y **los 34 axiomas de `coreAxioms` barrados**. Falta el **esquema de inducción**, más `hNum`/`hIn` — y `hcon`, que es Gödel y se queda | 🔶 en curso |
 | **H4** | **Reflexión `⌜·⌝` + adecuación + táctica**: el espejo se genera, no se transcribe | ❌ |
 | **H5** | **Volcado del núcleo aritmético** de Peano (suma, producto, orden, divisibilidad, primos) | ❌ |
 | **H6** | **Realizabilidad explícita**: extracción de realizadores hacia Peano | ❌ |
@@ -168,7 +168,7 @@ optimizar el transporte antes de saber qué se transporta.
 | Riesgo | Magnitud | Mitigación |
 |---|---|---|
 | **Reprobar finitariamente lo que ROB++ da por ω** | **Media** (revisado a la baja 2026-09-06 tras H2) | La primera medición real — `zero_add` — dio **coste cero**: misma estructura de prueba, tres axiomas menos. `gen_closed` hace innecesaria la ω-regla sobre contexto cerrado. Falta confirmarlo en el caso **con parámetro** |
-| **La sintaxis de FOL es MÁS GRANDE que el lenguaje de Q⁺⁺** — `Term.func s ts` admite cualquier `s`, y `elim_forall` instancia con cualquier término | **Alta**, y **realizada** el 2026-09-18 | Rompe la DP de HA (`sondeos/junk_probe.lean`). Obliga a restringir las derivaciones al lenguaje: `DerivesL` propio, o eliminación de símbolos ajenos vía Craig (preguntado a FOL) |
+| **La sintaxis de FOL es MÁS GRANDE que el lenguaje de Q⁺⁺** — `Term.func s ts` admite cualquier `s`, y `elim_forall` instancia con cualquier término | **Alta**, y **realizada** el 2026-09-18 | Rompe la DP de HA (`sondeos/junk_probe.lean`). ✅ **RESUELTO el 2026-09-18 con `derivesI_collapse`**: se **transforma** la derivación en vez de restringirla, y no hizo falta ni un `DerivesL` paralelo ni la interpolación de Craig |
 | **La parte estructural de Peano** (grupos, Sylow, `FSet`) exige **aritmetizar las estructuras**, no sólo traducir enunciados | Alta | Fuera de H5. `ROB++/Full/Lists` es el punto de partida. No prometer «al completo» |
 | Soundness demostrada de más ⇒ inconsistencia latente vía `raa`/`imp_intro` | **Crítica** | M-9 + eje finitario del gate |
 | El espejo se desincroniza de Peano | Media | H4: generarlo. Un espejo escrito a mano miente igual que un documento |

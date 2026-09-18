@@ -15,6 +15,36 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-19 · ARMONIZA — los dos controles en verde, y seis fechas falsas debajo
+
+Pasada de lectura con `check-doc-sync` y `check-coherencia` **los dos en verde**. Hallazgos
+reales, ninguno mecanizable por los controles tal y como estaban:
+
+1. ⚠️ **SEIS documentos con la marca de tiempo FALSA** — `REFERENCE` y `PLANNING` decían
+   09-16, `CURRENT-STATUS` y `NEXT-STEPS` 09-17, y **`DECISIONS` y `AI-GUIDE` decían 09-06
+   con cuatro ADR nuevos dentro**. [D] comprobaba que la marca **existiera**.
+   ⇒ **ADR-030**: ahora la compara con `git log -1 --date=short` y **rompe** si es anterior.
+   🔑 Es la **cuarta forma de dar verde sin comprobar**, y la más sutil: las otras tres
+   callan o no miden; ésta **mira la FORMA en vez del CONTENIDO**.
+2. El **banner** de `CURRENT-STATUS` decía «siguiente, H4» con **tres etapas de H3ter
+   hechas**. ⚠️ Lo señalaba [G], y se despachó **dos veces** como «falso positivo conocido»:
+   lo era el 09-17 y dejó de serlo después. **Un aviso que se adjudica por costumbre deja de
+   ser un aviso.**
+3. El **roadmap** de `PLANNING` daba H3ter como «etapa 1 ✅, etapas 2–3 abiertas». Las tres
+   están hechas.
+4. La **tabla de riesgos** de `PLANNING` seguía ofreciendo `DerivesL` o Craig para restringir
+   al lenguaje — una decisión ya tomada, y resuelta el 09-18 **sin ninguna de las dos**.
+5. `check-coherencia.bash` imprimía su lista de puntos ciegos **fechada el 2026-09-18** como
+   si fuera actual, y al menos uno ya no existía. Reescrita como **arquetipos**, no
+   hallazgos, con los dos nuevos de hoy dentro.
+6. «22 teoremas» en el banner, sin fecha, cuando hoy son 147. Fechado.
+
+Ruido descartado: ninguno — el único aviso de [G] resultó ser real. Y el falso positivo que
+SÍ apareció fue de cosecha propia: un `✅` dentro de la fila de H3ter hacía a [G] gritar; se
+reescribió, porque **un control que grita en falso deja de leerse** (ADR-026).
+
+Sin cambios en el código. **49 jobs · 16 módulos · 0 sorry · 267 declaraciones.**
+
 ### 2026-09-18 (k) · 🏁🏁 los SEIS duros, y con ellos los 34 axiomas de `coreAxioms`
 
 Por orden de la tabla, y todos en `[propext, Quot.sound]`:

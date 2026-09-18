@@ -1,6 +1,6 @@
 # Decisiones de Diseño — PeanoRF
 
-**Última actualización:** 2026-09-06
+**Última actualización:** 2026-09-19
 **Autor**: Julián Calderón Almendros
 
 Registro de decisiones arquitectónicas (ADR) de este proyecto. Cada entrada documenta
@@ -1162,6 +1162,47 @@ la identidad (`collapseF_trivial`) y con `D` total la clausura es trivial, así 
 - El caso `rewrite_at` obligó a una pieza más: `collapseF_substF`, la conmutación con la
   sustitución **paralela**, porque `slash_rewrite` está enunciada sobre `substF`.
 - ⏳ Queda sólo la etapa 3: `hT` para los 34 axiomas de `coreAxioms`.
+
+---
+
+## ADR-030: La marca de tiempo tiene que ser CIERTA, no sólo estar
+
+**Fecha**: 2026-09-19
+**Estado**: Aceptado
+
+**Contexto**: en la pasada de ARMONIZA del 2026-09-19, con `check-doc-sync.bash` y
+`check-coherencia.bash` **los dos en verde**, la lectura encontró **seis documentos con la
+fecha falsa**:
+
+| | dice | último cambio commiteado |
+|---|---|---|
+| `REFERENCE.md` | 2026-09-16 | 2026-09-18 |
+| `PLANNING.md` | 2026-09-16 | 2026-09-18 |
+| `CURRENT-STATUS-PROJECT.md` | 2026-09-17 | 2026-09-18 |
+| `NEXT-STEPS.md` | 2026-09-17 | 2026-09-18 |
+| `DECISIONS.md` | **2026-09-06** | 2026-09-18 |
+| `AI-GUIDE.md` | **2026-09-06** | 2026-09-18 |
+
+El de `DECISIONS.md` es el que duele: **trece días de desfase con cuatro ADR nuevos dentro**
+(026 a 029). El control [D] daba ✓ porque comprobaba que la marca **existiera**.
+
+**Decisión**: [D] compara la marca con `git log -1 --format=%ad --date=short -- <fichero>` y
+**rompe** si la marca es anterior. Y amplía su lista a `PLANNING.md`, `NEXT-STEPS.md`,
+`DECISIONS.md` y `AI-GUIDE.md`, que no estaban.
+
+**Justificación**: 🔑 es **la cuarta forma de dar verde sin comprobar**, y la más sutil de
+las cuatro ([[feedback-polaridad-de-los-controles]]): las otras tres callan (lista de
+prohibidos incompleta), fijan la respuesta a mano (forma de tipo clavada) o no pueden medir
+(`lake` fuera del PATH). Ésta **mira, pero mira la FORMA en vez del CONTENIDO**. Un fichero
+con marca de tiempo mentirosa es peor que uno sin marca: el segundo se nota.
+
+**Consecuencias**:
+- ✅ Probado (ADR-015) contra la realidad del día: sacó los seis a la primera ejecución.
+- ⚠️ Lo caza **un commit tarde**: compara contra el último cambio *commiteado*, no contra el
+  árbol de trabajo. Se eligió así a propósito — el `mtime` en Windows + Dropbox es ruido.
+- ⚠️ En la misma pasada se relajó la redacción de la fila de H3ter en `PLANNING.md` para
+  quitar un `✅` interior que hacía gritar en falso a [G]. **Un control que grita en falso
+  deja de leerse** (ADR-026).
 
 ---
 

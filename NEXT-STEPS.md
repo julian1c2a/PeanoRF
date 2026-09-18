@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-17
+**Última actualización:** 2026-09-19
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver

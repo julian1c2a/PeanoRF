@@ -98,6 +98,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/Subst.lean` | `PeanoRF.Calculus` | `PeanoRF.Prelim` | ✅ Completo |
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo |
+| `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
@@ -484,6 +485,39 @@ no va indexada por `posDepth` y la de la sustitución sí.
 
 ⚠️ Parametrizado por la signatura `L : String → Bool`, no clavado a Q⁺⁺. Y los **predicados**
 ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, sin testigo.
+
+---
+
+### 3.3decies HA/Domain.lean — el dominio de la barra
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.Calculus.{Collapse,Subst}`, `PeanoRF.HA.Numerals`
+**Last updated**: 2026-09-18
+**Status**: ✅ Completo
+****: **foundational**
+
+| nombre | enunciado | footprint |
+|---|---|---|
+| `LQ` | los cinco símbolos de Q⁺⁺ **con su aridad** | — |
+| `collapse_fix_closed` | `ClosedQTerm u → collapseT LQ u = u` | `propext` |
+| ⛔ `not_closed_add_unary` | `¬ ClosedQTerm (func add_sym [zero])` | `propext` |
+| `closed_of_LQ` | símbolo admitido + argumentos en el dominio ⟹ dominio | `propext, Quot.sound` |
+| ⭐⭐ `closed_collapse_subst` | `(∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))` | `propext, Quot.sound` |
+| `closed_zeroS` | el dominio no es vacío | — |
+
+**Para qué**: la barra de H3ter lleva un parámetro de dominio `Slash T D`, y L2 necesita
+**dos clausuras** de ese dominio: que el colapso lo **fije** (caso `intro_forall`) y que el
+colapso de `substT ρ t` **caiga** en él para `t` arbitrario (caso `elim_forall`). Las dos
+están aquí, medidas antes de escribir L2 (`sondeos/collapse_parallel_probe.lean`).
+
+⛔ **Por qué la signatura lleva la ARIDAD.** `collapseT` tomaba `L : String → Bool`, sólo el
+nombre. `+` con UN argumento es un término legítimo, cerrado y con símbolos de Q⁺⁺ — pero
+**Q⁺⁺ no tiene ningún axioma sobre él**, luego no es demostrablemente igual a ningún numeral,
+que es lo único que la etapa 3 le pide al dominio. `not_closed_add_unary` lo deja medido en
+producción, no en el cuaderno.
+
+⚠️ Aquí **no se pueden escribir `∧` ni `∨`**: `open FOL` las tiene tomadas por `FormulaG`.
+`(s = zero_sym ∧ n = 0)` da `unexpected token =` — la familia del `σ` de `peanolib`.
 
 ---
 

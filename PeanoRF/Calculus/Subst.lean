@@ -263,6 +263,15 @@ theorem substF_comp : ∀ (f : Formula) (ρ τ : Subst),
 
 /-! ## 5 · Los corolarios que usa L2 -/
 
+/-- La sustitución paralela **preserva la longitud**. Hace falta desde que el colapso mira
+    la ARIDAD (`Calculus/Collapse.lean`, 2026-09-18). -/
+theorem substTs_length : ∀ (ρ : Subst) (ts : List Term),
+    (substTs ρ ts).length = ts.length := by
+  intro ρ ts
+  induction ts with
+  | nil => rfl
+  | cons t ts0 ih => simp only [substTs, List.length_cons, ih]
+
 mutual
 theorem substT_var_id : ∀ t : Term, substT Term.var t = t := by
   intro t

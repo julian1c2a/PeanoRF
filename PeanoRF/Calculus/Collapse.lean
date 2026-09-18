@@ -66,18 +66,18 @@ set_option autoImplicit false
 mutual
 /-- Todo símbolo fuera de la signatura `L` colapsa a `zero`. Las variables no se tocan — y
     eso es lo que hace que conmute con la sustitución. -/
-def collapseT (L : String → Bool) : Term → Term
+def collapseT (L : String → Nat → Bool) : Term → Term
   | .var n     => .var n
-  | .func s ts => if L s then .func s (collapseTs L ts) else zero
+  | .func s ts => if L s ts.length then .func s (collapseTs L ts) else zero
 
-def collapseTs (L : String → Bool) : List Term → List Term
+def collapseTs (L : String → Nat → Bool) : List Term → List Term
   | []      => []
   | t :: ts => collapseT L t :: collapseTs L ts
 end
 
 /-- En las fórmulas sólo se colapsan los TÉRMINOS. Un predicado ajeno no da problema: la
     barra de un átomo es su derivabilidad, sin testigo. -/
-def collapseF (L : String → Bool) : Formula → Formula
+def collapseF (L : String → Nat → Bool) : Formula → Formula
   | .bottom    => .bottom
   | .atom p ts => .atom p (collapseTs L ts)
   | .eq t u    => .eq (collapseT L t) (collapseT L u)
@@ -87,21 +87,52 @@ def collapseF (L : String → Bool) : Formula → Formula
   | .or a b    => .or (collapseF L a) (collapseF L b)
   | .ex a      => .ex (collapseF L a)
 
+/-! ## 0 · Las longitudes, que es lo que la ARIDAD obliga a mirar
+
+    ⛔ Medido el 2026-09-18 (`sondeos/collapse_parallel_probe.lean`): una signatura que sólo
+    mira el NOMBRE del símbolo **no basta**. `func add_sym [zero]` —`+` con UN argumento— es
+    un término legítimo de la sintaxis, cerrado y con símbolos de Q⁺⁺, pero Q⁺⁺ no tiene
+    ningún axioma sobre él, luego no es demostrablemente igual a ningún numeral. Si el
+    colapso lo deja pasar, el dominio de la barra de H3ter no se puede cerrar.
+
+    ⇒ `L` toma también la **aridad**, y el precio son estos tres lemas. -/
+
+theorem collapseTs_length (L : String → Nat → Bool) :
+    ∀ ts : List Term, (collapseTs L ts).length = ts.length := by
+  intro ts
+  induction ts with
+  | nil => rfl
+  | cons t ts0 ih => simp only [collapseTs, List.length_cons, ih]
+
+theorem liftTerms_length : ∀ (c : Nat) (ts : List Term),
+    (liftTerms c ts).length = ts.length := by
+  intro c ts
+  induction ts with
+  | nil => rfl
+  | cons t ts0 ih => simp only [liftTerms, List.length_cons, ih]
+
+theorem substTerms_length : ∀ (v : Nat) (s : Term) (ts : List Term),
+    (substTerms v s ts).length = ts.length := by
+  intro v s ts
+  induction ts with
+  | nil => rfl
+  | cons t ts0 ih => simp only [substTerms, List.length_cons, ih]
+
 /-! ## 1 · Conmuta con el levantamiento -/
 
 mutual
-theorem collapseT_lift (L : String → Bool) : ∀ (c : Nat) (t : Term),
+theorem collapseT_lift (L : String → Nat → Bool) : ∀ (c : Nat) (t : Term),
     collapseT L (liftTerm c t) = liftTerm c (collapseT L t) := by
   intro c t
   cases t with
   | var n => by_cases h : n < c <;> simp [collapseT, liftTerm, h]
   | func s ts =>
-      by_cases h : L s
-      · simp only [liftTerm, collapseT, if_pos h]
+      by_cases h : L s ts.length
+      · simp only [liftTerm, collapseT, liftTerms_length, if_pos h]
         exact congrArg _ (collapseTs_lift L c ts)
-      · simp [liftTerm, collapseT, if_neg h, zero, liftTerms]
+      · simp [liftTerm, collapseT, liftTerms_length, if_neg h, zero, liftTerms]
 
-theorem collapseTs_lift (L : String → Bool) : ∀ (c : Nat) (ts : List Term),
+theorem collapseTs_lift (L : String → Nat → Bool) : ∀ (c : Nat) (ts : List Term),
     collapseTs L (liftTerms c ts) = liftTerms c (collapseTs L ts) := by
   intro c ts
   cases ts with
@@ -111,7 +142,7 @@ theorem collapseTs_lift (L : String → Bool) : ∀ (c : Nat) (ts : List Term),
       exact ⟨collapseT_lift L c t, collapseTs_lift L c ts'⟩
 end
 
-theorem collapseF_lift (L : String → Bool) : ∀ (f : Formula) (c : Nat),
+theorem collapseF_lift (L : String → Nat → Bool) : ∀ (f : Formula) (c : Nat),
     collapseF L (liftFormula c f) = liftFormula c (collapseF L f) := by
   intro f
   induction f with
@@ -127,7 +158,7 @@ theorem collapseF_lift (L : String → Bool) : ∀ (f : Formula) (c : Nat),
 /-! ## 2 · Conmuta con la sustitución -/
 
 mutual
-theorem collapseT_subst (L : String → Bool) : ∀ (v : Nat) (s t : Term),
+theorem collapseT_subst (L : String → Nat → Bool) : ∀ (v : Nat) (s t : Term),
     collapseT L (substTerm v s t) = substTerm v (collapseT L s) (collapseT L t) := by
   intro v s t
   cases t with
@@ -136,12 +167,12 @@ theorem collapseT_subst (L : String → Bool) : ∀ (v : Nat) (s t : Term),
       · simp [collapseT, substTerm, h1]
       · by_cases h2 : n > v <;> simp [collapseT, substTerm, h1, h2]
   | func c ts =>
-      by_cases h : L c
-      · simp only [substTerm, collapseT, if_pos h]
+      by_cases h : L c ts.length
+      · simp only [substTerm, collapseT, substTerms_length, if_pos h]
         exact congrArg _ (collapseTs_subst L v s ts)
-      · simp [substTerm, collapseT, if_neg h, zero, substTerms]
+      · simp [substTerm, collapseT, substTerms_length, if_neg h, zero, substTerms]
 
-theorem collapseTs_subst (L : String → Bool) : ∀ (v : Nat) (s : Term) (ts : List Term),
+theorem collapseTs_subst (L : String → Nat → Bool) : ∀ (v : Nat) (s : Term) (ts : List Term),
     collapseTs L (substTerms v s ts) = substTerms v (collapseT L s) (collapseTs L ts) := by
   intro v s ts
   cases ts with
@@ -153,7 +184,7 @@ end
 
 /-- ⭐ El caso `∀`/`∃` es el que podía fallar: ahí la sustitución entra bajo la ligadura como
     `substFormula (v+1) (liftTerm 0 s)`, y hace falta la conmutación del levantamiento. -/
-theorem collapseF_subst (L : String → Bool) : ∀ (f : Formula) (v : Nat) (s : Term),
+theorem collapseF_subst (L : String → Nat → Bool) : ∀ (f : Formula) (v : Nat) (s : Term),
     collapseF L (substFormula v s f) = substFormula v (collapseT L s) (collapseF L f) := by
   intro f
   induction f with
@@ -172,7 +203,7 @@ theorem collapseF_subst (L : String → Bool) : ∀ (f : Formula) (v : Nat) (s :
     por `posDepth p` porque la sustitución sí cambia al entrar en un cuantificador. Aquí no
     hace falta índice ninguno. -/
 
-theorem collapse_getAt? (L : String → Bool) : ∀ (p : Pos) (f : Formula),
+theorem collapse_getAt? (L : String → Nat → Bool) : ∀ (p : Pos) (f : Formula),
     getAt? (collapseF L f) p = (getAt? f p).map (collapseF L) := by
   intro p
   induction p with
@@ -181,7 +212,7 @@ theorem collapse_getAt? (L : String → Bool) : ∀ (p : Pos) (f : Formula),
   | right p' ih => intro f; cases f <;> simp only [getAt?, collapseF, ih] <;> rfl
   | body p' ih => intro f; cases f <;> simp only [getAt?, collapseF, ih] <;> rfl
 
-theorem collapse_replaceAt (L : String → Bool) : ∀ (p : Pos) (f newSub : Formula),
+theorem collapse_replaceAt (L : String → Nat → Bool) : ∀ (p : Pos) (f newSub : Formula),
     replaceAt (collapseF L f) p (collapseF L newSub) = collapseF L (replaceAt f p newSub) := by
   intro p
   induction p with
@@ -190,13 +221,13 @@ theorem collapse_replaceAt (L : String → Bool) : ∀ (p : Pos) (f newSub : For
   | right p' ih => intro f n; cases f <;> simp only [replaceAt, collapseF, ih]
   | body p' ih => intro f n; cases f <;> simp only [replaceAt, collapseF, ih]
 
-theorem collapse_localRule (L : String → Bool) {A B : Formula} (h : LocalRule A B) :
+theorem collapse_localRule (L : String → Nat → Bool) {A B : Formula} (h : LocalRule A B) :
     LocalRule (collapseF L A) (collapseF L B) := by
   cases h with
   | commuteImpl A B C =>
       exact LocalRule.commuteImpl (collapseF L A) (collapseF L B) (collapseF L C)
 
-theorem map_collapse_lift (L : String → Bool) (Γ : List Formula) :
+theorem map_collapse_lift (L : String → Nat → Bool) (Γ : List Formula) :
     (Γ.map (liftFormula 0)).map (collapseF L) = (Γ.map (collapseF L)).map (liftFormula 0) := by
   induction Γ with
   | nil => rfl
@@ -212,7 +243,7 @@ theorem map_collapse_lift (L : String → Bool) (Γ : List Formula) :
     ⚠️ A diferencia de `derivesI_subst`, la signatura **no cambia** a lo largo de la
     inducción: el colapso atraviesa las ligaduras sin transformarse. Por eso aquí no hay
     `∀ L` dentro ni navegación indexada por profundidad. -/
-theorem derivesI_collapse (L : String → Bool) {Γ : List Formula} {φ : Formula}
+theorem derivesI_collapse (L : String → Nat → Bool) {Γ : List Formula} {φ : Formula}
     (h : Γ ⊢ᵢ φ) : (Γ.map (collapseF L)) ⊢ᵢ collapseF L φ := by
   induction h with
   | hyp Γ' f' hIn => exact Derivesᵢ.hyp _ _ (List.mem_map_of_mem hIn)

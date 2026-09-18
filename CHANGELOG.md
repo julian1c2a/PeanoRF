@@ -15,6 +15,39 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (g) · la signatura del colapso lleva la ARIDAD, y el dominio ya está cerrado
+
+**`collapseT` pasa de `L : String → Bool` a `L : String → Nat → Bool`**, con el predicado
+aplicado a `ts.length`. El contraejemplo que lo obliga está en producción, no en el cuaderno:
+
+```
+not_closed_add_unary : ¬ ClosedQTerm (Term.func add_sym [zero])      [propext]
+```
+
+`+` con UN argumento es un término legítimo de la sintaxis, cerrado y con símbolos de Q⁺⁺ —
+pero Q⁺⁺ no tiene ningún axioma sobre él, luego no es demostrablemente igual a ningún
+numeral, que es lo único que la etapa 3 le pide al dominio. El colapso anterior lo dejaba
+pasar. Precio medido: tres lemas de longitud; las conmutaciones no cambiaron de forma, y
+**`derivesI_collapse` conserva su `[propext, Quot.sound]`**.
+
+**Módulo nuevo `HA/Domain.lean`** con las **dos clausuras que L2 pedirá**, medidas antes de
+escribir L2 (`sondeos/collapse_parallel_probe.lean`):
+
+```
+collapse_fix_closed   : ClosedQTerm u → collapseT LQ u = u                  [propext]
+closed_collapse_subst : (∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))  [propext, Quot.sound]
+```
+
+⭐⭐ La segunda es la que cierra `elim_forall`: con `ρ` valuada en el dominio, el colapso de
+`substT ρ t` cae en el dominio **para `t` arbitrario** — símbolos ajenos y aridades erróneas
+incluidos. ⇒ La forma (c) de L2 (demostrar la barra de la instancia **colapsada**) es la
+buena, y el cálculo indexado por el lenguaje queda descartado por medición.
+
+⚠️ Trampa nueva, de la familia del `σ`: bajo `open FOL` **no se pueden escribir `∧` ni `∨`**,
+que las tiene tomadas `FormulaG`. `(s = zero_sym ∧ n = 0)` da `unexpected token =`.
+
+**48 jobs · 15 módulos · 0 sorry · 212 declaraciones · deuda heredada 0.**
+
 ### 2026-09-18 (f) · ⭐ `derivesI_collapse` — la etapa 2 de H3ter pierde su pieza cara
 
 ```

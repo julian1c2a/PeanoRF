@@ -105,6 +105,7 @@ import PeanoRF.Omega.Basic
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Arith
 import PeanoRF.HA.Numerals
+import PeanoRF.HA.Domain
 
 set_option autoImplicit false
 

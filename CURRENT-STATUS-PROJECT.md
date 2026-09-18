@@ -94,7 +94,8 @@
 > ```
 >
 > 1. la **consistencia** de la teoría — el precio clásico de la barra, no demostrable aquí;
-> 2. los **6** axiomas que no son de Harrop — ⭐ **`ax19` ya está** (`HA/SlashAxioms.lean`);
+> 2. los **6** axiomas que no son de Harrop — ⭐ **3 ya están**: `ax19`, `ax21` y `ax_L2`
+>    (`HA/SlashAxioms.lean`). **31 de 34.**
 > 3. el **esquema de inducción**.
 >
 > ⚠️ Dos correcciones que salió de medir: (a) la lista dura es de **6**, no de 5, y no es la
@@ -138,7 +139,7 @@
 |--------|-------|
 | Módulos propios | 16 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms}`) |
 | Módulos con 0 `sorry` | 16 / 16 |
-| Teoremas propios | 128 |
+| Teoremas propios | 132 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

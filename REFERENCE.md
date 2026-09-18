@@ -99,7 +99,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `Calculus/SubstDerives.lean` | `PeanoRF.Calculus` | `Calculus.{Subst,DerivesI}`, `FOL.Eigenvariable` | ✅ Completo |
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo |
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo |
-| `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | 🔶 1 de 6 |
+| `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | 🔶 3 de 6 |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |
@@ -544,7 +544,7 @@ producción, no en el cuaderno.
 **Namespace**: `PeanoRF.HA`
 **Dependencies**: `PeanoRF.HA.Domain`
 **Last updated**: 2026-09-18
-**Status**: 🔶 1 de 6
+**Status**: 🔶 3 de 6
 
 | nombre | enunciado | footprint |
 |---|---|---|
@@ -552,6 +552,8 @@ producción, no en el cuaderno.
 | `numeralI_lt` | `a < b ⟹ ⊢ᵢ ā < b̄` — por la dirección ⇐ de `ax13` | `propext, Quot.sound` |
 | ⭐ `numeralI_ne` | `a ≠ b ⟹ ⊢ᵢ ¬(ā = b̄)` — **constructivo** | `propext, Quot.sound` |
 | ⭐⭐ `slash_ax19` | `ax19_lt_trichotomy` barrado bajo `hNum` | `propext, Quot.sound` |
+| ⭐ `slash_ax21` | `ax21_mod2_range` — bajo `hNum` **y consistencia** | `propext, Quot.sound` |
+| ⭐ `slash_axL2` | `ax_L2_in_cons` — bajo `hNum`, **sin consistencia** | `propext, Quot.sound` |
 
 **El patrón de los seis**: barrar una disyunción pide **elegir rama**, y eso es una decisión
 en el META. `hNum` baja los términos del dominio a numerales, se decide sobre números, y la
@@ -570,9 +572,7 @@ el paso, y mide `[propext, Quot.sound]`.
 
 | axioma | qué necesita |
 |---|---|
-| `ax21_mod2_range` | `hNum` + `numeralI_ne` + consistencia — **receta ya completa** |
-| `ax_L2_in_cons` | `hNum` + `numeralI_ne` — **receta ya completa** |
-| `ax13_lt_def` | además `numeralI_not_lt`, que pide transitividad de `<` |
+| `ax13_lt_def` | `numeralI_not_lt`, que pide «ningún numeral es `x + σy`» |
 | `ax14_sqrt_le` | idem, y evaluar `√` |
 | `ax_L3_in_concat` | ⛔ decidir `∈` sobre términos anclados: no hay atajo |
 

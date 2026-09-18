@@ -457,4 +457,20 @@ theorem grounded_substTerm (L : String → Nat → Bool) {t : Term} (h : Grounde
     (v : Nat) (s : Term) : substTerm v s t = t := by
   rw [← substT_singleS v s t]; exact h.2 (singleS v s)
 
+/-- Aplicar un símbolo UNARIO de la signatura conserva el anclaje. -/
+theorem grounded_func1 (L : String → Nat → Bool) {s : String} (hs : L s 1 = true)
+    {t : Term} (h : Grounded L t) : Grounded L (Term.func s [t]) := by
+  refine ⟨?_, fun ρ => ?_⟩
+  · simp only [collapseT, List.length_cons, List.length_nil, if_pos hs, collapseTs, h.1]
+  · simp only [substT, substTs, h.2 ρ]
+
+/-- Y uno BINARIO. Con estas dos, el dominio es cerrado bajo todo el lenguaje. -/
+theorem grounded_func2 (L : String → Nat → Bool) {s : String} (hs : L s 2 = true)
+    {t u : Term} (ht : Grounded L t) (hu : Grounded L u) :
+    Grounded L (Term.func s [t, u]) := by
+  refine ⟨?_, fun ρ => ?_⟩
+  · simp only [collapseT, List.length_cons, List.length_nil, if_pos hs, collapseTs,
+      ht.1, hu.1]
+  · simp only [substT, substTs, ht.2 ρ, hu.2 ρ]
+
 end PeanoRF.Calculus

@@ -35,6 +35,13 @@
 > testigo de un existencial demostrado **es** el cálculo que el lado Peano del espejo
 > tendría que ejecutar.
 >
+> ⭐⭐ **DEUDA META HEREDADA: CERO** (2026-09-18, ADR-024). `HA.ctx` pasa de `axioms` a
+> **`coreAxioms`**, que es net-0 — y no es un truco de footprint: los cinco axiomas sucios
+> eran del **verificador object de demostraciones** de RPP y no pintaban nada en el contexto
+> de la Aritmética de Heyting. Todo el proyecto mide ahora `⊆ {propext, Quot.sound}`, y
+> **`metaDebtIsError := true`**: el eje META deja de avisar y rompe el build. Lo destapó el
+> agente de RPP midiendo SU puerta en vez de aceptar mi diagnóstico de la mía.
+>
 > 🔧 **H3ter en marcha** (2026-09-18): el ingrediente que faltaba para la DP **de HA**
 > está puesto — `closed_term_eq_numeral`, y con él los tres homomorfismos de numerales
 > sobre `⊢ᵢ`. **Medido antes de escribirlo**: reusar los de RPP era imposible (están sobre
@@ -186,7 +193,8 @@ META heredada de la codificación `String` de RPP, no nuestra.
 - [x] ~~Pureza constructiva~~ → **M-1 y M-2** (ADR-013), con gate probado.
 - [x] ~~Qué naturales~~ → **M-3**: `ℕ₀` de peanolib (ADR-014).
 - [ ] Política de axiomas propios para `axiom` de naturaleza distinta a M-8.
-- [ ] Poner `metaDebtIsError := true` cuando ROBINSON_PlusPlus se sanee a nivel meta.
+- [x] ~~Poner `metaDebtIsError := true`~~ → **hecho el 2026-09-18** (ADR-024), y sin
+      esperar a RPP: la deuda no era matemática, era de empaquetado.
 - [ ] Configurar `SYMBOL_PREFIXES` en `check-doc-sync.bash` cuando existan familias de
       símbolos propias.
 

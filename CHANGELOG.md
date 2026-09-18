@@ -15,6 +15,31 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### ⭐⭐ 2026-09-18 (c) · deuda META heredada: de 14 declaraciones a CERO
+
+`HA.ctx` pasa de `axioms` a **`coreAxioms`** (ADR-024). Lo destapó el agente de RPP
+midiendo SU puerta en vez de aceptar mi diagnóstico de la mía: de los 109 constituyentes de
+`axioms` sólo cinco arrastran `Classical.choice`, y **`coreAxioms` no depende de ninguno**.
+
+```
+PeanoRF.HA.ctx                 →  does not depend on any axioms
+zero_add / succ_add / numeralI_*  →  [propext, Quot.sound]
+```
+
+⭐ **No es un truco de footprint, es una corrección**: los cinco sucios son axiomas del
+verificador object de demostraciones de RPP, y no pintaban nada en el contexto de la
+Aritmética de Heyting. `ctx` los arrastraba por usar la lista grande.
+
+⭐ **`metaDebtIsError := true`** — llevaba en `false` desde el 2026-09-06. El eje META deja
+de avisar y **rompe el build**. Probado (ADR-015) con un módulo temporal que usa la lista
+grande: el gate lo rechaza.
+
+✅ Y RPP deja de estar en nuestro camino crítico: su migración `String → List Char` pasa a
+ser decisión suya por sus razones. Respuesta en `doc/RESPUESTA-RPP-2026-09-18.md`.
+
+⚠️ Cambia la teoría y se dice: si algún día H7 quiere hablar de la demostrabilidad object
+de RPP, esos axiomas vuelven **explícitamente y con su coste medido**, no por arrastre.
+
 ### 2026-09-18 (b) · H3ter arranca: los numerales sobre `⊢ᵢ`, y `closed_term_eq_numeral`
 
 **`Calculus/Eq.lean`** — congruencia GENÉRICA por símbolo de función

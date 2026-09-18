@@ -41,8 +41,7 @@ puente va en un solo sentido —, pero el port sale limpio de ω. Ver `sondeos/R
 
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
-- `metaDebtIsError := true` cuando RPP sanee su nivel meta (hoy **14** decls; subía de 10
-  porque los numerales tocan `axioms`).
+- ✅ ~~`metaDebtIsError := true`~~ **hecho el 2026-09-18** (ADR-024). Deuda heredada: **0**.
 - `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
 
 ⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**.

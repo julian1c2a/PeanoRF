@@ -903,6 +903,50 @@ existía. Se abstrae la variable `k` al índice 0 con
 
 ---
 
+## ADR-024: `HA.ctx` sobre `coreAxioms` — y el eje META pasa de aviso a ERROR
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado
+
+**Contexto**: desde el 2026-09-06, `metaDebtIsError` estaba en `false` y el gate toleraba
+con aviso que 10–14 declaraciones heredaran `Classical.choice` de ROBINSON_PlusPlus. La
+deuda se daba por inevitable hasta que RPP sanease su nivel meta (`String → List Char`,
+paso 4 de su plan §7).
+
+El agente de RPP lo midió punto por punto y **corrigió el diagnóstico**: de los 109
+constituyentes de `axioms`, sólo **cinco** arrastran `Classical.choice`
+(`ax_vpf_ind`, `ax_vpf_listInd`, `ax_tc_zero`, `ax_tc_succ`, `ax_lineWF_listInd`), la causa
+raíz es `strCodeM s := charsCodeM s.toList` (la puerta es `String.toList`), y —lo decisivo—
+**`coreAxioms` no depende de ningún axioma**.
+
+**Decisión**: `ctx insts = coreAxioms ++ insts.map inductionFormula`, y
+`metaDebtIsError := true`.
+
+**Justificación**: **no es un truco de footprint, es una corrección.** Los cinco axiomas
+sucios son axiomas sobre el **verificador object de demostraciones** de RPP. Tenían tan poco
+que hacer en el contexto de la Aritmética de Heyting como en el de cualquier otra teoría
+aritmética: `ctx` los arrastraba por usar la lista grande, no porque HA los necesitara. HA
+es `coreAxioms` más la inducción, y ahora el código lo dice.
+
+**Consecuencias**:
+- ⭐ **Deuda META heredada: de 14 declaraciones a CERO.** Todo el proyecto mide
+  `⊆ {propext, Quot.sound}`. `PeanoRF.HA.ctx` **no depende de ningún axioma**.
+- ⭐ `metaDebtIsError := true`: el eje META deja de avisar y **rompe el build**. Probado
+  (ADR-015) con un módulo temporal que usa la lista grande:
+  `[gate · EJE META] 1 axioma(s) no-constructivo(s)… [(PeanoRF.HA.smokeDebt, Classical.choice)]`
+- ✅ **RPP deja de estar en nuestro camino crítico.** Su migración `String → List Char` —y
+  la duda de su §7.5 sobre tener que hacerla dos veces si entra LS ascendente— pasa a ser
+  decisión suya por sus razones, no por las nuestras.
+- ⚠️ **Cambia la teoría, y hay que decirlo**: `ctx` ya no incluye los axiomas del
+  verificador. Para HA eso es lo correcto, pero si algún día PeanoRF quisiera hablar de la
+  demostrabilidad object de RPP (H7), habría que volver a meterlos **explícitamente y con su
+  coste medido**, no por arrastre.
+- 🔑 La lección general: **la deuda que parecía matemática era de empaquetado.** Doce días
+  de aviso tolerado se resolvieron cambiando qué lista se importa. Vino de que otro proyecto
+  midiera SU puerta en vez de aceptar nuestro diagnóstico de la nuestra.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

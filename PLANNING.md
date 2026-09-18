@@ -170,7 +170,7 @@ optimizar el transporte antes de saber qué se transporta.
 | **La parte estructural de Peano** (grupos, Sylow, `FSet`) exige **aritmetizar las estructuras**, no sólo traducir enunciados | Alta | Fuera de H5. `ROB++/Full/Lists` es el punto de partida. No prometer «al completo» |
 | Soundness demostrada de más ⇒ inconsistencia latente vía `raa`/`imp_intro` | **Crítica** | M-9 + eje finitario del gate |
 | El espejo se desincroniza de Peano | Media | H4: generarlo. Un espejo escrito a mano miente igual que un documento |
-| Deuda META heredada de RPP (`Classical.choice` vía codificación `String`) | Baja, con fecha | El autor la sanea aguas arriba → `metaDebtIsError := true` |
+| ~~Deuda META heredada de RPP~~ | ✅ **CERRADO 2026-09-18** | No hizo falta esperar: `ctx` pasa a `coreAxioms`, que es net-0 (ADR-024). Deuda: **0** |
 
 ---
 

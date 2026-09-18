@@ -405,7 +405,11 @@ private def dependencyRoots : List Name := [`FOL, `ROBINSON_PlusPlus, `Peano]
 
 /-- Poner a `true` cuando `ROBINSON_PlusPlus` sea constructivo a nivel meta: la deuda
     heredada pasa de AVISO a ERROR y el gate exige el footprint diana completo. -/
-private def metaDebtIsError : Bool := false
+-- ⭐ ACTIVADO el 2026-09-18. Llevaba desde el 2026-09-06 en `false` esperando a que
+-- ROBINSON_PlusPlus sanease su nivel meta. No hizo falta esperar: la deuda no entraba por
+-- las matemáticas sino por la lista `axioms`, y `coreAxioms` —que es la que HA necesita—
+-- es net-0. Ver HA/Axioms.lean. La deuda heredada pasó de 14 declaraciones a CERO.
+private def metaDebtIsError : Bool := true
 
 /-- Excepciones propias documentadas (símbolos NUESTROS con footprint no-constructivo
     que se aceptan por una razón escrita). **Vacía**, y el objetivo es que siga así:

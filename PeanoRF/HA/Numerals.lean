@@ -56,12 +56,12 @@ theorem numeralI_add (a b : Nat) :
     ctx [] ⊢ᵢ (add (numeralM a) (numeralM b) =eq numeralM (a + b)) := by
   induction b with
   | zero =>
-      have h4 : ctx [] ⊢ᵢ ax4_add_zero := ax' (by simp [axioms])
+      have h4 : ctx [] ⊢ᵢ ax4_add_zero := ax' (by simp [coreAxioms])
       have h := specI h4 (numeralM a)
       simp [substFormula, substTerm, substTerms, add, zero] at h
       exact h
   | succ k ih =>
-      have h5' : ctx [] ⊢ᵢ ax5_add_succ := ax' (by simp [axioms])
+      have h5' : ctx [] ⊢ᵢ ax5_add_succ := ax' (by simp [coreAxioms])
       have h5 : ctx [] ⊢ᵢ
           (add (numeralM a) (succ (numeralM k)) =eq succ (add (numeralM a) (numeralM k))) := by
         have hh := specI (specI h5' (numeralM a)) (numeralM k)
@@ -75,14 +75,14 @@ theorem numeralI_mul (a b : Nat) :
     ctx [] ⊢ᵢ (mul (numeralM a) (numeralM b) =eq numeralM (a * b)) := by
   induction b with
   | zero =>
-      have h8 : ctx [] ⊢ᵢ ax8_mul_zero := ax' (by simp [axioms])
+      have h8 : ctx [] ⊢ᵢ ax8_mul_zero := ax' (by simp [coreAxioms])
       have h := specI h8 (numeralM a)
       simp [substFormula, substTerm, substTerms, mul, zero] at h
       exact h
   | succ k ih =>
       -- `a * (k+1) = a*k + a` es DEFINICIONAL en `Nat`, así que la meta ya está en forma.
       show ctx [] ⊢ᵢ (mul (numeralM a) (succ (numeralM k)) =eq numeralM (a * k + a))
-      have h9' : ctx [] ⊢ᵢ ax9_mul_succ := ax' (by simp [axioms])
+      have h9' : ctx [] ⊢ᵢ ax9_mul_succ := ax' (by simp [coreAxioms])
       have h9 : ctx [] ⊢ᵢ (mul (numeralM a) (succ (numeralM k)) =eq
                            add (mul (numeralM a) (numeralM k)) (numeralM a)) := by
         have hh := specI (specI h9' (numeralM a)) (numeralM k)
@@ -99,13 +99,13 @@ theorem numeralI_pow (a b : Nat) :
     ctx [] ⊢ᵢ (pow (numeralM a) (numeralM b) =eq numeralM (a ^ b)) := by
   induction b with
   | zero =>
-      have hp : ctx [] ⊢ᵢ ax_pow_zero := ax' (by simp [axioms])
+      have hp : ctx [] ⊢ᵢ ax_pow_zero := ax' (by simp [coreAxioms])
       have h := specI hp (numeralM a)
       simp [substFormula, substTerm, substTerms, pow, zero, one, succ] at h
       exact h
   | succ k ih =>
       show ctx [] ⊢ᵢ (pow (numeralM a) (succ (numeralM k)) =eq numeralM (a ^ k * a))
-      have hp' : ctx [] ⊢ᵢ ax_pow_succ := ax' (by simp [axioms])
+      have hp' : ctx [] ⊢ᵢ ax_pow_succ := ax' (by simp [coreAxioms])
       have hp : ctx [] ⊢ᵢ (pow (numeralM a) (succ (numeralM k)) =eq
                            mul (pow (numeralM a) (numeralM k)) (numeralM a)) := by
         have hh := specI (specI hp' (numeralM a)) (numeralM k)

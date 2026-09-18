@@ -56,7 +56,7 @@ theorem zero_add : ctx [phiZeroAdd] ⊢ᵢ Formula.forall phiZeroAdd := by
   case base =>
     -- `φ(0)` es `0 + 0 = 0`, que es `ax4_add_zero` especializado en `0`.
     show ctx [phiZeroAdd] ⊢ᵢ (add zero zero =eq zero)
-    have h4 : ctx [phiZeroAdd] ⊢ᵢ ax4_add_zero := ax' (by simp [axioms])
+    have h4 : ctx [phiZeroAdd] ⊢ᵢ ax4_add_zero := ax' (by simp [coreAxioms])
     have h := specI h4 zero
     simp [substFormula, substTerm, substTerms, add, zero] at h
     exact h
@@ -79,7 +79,7 @@ theorem zero_add : ctx [phiZeroAdd] ⊢ᵢ Formula.forall phiZeroAdd := by
     -- `ax5_add_succ` especializado: `0 + σ#0 = σ(0 + #0)`.
     have h5 : (phiZeroAdd :: ctx [phiZeroAdd]) ⊢ᵢ
         (add zero (succ (.var 0)) =eq succ (add zero (.var 0))) := by
-      have h5' : ctx [phiZeroAdd] ⊢ᵢ ax5_add_succ := ax' (by simp [axioms])
+      have h5' : ctx [phiZeroAdd] ⊢ᵢ ax5_add_succ := ax' (by simp [coreAxioms])
       have hh := wk (specI (specI h5' zero) (.var 0))
       simp [substFormula, substTerm, substTerms, add, succ, zero,
             FOL.substTerm_liftTerm] at hh
@@ -111,7 +111,7 @@ theorem succ_add (a : Term) (hc : Closed a) :
     show ctx [phiSuccAdd a] ⊢ᵢ substFormula 0 zero (phiSuccAdd a)
     simp only [phiSuccAdd, substFormula, substTerm, substTerms, add, succ, zero,
       FOL.substTerm_liftTerm]
-    have h4 : ctx [phiSuccAdd a] ⊢ᵢ ax4_add_zero := ax' (by simp [axioms])
+    have h4 : ctx [phiSuccAdd a] ⊢ᵢ ax4_add_zero := ax' (by simp [coreAxioms])
     have hA : ctx [phiSuccAdd a] ⊢ᵢ (add (succ a) zero =eq succ a) := by
       have hh := specI h4 (succ a)
       simp [substFormula, substTerm, substTerms, add, zero, succ] at hh
@@ -146,7 +146,7 @@ theorem succ_add (a : Term) (hc : Closed a) :
     show (phiSuccAdd a :: ctx [phiSuccAdd a]) ⊢ᵢ
       substFormula 0 (succ (.var 0)) (liftFormula 1 (phiSuccAdd a))
     rw [goal_eq]
-    have h5' : ctx [phiSuccAdd a] ⊢ᵢ ax5_add_succ := ax' (by simp [axioms])
+    have h5' : ctx [phiSuccAdd a] ⊢ᵢ ax5_add_succ := ax' (by simp [coreAxioms])
     have h5sa : (phiSuccAdd a :: ctx [phiSuccAdd a]) ⊢ᵢ
         (add (succ a) (succ (.var 0)) =eq succ (add (succ a) (.var 0))) := by
       have hh := wk (specI (specI h5' (succ a)) (.var 0))

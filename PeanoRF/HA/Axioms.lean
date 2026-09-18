@@ -28,7 +28,7 @@ import ROBINSON_PlusPlus.Full.Induction
 
   ## La convención: contextos finitos
 
-  `ctx insts = axioms ++ insts.map inductionFormula`. Cada teorema declara **qué instancias
+  `ctx insts = coreAxioms ++ insts.map inductionFormula`. Cada teorema declara **qué instancias
   de inducción usa**, y eso queda registrado en su tipo — contabilidad al estilo de
   matemática inversa: se lee si un resultado necesitó IΔ₀, IΣ₁ o HA completa.
 
@@ -37,6 +37,27 @@ import ROBINSON_PlusPlus.Full.Induction
   **Sobre un contexto CERRADO, la generalización es finitaria.** `Derivesᵢ.intro_forall`
   pide `Γ.map (liftFormula 0) ⊢ᵢ A`; si `Γ` es cerrado, `Γ.map (liftFormula 0) = Γ` y basta
   `Γ ⊢ᵢ A`. La hipótesis se cumple por CÓMPUTO DEL KERNEL: `axioms_lift` es un `rfl`.
+-/
+
+/-! ### ⚠️ Por qué `coreAxioms` y no `axioms` (cambiado el 2026-09-18)
+
+  `ROBINSON_PlusPlus.Minimal.Axioms.axioms` tiene **109 constituyentes**, y cinco de ellos
+  —`ax_vpf_ind`, `ax_vpf_listInd`, `ax_tc_zero`, `ax_tc_succ`, `ax_lineWF_listInd`—
+  arrastran `Classical.choice`. La causa, medida por el agente de RPP: `strCodeM s :=
+  charsCodeM s.toList`, y la puerta es **`String.toList`**; `charsCodeM` sobre `List Char`
+  es net-0. Es deuda de implementación del núcleo, no matemática.
+
+  ⭐ `coreAxioms` **no depende de ningún axioma** (medido), y contiene los 33 axiomas
+  aritméticos y de listas de Q⁺⁺ — incluidos los seis que este proyecto usa.
+
+  🔑 **Y el cambio no es un truco de footprint: es una corrección.** Los cinco sucios son
+  axiomas sobre el **verificador object de demostraciones** (la maquinaria de Gödel de RPP).
+  Tenían tan poco que hacer en el contexto de la Aritmética de Heyting como en el de
+  cualquier otra teoría aritmética: `ctx` los arrastraba por usar la lista grande, no
+  porque HA los necesitara. HA es `coreAxioms` más la inducción, y ahora lo dice.
+
+  ⇒ Toda la capa HA pasa a `[propext, Quot.sound]`. La deuda META heredada, que había
+  llegado a 14 declaraciones, **se queda en 0**.
 -/
 
 namespace PeanoRF.HA
@@ -54,15 +75,15 @@ set_option maxRecDepth 100000
     inducción que el teorema declare usar. Finito por construcción — eso es lo que hace de
     HA una teoría r.e. y no ω-lógica. -/
 def ctx (insts : List Formula) : List Formula :=
-  axioms ++ insts.map inductionFormula
+  coreAxioms ++ insts.map inductionFormula
 
 /-- Los axiomas de Q⁺⁺ están en todo contexto de HA. -/
 theorem mem_ctx_of_mem_axioms {insts : List Formula} {f : Formula}
-    (h : f ∈ axioms) : f ∈ ctx insts :=
+    (h : f ∈ coreAxioms) : f ∈ ctx insts :=
   List.mem_append_left _ h
 
 /-- Un axioma de Q⁺⁺ es derivable **intuicionistamente** en cualquier contexto de HA. -/
-theorem ax' {insts : List Formula} {f : Formula} (h : f ∈ axioms) : ctx insts ⊢ᵢ f :=
+theorem ax' {insts : List Formula} {f : Formula} (h : f ∈ coreAxioms) : ctx insts ⊢ᵢ f :=
   Derivesᵢ.hyp _ f (mem_ctx_of_mem_axioms h)
 
 /-- **La instancia de inducción es una HIPÓTESIS, no un axioma de Lean.** -/
@@ -84,7 +105,7 @@ theorem mono {insts insts' : List Formula} {ψ : Formula}
 
 /-- Los axiomas de Q⁺⁺ son **sentencias cerradas**: `liftFormula 0` los deja igual.
     Se demuestra por cómputo del kernel sobre la lista concreta. -/
-theorem axioms_lift : axioms.map (liftFormula 0) = axioms := by rfl
+theorem axioms_lift : coreAxioms.map (liftFormula 0) = coreAxioms := by rfl
 
 /-- Si las instancias declaradas son cerradas, el contexto entero lo es. -/
 theorem ctx_lift {insts : List Formula}

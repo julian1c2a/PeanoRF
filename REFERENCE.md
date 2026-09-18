@@ -186,7 +186,7 @@ La deuda heredada se clasifica **por procedencia, no por nombre de axioma**: un
 
 **Puntos de configuración** (todos `private`, documentados en el fichero):
 `objectClassicalAxioms`, `allowedAxioms`, `inheritedMetaDebt`, `omegaAxioms`,
-`omegaLayer`, `dependencyRoots`, `metaDebtIsError`, `baselineOwn`,
+`omegaLayer`, `dependencyRoots`, `metaDebtIsError` (**`true` desde 2026-09-18**), `baselineOwn`,
 `classicalCtorShortNames`, `benignForeignCtors`, `omegaAllowedForeignCtors`.
 
 **Control de constructores, POR TELESCOPIO** (reescrito 2026-09-17, revisado esa misma

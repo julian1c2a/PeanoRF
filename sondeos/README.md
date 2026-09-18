@@ -471,3 +471,46 @@ formalizable con `derivesI_soundness`, **no formalizado**.
 Kleene es sobre SU lenguaje. Informado a FOL y RPP en
 `doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`, con la pregunta de si su Craig les da la
 eliminación de símbolos ajenos.
+
+
+---
+
+## Medición del 2026-09-18 (e) — ⭐ el COLAPSO conmuta: la ruta barata de H3ter existe
+
+`collapse_probe.lean`. La pregunta: el obstáculo de H3ter es que `elim_forall` instancia con
+símbolos ajenos al lenguaje (medición (d)). La ruta cara sería un cálculo paralelo
+`DerivesL`. La barata es **transformar** la derivación en vez de restringirla:
+
+```lean
+derivesI_collapse : Γ ⊢ᵢ f  →  Γ.map (collapseF L) ⊢ᵢ collapseF L f
+```
+
+donde `collapseT L` manda a `zero` todo símbolo fuera de la signatura `L` y **no toca las
+variables**. En `elim_forall`, una instanciación con basura pasa a ser una con
+`collapseT L t`, que sí es del lenguaje.
+
+Ese lema necesita **dos conmutaciones**, y eran la única incógnita:
+
+```
+'collapseF_lift'       depends on axioms: [propext]
+'collapseF_subst'      depends on axioms: [propext]
+'collapseT_numeralM'   depends on axioms: [propext]
+```
+
+⭐ **Las dos salen, a la primera, y ni siquiera arrastran `Quot.sound`.** El caso que podía
+fallar —`∀`/`∃`, donde la sustitución entra bajo la ligadura como
+`substFormula (v+1) (liftTerm 0 s)`— se cierra con la conmutación del levantamiento.
+
+⭐ Y está **parametrizado por la signatura** `L : String → Bool`, no clavado a Q⁺⁺: las
+conmutaciones no dependen de qué símbolos se conserven. Lo único que se usa del reemplazo es
+que sea **cerrado** (`zero` no tiene argumentos, luego lift y subst lo dejan igual por `rfl`).
+
+⚠️ Los predicados ajenos **no** se colapsan, y es deliberado: la barra de un átomo es su
+derivabilidad, sin testigo. El obstáculo era la instanciación de `∀`/`∃` con **términos**
+ajenos, no los predicados.
+
+⇒ **La ruta está abierta.** Falta `derivesI_collapse`, que es una inducción sobre los 18
+constructores con estas conmutaciones en la mano — la misma forma que `derivesI_subst`.
+Y no depende de FOL: su ADR-065 mide que el puente a `LKp` **no tiene camino barato**
+(«parametrizar `Hauptsatz0`… un módulo de 1 256 l., ESTIMADO alto»), así que esperar a
+Craig era mala apuesta.

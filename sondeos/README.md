@@ -514,3 +514,80 @@ constructores con estas conmutaciones en la mano — la misma forma que `derives
 Y no depende de FOL: su ADR-065 mide que el puente a `LKp` **no tiene camino barato**
 («parametrizar `Hauptsatz0`… un módulo de 1 256 l., ESTIMADO alto»), así que esperar a
 Craig era mala apuesta.
+
+---
+
+## 2026-09-18 (g) · `collapse_parallel_probe.lean` — ¿cierra `elim_forall` con el colapso DENTRO del enunciado?
+
+**La pregunta.** La etapa 2 de H3ter quiere `Slash T D` con `D = ClosedQTerm`. Su caso
+`elim_forall` pide entonces `D (substT ρ t)` para un `t` **arbitrario**, que es inalcanzable:
+si `t` lleva un símbolo ajeno, `substT ρ t` también. Y **`derivesI_collapse` no lo arregla por
+sí solo**: actúa sobre derivaciones enteras, y L2 por dentro no sabe que la derivación venga
+colapsada. La forma candidata (c) era que L2 demostrara la barra de la instancia **colapsada**,
+
+```
+slash_of_derives : Γ ⊢ᵢ f → ∀ ρ, (…) → Slash T D (collapseF L (substF ρ f))
+```
+
+con lo que la obligación pasa a ser `D (collapseT L (substT ρ t))`.
+
+### Q1 · ¿conmuta el colapso con la sustitución PARALELA?
+
+```
+'collapseF_substF'  depends on axioms: [propext, Quot.sound]
+```
+
+✅ Sí, con `collapseS L ρ := fun n => collapseT L (ρ n)`. El caso de la ligadura sale de
+`collapseS L (upS ρ) = upS (collapseS L ρ)`, que en el índice 0 es `rfl` y en `n+1` es
+exactamente `collapseT_lift`, ya demostrado el (e).
+
+### Q3 · ¿el colapso FIJA el dominio? (lo que pide `intro_forall`)
+
+```
+'collapseT2_fix'  depends on axioms: [propext]
+```
+
+✅ `ClosedQTerm u → collapseT LQ2 u = u`, por inducción sobre `ClosedQTerm`.
+
+### Q2 · ⭐⭐ la obligación de `elim_forall`
+
+```
+'q2_term'  depends on axioms: [propext, Quot.sound]
+
+q2_term (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
+    ∀ t : Term, ClosedQTerm (collapseT2 LQ2 (substT ρ t))
+```
+
+✅ **Con `ρ` valuada en el dominio, el colapso de `substT ρ t` está en el dominio para `t`
+ARBITRARIO** — símbolos ajenos y aridades erróneas incluidos. Es exactamente lo que
+`elim_forall` pedirá en la forma (c). ⇒ **La forma (c) es la buena.**
+
+### ⛔ El hallazgo: la signatura tiene que llevar la ARIDAD
+
+`collapseT` toma hoy `L : String → Bool`, **sólo el nombre del símbolo**. Eso no basta:
+
+```
+contraejemplo_aridad : ¬ ClosedQTerm (Term.func add_sym [zero])      [propext]
+contraejemplo_colapso : collapseT LQ (Term.func add_sym [zero])
+                          = Term.func add_sym [zero]                 [propext]
+```
+
+`+` aplicado a **un** argumento es un término legítimo de la sintaxis, es cerrado y lleva
+sólo símbolos de Q⁺⁺ — pero **no es un `ClosedQTerm`**, porque los constructores de
+`ClosedQTerm` fijan también la aridad. Y Q⁺⁺ no tiene ningún axioma sobre él, así que
+**tampoco es demostrablemente igual a un numeral**: no puede estar en `D`. El colapso de hoy
+lo deja pasar intacto.
+
+⇒ **`collapseT` hay que generalizarlo a `L : String → Nat → Bool`**, con el predicado
+aplicado a `ts.length`. El coste medido es **dos lemas de longitud** (`collapseTs2_length`,
+`substTs_length`, tres líneas cada uno) más el mismo `by_cases` que ya había; las
+conmutaciones no cambian de forma.
+
+### ⚠️ Trampa de notación: `∧` y `∨` NO se pueden escribir bajo `open FOL`
+
+`open FOL` las tiene tomadas por la conjunción y la disyunción de `FormulaG`. Escribir
+`(s = zero_sym ∧ ts.length = 0)` da **`unexpected token '='; expected ')', ',' or ':'`**, un
+error que no se parece nada a su causa — la misma familia que el `σ` de `peanolib`
+(`unexpected token 'σ'`). Leerlas está bien (las que vienen de `injEq`, `rcases`…);
+escribirlas, no. Se rodea con `Or`/`And` explícitos, o reformulando el enunciado para no
+necesitarlas (aquí: `LQ2 s args.length = true` en vez de una disyunción de conjunciones).

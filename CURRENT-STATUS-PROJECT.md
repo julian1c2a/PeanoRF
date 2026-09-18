@@ -69,9 +69,25 @@
 > **FALSA**, y por eso hace falta el colapso delante: `HA/Domain.lean` demuestra
 > `closed_collapse_subst`, su versión con `collapseT LQ`.
 >
-> 🔶 **Lo que queda de la etapa 2 es la FORMA (c) de L2**: que demuestre la barra de la
-> instancia **colapsada**, `Slash T D (collapseF L (substF ρ f))`. Medido antes de escribirla
-> (`sondeos/collapse_parallel_probe.lean`): las tres obligaciones salen.
+> 🏁🏁 **ETAPA 2 CERRADA** (2026-09-18): **la FORMA (c)**. L2 demuestra la barra de la
+> instancia **COLAPSADA**, `Slash T D (collapseF L (substF ρ f))`, y con ella las dos
+> clausuras de `HA/Domain.lean` encajan **sin adaptador ninguno**:
+>
+> ```
+> qDisjunctionProperty : (∀ g ∈ T, Slash T ClosedQTerm (…g…)) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
+> qExistenceProperty_numeral : … → ∃ t, ClosedQTerm t ∧ (∃n, ⊢ᵢ t =eq n̅) ∧ T ⊢ᵢ A[t]
+> ```
+>
+> ⭐ **La DP para CUALQUIER teoría de Q⁺⁺ cuyos axiomas estén barrados**, y el testigo de la
+> existencia sale **demostrablemente igual a un NUMERAL**. Todo en `[propext, Quot.sound]`.
+>
+> ⚠️ La hipótesis «`A ∨ B` es una sentencia del lenguaje» va como **una sola ecuación**,
+> `collapseF LQ (substF zeroS (A ∨ B)) = A ∨ B` — cerrada porque la sustitución no la toca,
+> del lenguaje porque el colapso no la toca. Comprobado que **no es vacía**, con un ejemplo
+> que la cumple por `rfl`.
+>
+> ⏳ **Queda SÓLO la etapa 3**: la hipótesis `hT`, que cada axioma de `coreAxioms` esté
+> barrado. Ahí ya no hay incógnita de método, sólo trabajo.
 >
 > ⏳ **Etapa 3**, medida: de los 34 axiomas de `coreAxioms`, **25** salen con `specI`, ~4 con
 > `elim_impl`, y **5** piden decidir en el meta (`ax19`, `ax21`, `ax13`, `ax_L3`, `ax29`).
@@ -108,7 +124,7 @@
 |--------|-------|
 | Módulos propios | 15 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain}`) |
 | Módulos con 0 `sorry` | 15 / 15 |
-| Teoremas propios | 98 |
+| Teoremas propios | 109 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

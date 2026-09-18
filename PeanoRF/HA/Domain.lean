@@ -6,6 +6,7 @@ License: MIT
 
 import PeanoRF.Calculus.Collapse
 import PeanoRF.Calculus.Subst
+import PeanoRF.Calculus.Slash
 import PeanoRF.HA.Numerals
 
 /-! # El DOMINIO de la barra — `ClosedQTerm` y la signatura de Q⁺⁺
@@ -171,6 +172,80 @@ theorem closed_collapse_substs (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
       · exact closed_collapse_subst ρ hρ t
       · exact closed_collapse_substs ρ hρ ts0 u hu0
 end
+
+/-! ## 3 · 🏁 La propiedad de disyunción de una teoría de Q⁺⁺
+
+    Aquí se junta todo: la forma (c) de L2 instanciada con `D = ClosedQTerm` y `L = LQ`. Las
+    dos clausuras que L2 pide son **exactamente** los dos teoremas de arriba, sin adaptador
+    ninguno.
+
+    ⏳ Lo que queda para la DP de **HA** es una sola hipótesis: `hT`, que cada axioma de
+    `coreAxioms` esté barrado. Eso es la etapa 3, y está medida: 25 de los 34 salen con
+    `specI`, ~4 con `elim_impl`, y 5 piden decidir en el meta. -/
+
+/-- La sustitución que cierra: todo índice a `zero`. Es la que instancia el nivel de arriba,
+    donde la fórmula es una **sentencia** y por tanto ninguna variable llega a usarse.
+
+    ⚠️ **`g ∈ T` no se puede escribir en este módulo**: en este ámbito `∈` está sobrecargada
+    y elabora el lado derecho como un TIPO (`type expected, got (T : List Formula)`). Se
+    escribe `List.Mem g T`, que es a lo que reduce y encaja por defeq con lo que
+    `Slash.lean` pide. Misma familia que el `σ` de `peanolib` y que el `∧`/`∨` de `FOL`. -/
+
+def zeroS : Subst := fun _ => zero
+
+theorem zeroS_closed : ∀ n, ClosedQTerm (zeroS n) := fun _ => ClosedQTerm.zero
+
+/-- 🏁 **La DP para cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados.**
+
+    La hipótesis `hAB` dice, en una sola ecuación, que `A ∨ B` es una **sentencia del
+    lenguaje**: cerrada (la sustitución no la toca) y sin símbolos ajenos (el colapso no la
+    toca). ⛔ Sin ella el enunciado es FALSO — `sondeos/junk_probe.lean`. -/
+theorem qDisjunctionProperty (T : List Formula)
+    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
+    {A B : Formula}
+    (hAB : collapseF LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : T ⊢ᵢ Formula.or A B) :
+    (T ⊢ᵢ A) ∨ (T ⊢ᵢ B) :=
+  disjunction_property_of_slashed T ClosedQTerm LQ
+    (fun _ hu => collapse_fix_closed hu) closed_collapse_subst
+    zeroS zeroS_closed hT hAB h
+
+/-! ### Que las hipótesis no sean vacías, medido
+
+    `hAB` dice «`A ∨ B` es una sentencia del lenguaje». Conviene comprobar que **hay
+    fórmulas que la cumplen**, porque una hipótesis insatisfacible haría el teorema cierto
+    y vacío — la misma trampa que este proyecto lleva dos semanas cazando en los controles. -/
+
+example :
+    collapseF LQ (substF zeroS
+        (Formula.or (Formula.eq zero zero) (Formula.eq (succ zero) zero)))
+      = Formula.or (Formula.eq zero zero) (Formula.eq (succ zero) zero) := by
+  rfl
+
+/-- 🏁 **La propiedad de existencia para una teoría de Q⁺⁺** — y el testigo sale **en el
+    dominio**, o sea: un término cerrado del lenguaje, que por `closed_term_eq_numeral` es
+    demostrablemente igual a un NUMERAL. Ésa es la sombra sintáctica del cómputo. -/
+theorem qExistenceProperty (T : List Formula)
+    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
+    {A : Formula}
+    (hA : collapseF LQ (substF zeroS (Formula.ex A)) = Formula.ex A)
+    (h : T ⊢ᵢ Formula.ex A) :
+    ∃ t : Term, And (ClosedQTerm t) (T ⊢ᵢ substFormula 0 t A) :=
+  existence_property_of_slashed T ClosedQTerm LQ
+    (fun _ hu => collapse_fix_closed hu) closed_collapse_subst
+    zeroS zeroS_closed hT hA h
+
+/-- ⭐ Y el testigo, por ser del dominio, **es un numeral salvo demostración**. Es lo que
+    convierte la propiedad de existencia en una afirmación sobre NÚMEROS. -/
+theorem qExistenceProperty_numeral (T : List Formula)
+    (hT : ∀ g, List.Mem g T → Slash T ClosedQTerm (collapseF LQ (substF zeroS g)))
+    {A : Formula}
+    (hA : collapseF LQ (substF zeroS (Formula.ex A)) = Formula.ex A)
+    (h : T ⊢ᵢ Formula.ex A) :
+    ∃ t : Term, And (ClosedQTerm t)
+      (And (∃ n : Nat, ctx [] ⊢ᵢ (t =eq numeralM n)) (T ⊢ᵢ substFormula 0 t A)) := by
+  rcases qExistenceProperty T hT hA h with ⟨t, hDt, ht⟩
+  exact ⟨t, hDt, closed_term_eq_numeral hDt, ht⟩
 
 /-- El dominio **no es vacío**: la sustitución constante `zero` lo valúa. Es la que instancia
     L2 en el nivel de arriba, donde la fórmula es una sentencia. -/

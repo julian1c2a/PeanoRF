@@ -398,7 +398,9 @@ COLAPSADA. Las obligaciones están medidas en `HA/Domain.lean` y en
 ninguna rama — y con `notP_syn` da la separación `⊢ᵢ ≠ ⊢₀` como teorema.
 
 | **`slash_eq_congr`** | la barra no distingue términos demostrablemente iguales | `propext, Quot.sound` |
-| **`slash_of_derives`** (**L2**) | `Γ ⊢ᵢ f`, `ρ` valuada en `D` y `Γ` barrado `⟹` `∣ fρ` | `propext, Quot.sound` |
+| **`slash_of_derives`** (**L2**, forma (c)) | `Γ ⊢ᵢ f`, `ρ` valuada en `D` y `Γ` barrado `⟹` `∣ (fρ)ᴸ` — la instancia **colapsada** | `propext, Quot.sound` |
+| `collapseF_substF` | el colapso conmuta con la sustitución **paralela** — lo pide `rewrite_at` | `propext, Quot.sound` |
+| `collapseF_trivial` | con `L` total el colapso es la identidad — **es lo que deja H3bis intacto** | `propext` |
 | **`disjunction_property_of_slashed`** | DP relativa a una teoría barrada — H3bis es su caso `T = []` | `propext, Quot.sound` |
 | 🏁 **`disjunction_property`** | `[] ⊢ᵢ A ∨ B ⟹ [] ⊢ᵢ A` ó `[] ⊢ᵢ B` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
 | 🏁 **`existence_property`** | `[] ⊢ᵢ ∃A ⟹ ∃t, [] ⊢ᵢ A[t]` — ⛔ contexto VACÍO, no HA | `propext, Quot.sound` |
@@ -514,6 +516,10 @@ ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, 
 | ⛔ `not_closed_add_unary` | `¬ ClosedQTerm (func add_sym [zero])` | `propext` |
 | `closed_of_LQ` | símbolo admitido + argumentos en el dominio ⟹ dominio | `propext, Quot.sound` |
 | ⭐⭐ `closed_collapse_subst` | `(∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))` | `propext, Quot.sound` |
+| `zeroS` / `zeroS_closed` | la sustitución que cierra, todo índice a `zero` | — |
+| 🏁 **`qDisjunctionProperty`** | la DP para **cualquier teoría de Q⁺⁺** con los axiomas barrados | `propext, Quot.sound` |
+| 🏁 **`qExistenceProperty`** | la EP, con el testigo **en el dominio** | `propext, Quot.sound` |
+| ⭐ **`qExistenceProperty_numeral`** | …y el testigo es **demostrablemente un NUMERAL** | `propext, Quot.sound` |
 | `closed_zeroS` | el dominio no es vacío | — |
 
 **Para qué**: la barra de H3ter lleva un parámetro de dominio `Slash T D`, y L2 necesita
@@ -527,7 +533,7 @@ nombre. `+` con UN argumento es un término legítimo, cerrado y con símbolos d
 que es lo único que la etapa 3 le pide al dominio. `not_closed_add_unary` lo deja medido en
 producción, no en el cuaderno.
 
-⚠️ Aquí **no se pueden escribir `∧` ni `∨`**: `open FOL` las tiene tomadas por `FormulaG`.
+⚠️ Aquí **no se pueden escribir `∧`, `∨` ni `g ∈ T`**: `open FOL` tiene tomadas las dos primeras por `FormulaG`, y `∈` está sobrecargada de forma que elabora su lado derecho como un TIPO. Se escriben `And`/`Or` y `List.Mem g T`. La familia del `σ` de `peanolib`.
 `(s = zero_sym ∧ n = 0)` da `unexpected token =` — la familia del `σ` de `peanolib`.
 
 ---

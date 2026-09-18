@@ -44,36 +44,29 @@ disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B 
    **transforma** la derivación en vez de restringirla. Y la espera habría sido mala
    apuesta — el ADR-065 de RPP mide que el puente a `LKp` no tiene camino barato.
 
-⇒ **Lo que queda de la etapa 2 es la FORMA (c) de L2.** Las dos piezas están, pero **no
-encajan aún**: con `D = ClosedQTerm` la clausura que L2 pide hoy,
+✅ **FORMA (c) — HECHA** (`Calculus/Slash.lean`). L2 demuestra ahora la barra de la
+instancia **COLAPSADA**:
 
 ```lean
-hDsub : ∀ ρ, (∀ n, D (ρ n)) → ∀ t, D (substT ρ t)
+slash_of_derives (T) (D) (L)
+    (hDfix : ∀ u, D u → collapseT L u = u)
+    (hDsub : ∀ ρ, (∀n, D (ρ n)) → ∀ t, D (collapseT L (substT ρ t)))
+    (h : Γ ⊢ᵢ f) : ∀ ρ, (∀n, D (ρ n)) → (∀ g ∈ Γ, Slash T D (collapseF L (substF ρ g)))
+      → Slash T D (collapseF L (substF ρ f))
 ```
 
-es **FALSA** — `t` puede llevar símbolos ajenos, y entonces `substT ρ t` también. Y
-`derivesI_collapse` **no lo arregla por sí solo**: actúa sobre derivaciones enteras, y L2 por
-dentro no sabe que la derivación venga colapsada.
+y las dos clausuras de `HA/Domain.lean` **son exactamente `hDfix` y `hDsub`**, sin adaptador.
+De ahí salen `qDisjunctionProperty` y `qExistenceProperty_numeral` — la DP y la EP para
+**cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados**, con el testigo demostrablemente
+igual a un numeral.
 
-⭐ La salida, medida el 2026-09-18 (`sondeos/collapse_parallel_probe.lean`): que L2 demuestre
-la barra de la instancia **COLAPSADA**,
+⭐ Y **H3bis no se debilitó**: con `L` total el colapso es la identidad (`collapseF_trivial`)
+y con `D` total la clausura es trivial, así que `disjunction_property` y `existence_property`
+salen con el enunciado literal de antes y el mismo `[propext, Quot.sound]`.
 
-```lean
-slash_of_derives : Γ ⊢ᵢ f → ∀ ρ, (…) → Slash T D (collapseF L (substF ρ f))
-```
-
-y entonces la obligación pasa a ser `D (collapseT L (substT ρ t))`, que **sí sale**
-(`closed_collapse_subst`). Las tres obligaciones están medidas antes de escribir el lema:
-
-| lo que pide L2 | quién lo da | footprint |
-|---|---|---|
-| `intro_forall` | `collapse_fix_closed` | `propext` |
-| `elim_forall` / `intro_ex` | ⭐⭐ `closed_collapse_subst` | `propext, Quot.sound` |
-| la conmutación paralela, si hace falta | `collapseF_substF` (en el sondeo) | `propext, Quot.sound` |
-
-⚠️ Y el nivel de arriba **cambia de enunciado**: la DP de HA se afirmará de una `A ∨ B`
-**cerrada y del lenguaje**, instanciando con `ρ = fun _ => zero` (`closed_zeroS`). No es una
-pérdida: es el teorema de Kleene, que siempre fue sobre SU lenguaje.
+⚠️ El caso `rewrite_at` fue el que pidió la pieza extra: para aplicar `slash_rewrite`, que
+está enunciada sobre `substF`, hay que mover el colapso al otro lado ⇒ **`collapseF_substF`**,
+la conmutación con la sustitución PARALELA, que el sondeo (g) ya había medido.
 
 ### Etapa 3 — ya medida
 

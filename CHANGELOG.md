@@ -15,6 +15,52 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-18 (i) · 🏁🏁 la FORMA (c) — la etapa 2 de H3ter, CERRADA
+
+L2 demuestra ahora la barra de la instancia **COLAPSADA**:
+
+```lean
+slash_of_derives (T) (D) (L)
+    (hDfix : ∀ u, D u → collapseT L u = u)
+    (hDsub : ∀ ρ, (∀n, D (ρ n)) → ∀ t, D (collapseT L (substT ρ t)))
+    (h : Γ ⊢ᵢ f) : … → Slash T D (collapseF L (substF ρ f))
+```
+
+El colapso viaja **dentro** de la inducción, así que la obligación de `elim_forall` pasa de
+`D (substT ρ t)` —falsa para `ClosedQTerm`— a `D (collapseT L (substT ρ t))`, que sí sale.
+Y `hDfix`/`hDsub` **son exactamente** `collapse_fix_closed` y `closed_collapse_subst` de
+`HA/Domain.lean`, sin adaptador ninguno.
+
+🏁 **Lo que esto da** (`HA/Domain.lean`, todo en `[propext, Quot.sound]`):
+
+```
+qDisjunctionProperty       : axiomas barrados → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
+qExistenceProperty         : … → ∃ t, ClosedQTerm t ∧ T ⊢ᵢ A[t]
+⭐ qExistenceProperty_numeral : …y ese testigo es demostrablemente igual a un NUMERAL
+```
+
+La DP y la EP **para cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados**.
+
+⭐ **H3bis NO se debilita**: con `L` total el colapso es la identidad (`collapseF_trivial`) y
+con `D` total la clausura es trivial, así que `disjunction_property`, `existence_property` y
+`derivesI_ne_derives0` salen con el enunciado literal de antes y el mismo footprint.
+
+⚠️ La hipótesis «`A ∨ B` es una sentencia del lenguaje» va como **una sola ecuación**,
+`collapseF LQ (substF zeroS (A ∨ B)) = A ∨ B`. Comprobado que **no es vacía**, con un ejemplo
+que la cumple por `rfl` — una hipótesis insatisfacible haría el teorema cierto y vacío.
+
+⚠️ `rewrite_at` pidió una pieza más: **`collapseF_substF`**, la conmutación con la
+sustitución PARALELA, porque `slash_rewrite` está enunciada sobre `substF`. Ya estaba medida
+en el sondeo (g).
+
+⚠️ Trampa nueva: **`g ∈ T` no se puede escribir en `HA/Domain.lean`** — `∈` está sobrecargada
+y elabora su lado derecho como un TIPO (`type expected, got (T : List Formula)`). Se escribe
+`List.Mem g T`. La tercera de la familia, tras el `σ` de `peanolib` y el `∧`/`∨` de `FOL`.
+
+⏳ Queda **sólo la etapa 3**: `hT` para los 34 axiomas de `coreAxioms`.
+
+**48 jobs · 15 módulos · 0 sorry · 225 declaraciones · deuda heredada 0.**
+
 ### 2026-09-18 (h) · ⭐ `Slash T D` — la barra con parámetro de DOMINIO
 
 La pieza (1) de la etapa 2 de H3ter. Las cláusulas de `∀` y `∃` de la barra cuantifican

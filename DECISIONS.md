@@ -1118,6 +1118,53 @@ sondeos, porque es lo que justifica el diseño.
 
 ---
 
+## ADR-029: La FORMA (c) — L2 barra la instancia COLAPSADA
+
+**Fecha**: 2026-09-18
+**Estado**: Aceptado
+
+**Contexto**: con `Slash T D` (ADR-027), el caso `elim_forall` de L2 pedía `D (substT ρ t)`
+para un `t` **arbitrario**. Con `D = ClosedQTerm` eso es **falso**: si `t` lleva un símbolo
+ajeno, `substT ρ t` también. Y `derivesI_collapse` **no lo arregla por sí solo**, porque
+actúa sobre derivaciones enteras y L2 por dentro no sabe que la derivación venga colapsada.
+
+Tres formas se consideraron, y se **midieron** antes de escribir nada
+(`sondeos/collapse_parallel_probe.lean`):
+
+| | qué exige | veredicto |
+|---|---|---|
+| (a) `D = ClosedQTerm` + L2 restringida a derivaciones limpias | un cálculo `DerivesL` indexado | ⛔ la ruta cara |
+| (b) `D` cerrado bajo `substT ρ` para `t` arbitrario | `D` ⊇ todos los términos sin variables | ⛔ `ax19` vuelve a fallar |
+| (c) que L2 barre la instancia **colapsada** | una conmutación más | ⭐ la buena |
+
+**Decisión**: (c).
+
+```lean
+slash_of_derives : Γ ⊢ᵢ f → ∀ ρ, (…) → Slash T D (collapseF L (substF ρ f))
+```
+
+con dos hipótesis sobre el dominio: `hDfix` (el colapso lo fija) y `hDsub` (el colapso de
+`substT ρ t` cae en él). **Las dos están demostradas en `HA/Domain.lean` y encajan sin
+adaptador ninguno.**
+
+**Justificación**: el colapso viaja dentro de la inducción, así que todo se queda en el
+lenguaje solo, y arriba no se pierde nada porque para una sentencia del lenguaje el colapso
+y la sustitución son la identidad. ⭐ **Y H3bis no se debilita**: con `L` total el colapso es
+la identidad (`collapseF_trivial`) y con `D` total la clausura es trivial, así que
+`disjunction_property` sale con el enunciado LITERAL de antes.
+
+**Consecuencias**:
+- 🏁 `qDisjunctionProperty` y `qExistenceProperty_numeral`: la DP y la EP para **cualquier
+  teoría de Q⁺⁺ cuyos axiomas estén barrados**, con el testigo demostrablemente igual a un
+  numeral. `[propext, Quot.sound]`.
+- La hipótesis «`A ∨ B` es una sentencia del lenguaje» va como **una sola ecuación**,
+  `collapseF LQ (substF zeroS (A ∨ B)) = A ∨ B`. Comprobado que **no es vacía**.
+- El caso `rewrite_at` obligó a una pieza más: `collapseF_substF`, la conmutación con la
+  sustitución **paralela**, porque `slash_rewrite` está enunciada sobre `substF`.
+- ⏳ Queda sólo la etapa 3: `hT` para los 34 axiomas de `coreAxioms`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

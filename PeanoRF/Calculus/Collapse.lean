@@ -5,6 +5,7 @@ License: MIT
 -/
 
 import PeanoRF.Calculus.DerivesI
+import PeanoRF.Calculus.Subst
 
 /-! # El COLAPSO de símbolos ajenos — `⊢ᵢ` es cerrado bajo él
 
@@ -287,5 +288,97 @@ theorem derivesI_collapse (L : String → Nat → Bool) {Γ : List Formula} {φ 
       refine Derivesᵢ.subst _ (collapseT L t₁) (collapseT L t₂) (collapseF L f) ih1 ?_
       rw [← collapseF_subst]
       exact ih2
+
+/-! ## 5 · El colapso contra la sustitución PARALELA
+
+    Lo pide el caso `rewrite_at` de L2 en su **forma (c)**: con el colapso delante hay que
+    poder mover `collapseF L` al otro lado de `substF ρ` para aplicar `slash_rewrite`, que
+    está enunciada sobre `substF`. Medido en `sondeos/collapse_parallel_probe.lean`. -/
+
+/-- El colapso de una sustitución, punto a punto. -/
+def collapseS (L : String → Nat → Bool) (ρ : Subst) : Subst := fun n => collapseT L (ρ n)
+
+/-- ⭐ El caso que podía fallar: bajo la ligadura. En el índice 0 es `rfl`, y en `n+1` es
+    exactamente `collapseT_lift`. -/
+theorem collapseS_upS (L : String → Nat → Bool) (ρ : Subst) :
+    collapseS L (upS ρ) = upS (collapseS L ρ) := by
+  funext n
+  cases n with
+  | zero => rfl
+  | succ m => exact collapseT_lift L 0 (ρ m)
+
+mutual
+theorem collapseT_substT (L : String → Nat → Bool) : ∀ (ρ : Subst) (t : Term),
+    collapseT L (substT ρ t) = substT (collapseS L ρ) (collapseT L t) := by
+  intro ρ t
+  cases t with
+  | var n => rfl
+  | func s ts =>
+      by_cases h : L s ts.length
+      · simp only [substT, collapseT, substTs_length, if_pos h]
+        exact congrArg _ (collapseTs_substTs L ρ ts)
+      · simp [substT, collapseT, substTs_length, if_neg h, zero, substTs]
+
+theorem collapseTs_substTs (L : String → Nat → Bool) : ∀ (ρ : Subst) (ts : List Term),
+    collapseTs L (substTs ρ ts) = substTs (collapseS L ρ) (collapseTs L ts) := by
+  intro ρ ts
+  cases ts with
+  | nil => rfl
+  | cons t ts0 =>
+      simp only [substTs, collapseTs, List.cons.injEq]
+      exact ⟨collapseT_substT L ρ t, collapseTs_substTs L ρ ts0⟩
+end
+
+theorem collapseF_substF (L : String → Nat → Bool) : ∀ (f : Formula) (ρ : Subst),
+    collapseF L (substF ρ f) = substF (collapseS L ρ) (collapseF L f) := by
+  intro f
+  induction f with
+  | bottom => intro _; rfl
+  | atom p ts => intro ρ; simp only [substF, collapseF, collapseTs_substTs]
+  | eq t u => intro ρ; simp only [substF, collapseF, collapseT_substT]
+  | impl a b iha ihb => intro ρ; simp only [substF, collapseF, iha, ihb]
+  | and a b iha ihb => intro ρ; simp only [substF, collapseF, iha, ihb]
+  | or a b iha ihb => intro ρ; simp only [substF, collapseF, iha, ihb]
+  | «forall» a ih => intro ρ; simp only [substF, collapseF, ih, collapseS_upS]
+  | ex a ih => intro ρ; simp only [substF, collapseF, ih, collapseS_upS]
+
+/-! ## 6 · La signatura TOTAL no colapsa nada
+
+    Es lo que mantiene H3bis exactamente donde estaba: la propiedad de disyunción de la
+    LÓGICA es la instancia de la forma (c) con `L = fun _ _ => true`, donde el colapso es la
+    identidad y el enunciado vuelve a ser el de antes, literalmente. -/
+
+mutual
+theorem collapseT_trivial (L : String → Nat → Bool) (hL : ∀ s n, L s n = true) :
+    ∀ t : Term, collapseT L t = t := by
+  intro t
+  cases t with
+  | var n => rfl
+  | func s ts =>
+      simp only [collapseT, if_pos (hL s ts.length)]
+      exact congrArg _ (collapseTs_trivial L hL ts)
+
+theorem collapseTs_trivial (L : String → Nat → Bool) (hL : ∀ s n, L s n = true) :
+    ∀ ts : List Term, collapseTs L ts = ts := by
+  intro ts
+  cases ts with
+  | nil => rfl
+  | cons t ts0 =>
+      simp only [collapseTs, List.cons.injEq]
+      exact ⟨collapseT_trivial L hL t, collapseTs_trivial L hL ts0⟩
+end
+
+theorem collapseF_trivial (L : String → Nat → Bool) (hL : ∀ s n, L s n = true) :
+    ∀ f : Formula, collapseF L f = f := by
+  intro f
+  induction f with
+  | bottom => rfl
+  | atom p ts => simp only [collapseF, collapseTs_trivial L hL]
+  | eq t u => simp only [collapseF, collapseT_trivial L hL]
+  | impl a b iha ihb => simp only [collapseF, iha, ihb]
+  | and a b iha ihb => simp only [collapseF, iha, ihb]
+  | or a b iha ihb => simp only [collapseF, iha, ihb]
+  | «forall» a ih => simp only [collapseF, ih]
+  | ex a ih => simp only [collapseF, ih]
 
 end PeanoRF.Calculus

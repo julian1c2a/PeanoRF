@@ -399,10 +399,75 @@ Y `numeralM` vive en la capa **Minimal**, que ya importábamos — coste de impo
 
 ### Veredicto
 
-**H3ter es viable por el port.** El lenguaje de Q⁺⁺ tiene cinco símbolos de función
+⚠️ **SUPERADO EL MISMO DÍA**: esta medición contestó bien a su pregunta —el port es
+barato— pero la pregunta era demasiado estrecha. Ver «Medición del 2026-09-18 (d)»: el
+enunciado de H3ter era falso, y no por los numerales.
+
+**El port es viable.** El lenguaje de Q⁺⁺ tiene cinco símbolos de función
 (`zero`, `succ`, `add`, `mul`, `pow`; `one`/`two` son abreviaturas), así que son **tres
 homomorfismos** que portar, los tres del mismo patrón que el spike.
 
 ⚠️ Lo que sigue siendo incógnita es `closed_term_eq_numeral` —inducción sobre la estructura
 del término—, que es nuestra y nueva. Pero **no tiene bloqueo aguas arriba**, que era
 justo lo que esta medición venía a decidir.
+
+
+---
+
+## Medición del 2026-09-18 (b) — el gate contra un cálculo que NO existía al escribirlo
+
+`audit_2026-09-18.lean`. FOL estrenó `LKp` la noche anterior (`Craig0.lean`, su ADR-063:
+Maehara + interpolación de Craig). El criterio **por telescopio** se escribió el 17 sin
+saber que `LKp` iba a existir.
+
+```
+[gate · inventario] 8 relaciones POR TELESCOPIO: [… FOL.Craig0.LKp …]
+                    ⇒ 58 constructores ajenos vigilados, de ellos 12 CLÁSICOS
+error: 'smoke_lkp' usa 1 constructor(es) que ⊢ᵢ NO tiene: [FOL.Craig0.LKp.ax]
+```
+
+**Sin tocar `AxiomCheck.lean`.** Primera validación del criterio contra un cálculo posterior
+a su escritura — justo lo que las tres versiones anteriores no aguantaron.
+
+---
+
+## Medición del 2026-09-18 (c) — `coreAxioms`, y la deuda que no era matemática
+
+`coreaxioms_probe.lean`, `core_after.lean`. La apuntó el agente de RPP midiendo SU puerta.
+
+```
+ROBINSON_PlusPlus.Minimal.Axioms.axioms      →  [propext, Classical.choice, Quot.sound]
+ROBINSON_PlusPlus.Minimal.Axioms.coreAxioms  →  does not depend on any axioms
+```
+
+De los 109 constituyentes de `axioms` sólo cinco arrastran `Classical.choice`, y son del
+**verificador object de demostraciones**. `coreAxioms` trae los seis que usamos.
+
+⇒ `HA.ctx` pasa a `coreAxioms` (ADR-024): `PeanoRF.HA.ctx` **sin axiomas**, toda la capa HA
+en `[propext, Quot.sound]`, deuda heredada **de 14 a 0**, y `metaDebtIsError := true`.
+
+🔑 **Doce días de aviso tolerado se resolvieron cambiando qué lista se importa.**
+
+---
+
+## Medición del 2026-09-18 (d) — ⛔ el enunciado de H3ter es FALSO
+
+`junk_probe.lean`.
+
+```lean
+theorem junk_trichotomy :
+    ctx [] ⊢ᵢ (lt foo bar ∨ foo = bar ∨ lt bar foo)     -- [propext]
+```
+
+`foo`, `bar` son `Term.func "foo" []`: **no son símbolos del lenguaje de Q⁺⁺**. Pero `Term`
+es genérica y `elim_forall` instancia con cualquier término, así que `ax19_lt_trichotomy` se
+instancia en basura y es derivable.
+
+⚠️ **Mitad medido, mitad argumentado.** La derivabilidad está medida. Que **ninguna rama**
+sea derivable es argumento por solidez con dos modelos (`foo↦0,bar↦1` y al revés);
+formalizable con `derivesI_soundness`, **no formalizado**.
+
+⇒ **HA sobre la sintaxis genérica no tiene la propiedad de disyunción.** El teorema de
+Kleene es sobre SU lenguaje. Informado a FOL y RPP en
+`doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`, con la pregunta de si su Craig les da la
+eliminación de símbolos ajenos.

@@ -10,53 +10,60 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-**H3ter, etapa 2 — y tiene una DECISIÓN DE DISEÑO que conviene tomar antes de escribir.**
+**H3ter — y lo primero es mirar si FOL ha contestado.**
 
-✅ **Etapa 1 hecha** (ADR-025): la barra es relativa a la teoría. El hito se reduce a una
-hipótesis con tipo exacto:
+⛔ **El enunciado ingenuo de H3ter es FALSO, y está medido** (`sondeos/junk_probe.lean`):
+
+```lean
+ctx [] ⊢ᵢ (lt foo bar ∨ foo = bar ∨ lt bar foo)      -- derivable, [propext]
+```
+
+con `foo`, `bar` símbolos **ajenos al lenguaje**. `Term` es genérica y `elim_forall`
+instancia con cualquier término. Ninguna rama es derivable (argumento por solidez, **no
+formalizado**). ⇒ HA sobre la sintaxis genérica **no tiene** la propiedad de disyunción.
+
+### Lo hecho
+
+✅ **Etapa 1** (ADR-025): la barra es relativa a la teoría. H3bis = instancia `T = []`,
+intacto. Teorema general:
 
 ```lean
 disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B
 ```
 
-H3bis es la instancia `T = []` (hipótesis vacía). H3ter es `T = ctx insts`, y le falta
-**`ha_ctx_slashed`**.
+✅ `closed_term_eq_numeral` y los tres homomorfismos (`HA/Numerals.lean`).
 
-⛔ **Pero no sale con la barra actual**, y esto está medido, no supuesto: su `∀` cuantifica
-sobre TODOS los términos, y `ax19_lt_trichotomy` exigiría una rama derivable para dos
-variables libres. Hace falta la barra de Kleene de verdad: `∀`/`∃` sobre **numerales**.
+### Etapa 2 — decidida, y con DOS piezas, no una
 
-### La decisión de la etapa 2
+1. **Parámetro de dominio `Slash T D`** — elegido: conserva H3bis en toda su fuerza. `D`
+   serán los términos cerrados del lenguaje (`ClosedQTerm`, ya definido).
+2. **Restringir las derivaciones al lenguaje** — pieza nueva que el contraejemplo obliga a
+   añadir. `D` dice sobre qué cuantifica la barra; esto dice qué usa la derivación por
+   dentro, y son cosas distintas. Dos rutas:
+   * un `DerivesL` paralelo con su puente — trabajo nuestro, sin bloqueo;
+   * ⭐ **eliminación de símbolos ajenos** (`Γ ⊢ φ` con todo en `L` ⇒ hay derivación sin
+     términos fuera de `L`) — **preguntado a FOL**, que cerró Maehara + Craig el 17
+     (`LKp`, su ADR-063). Si se lo da su maquinaria, nos ahorra un cálculo entero.
 
-| opción | qué cuesta | qué conserva |
-|---|---|---|
-| **parámetro de dominio** `Slash T D` | más código, condiciones de clausura sobre `D` | H3bis en toda su fuerza (D = todo) |
-| **numerales a secas** | más simple | debilita `disjunction_property` a sentencias del lenguaje |
+⚠️ **Primero mirar si han contestado** (`doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`).
+Si no, la ruta del `DerivesL` no depende de nadie.
 
-### Etapa 3, ya medida
+### Etapa 3 — ya medida
 
-De los **34 axiomas de `coreAxioms`**:
-
-| forma | cuántos | qué cuesta |
-|---|---|---|
-| matriz atómica | **25** | nada: barra = derivabilidad ⇒ `specI` |
-| `⇒`/`⇔` con partes atómicas | ~4 | poco: `elim_impl` |
-| `∨` o `∃` | **5** | decidir en el meta y construir la derivación |
-
-Los cinco: `ax19_lt_trichotomy`, `ax21_mod2_range`, `ax13_lt_def`, `ax_L3_in_concat`,
-`ax29_sub_witness`. Necesitan comparar numerales, evaluar `mod2`, decidir pertenencia en
-listas. `numeral_lt` existe aguas arriba y es ω-limpio; `numeral_ne` —el contaminado— sigue
-fuera del camino. **Más el esquema de inducción.**
-
-⚠️ H3ter es un hito del tamaño de H3bis, no el remate que anuncié el 17. La lección queda
-en ADR-025: **una firma que encaja no es un teorema que sale.**
+De los **34 axiomas de `coreAxioms`**: **25** con matriz atómica (barra = derivabilidad
+⇒ `specI`), ~4 `⇒`/`⇔` con partes atómicas, y **5** que piden decidir en el meta y construir
+la derivación: `ax19_lt_trichotomy`, `ax21_mod2_range`, `ax13_lt_def`, `ax_L3_in_concat`,
+`ax29_sub_witness`. `numeral_lt` existe aguas arriba y es ω-limpio; `numeral_ne` —el
+contaminado— sigue fuera del camino. **Más el esquema de inducción.**
 
 ### ⚠️ Deudas vivas
 
+- **Formalizar la no-derivabilidad de las ramas** del contraejemplo. Hoy es argumento por
+  solidez; en esta familia un argumento no es una medición.
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
-- ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.
 - `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
+- ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.
 
 ⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**.
 

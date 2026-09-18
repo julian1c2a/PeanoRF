@@ -42,19 +42,26 @@
 > **`metaDebtIsError := true`**: el eje META deja de avisar y rompe el build. Lo destapó el
 > agente de RPP midiendo SU puerta en vez de aceptar mi diagnóstico de la mía.
 >
-> 🔧 **H3ter, etapa 1 hecha** (2026-09-18, ADR-025): la barra pasa a ser **relativa a la
-> teoría**, y H3bis queda como su instancia `T = []`. El hito se reduce ahora a **una
-> hipótesis con tipo exacto**:
-> `disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B`.
-> ⛔ Y destapó que `ha_ctx_slashed` **no sale con esta barra**: su `∀` cuantifica sobre
-> TODOS los términos, y `ax19_lt_trichotomy` exigiría una rama derivable para dos variables
-> libres. La barra de Kleene para una teoría va sobre **numerales** — etapa 2.
+> ⛔ **H3ter: el enunciado ingenuo es FALSO, y está medido** (2026-09-18).
+> `ctx [] ⊢ᵢ (foo < bar ∨ foo = bar ∨ bar < foo)` **es derivable** con `foo`, `bar` símbolos
+> ajenos al lenguaje: `Term` es genérica y `elim_forall` instancia con cualquier término. Y
+> ninguna rama lo es. ⇒ **HA sobre la sintaxis genérica NO tiene la propiedad de
+> disyunción**; el teorema de Kleene es sobre SU lenguaje.
+> (`sondeos/junk_probe.lean`; la no-derivabilidad de las ramas es argumento por solidez,
+> **no medida todavía**. Informado a FOL y RPP: `doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`.)
 >
-> 🔧 **H3ter en marcha** (2026-09-18): el ingrediente que faltaba para la DP **de HA**
-> está puesto — `closed_term_eq_numeral`, y con él los tres homomorfismos de numerales
-> sobre `⊢ᵢ`. **Medido antes de escribirlo**: reusar los de RPP era imposible (están sobre
-> `⊢`, y el puente va en un solo sentido), pero portarlos sale limpio de ω porque van por
-> inducción META. Falta `ha_ctx_slashed`, que es el lema que cierra H3ter.
+> ✅ **Etapa 1 hecha** (ADR-025): la barra es **relativa a la teoría**, `Slash T f`, y H3bis
+> queda como su instancia `T = []` — intacto. El teorema general es
+> `disjunction_property_of_slashed : (∀ g ∈ T, Slash T g) → T ⊢ᵢ A ∨ B → T ⊢ᵢ A ∨ T ⊢ᵢ B`.
+>
+> 🔶 **Etapa 2**, decidida y con una pieza nueva: parámetro de dominio `Slash T D`
+> (conserva H3bis en toda su fuerza) **más** la restricción de las derivaciones al lenguaje,
+> que el contraejemplo obliga a añadir. Dos rutas para lo segundo: un `DerivesL` propio, o
+> **eliminación de símbolos ajenos** — preguntado a FOL, que acaba de cerrar Craig.
+>
+> ⏳ **Etapa 3**, medida: de los 34 axiomas de `coreAxioms`, **25** salen con `specI`, ~4 con
+> `elim_impl`, y **5** piden decidir en el meta (`ax19`, `ax21`, `ax13`, `ax_L3`, `ax29`).
+> Más el esquema de inducción. ✅ `closed_term_eq_numeral` ya está (`HA/Numerals.lean`).
 >
 > ⛔ **Las dos son de la LÓGICA `⊢ᵢ`, sobre contexto VACÍO — no son las de HA.** Son las
 > marcas que en general separan HA de PA, pero **para HA no se siguen**: las instancias de

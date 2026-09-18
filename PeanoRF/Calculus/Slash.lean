@@ -682,8 +682,20 @@ theorem slash_of_derives (T : List Formula) {Γ : List Formula} {f : Formula} (h
 
   🔑 No es un defecto: **la barra de Kleene para una TEORÍA cuantifica sobre términos
   cerrados**, no sobre todos. La nuestra cuantifica sobre todos porque para la lógica pura
-  eso funciona y da más. Para HA hace falta la restricción a numerales — y ahí es donde
-  entra `closed_term_eq_numeral` (`HA/Numerals.lean`).
+  eso funciona y da más. Para HA hace falta la restricción — y ahí es donde entra
+  `closed_term_eq_numeral` (`HA/Numerals.lean`).
+
+  ⛔ **Y hay una segunda pieza, que el 2026-09-18 resultó obligatoria.** Restringir la barra
+  no basta, porque `Term` es GENÉRICA: `Term.func s ts` admite cualquier `s`, y
+  `elim_forall` instancia con cualquier término. Medido en `sondeos/junk_probe.lean`:
+
+  ```lean
+  ctx [] ⊢ᵢ (lt foo bar ∨ foo = bar ∨ lt bar foo)      -- derivable, con foo, bar ajenos
+  ```
+
+  y ninguna rama lo es ⇒ **HA sobre la sintaxis genérica no tiene la propiedad de
+  disyunción**. `D` dice sobre qué cuantifica la barra; hace falta además decir **qué usa la
+  derivación por dentro**. Ver `doc/HALLAZGO-SINTAXIS-GENERICA-2026-09-18.md`.
 
   📏 **Medido sobre los 34 axiomas de `coreAxioms`**: 25 tienen matriz atómica (la barra
   se reduce a derivabilidad ⇒ `specI`), ~4 son `⇒`/`⇔` con partes atómicas, y **5 piden

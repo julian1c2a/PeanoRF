@@ -540,6 +540,12 @@ es de este lenguaje**. Son los cinco símbolos de Q⁺⁺.
 términos cerrados, y la inducción meta sólo alcanza a los numerales. Este lema cierra ese
 hueco, y `slash_eq_congr` (H3bis) transporta la barra a través de la igualdad.
 
+⚠️ **Pero no basta para H3ter**, y conviene no leerlo de más: `ClosedQTerm` captura los
+términos **del lenguaje** sin variables, y el 2026-09-18 se midió que la sintaxis ambiente
+es más grande — `elim_forall` instancia con símbolos ajenos y rompe la DP de HA
+(`sondeos/junk_probe.lean`). Este módulo resuelve una de las dos piezas de la etapa 2, no
+las dos.
+
 ---
 
 ### 3.5 HA/Arith.lean — primer teorema finitario

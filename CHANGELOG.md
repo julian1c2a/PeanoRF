@@ -15,6 +15,36 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (c) · 🏁 `hInd` y `hlift` descargadas — quedan TRES hipótesis, las tres de fondo
+
+**El atajo de `hInd`, ahora medido y no afirmado.** `inductionFormula φ` es
+`φ[0] ⇒ ((∀(φ ⇒ φ[σ])) ⇒ ∀φ)`: en Harrop el antecedente de `⇒` da igual y el consecuente
+final es `∀φ`, luego
+
+```lean
+isHarrop_inductionFormula : isHarrop (inductionFormula φ) = isHarrop φ := rfl
+```
+
+— por iota, y **no depende de ningún axioma**. Comprobado por `#eval` en las dos
+direcciones: `(true, true)` con una instancia atómica, `(false, false)` con una que lleva `∨`.
+
+⇒ `slash_inductions` descarga `hInd` con `slash_of_isHarrop`, sólo con la consistencia.
+⇒ `inductions_lift` + `ctx_lift` descargan `hlift`.
+⇒ **`haDisjunctionProperty_harrop`**: la DP de HA con las dos mecánicas fuera.
+
+✅ **Y NO es vacuo, medido**: `haDisjunctionProperty_zeroAdd` lo instancia con `phiZeroAdd`
+—`0 + x = x`, la instancia que el proyecto usa de verdad— y **las tres condiciones por
+instancia salen por `rfl`**. Un teorema con hipótesis insatisfacibles es cierto y hueco.
+
+⛔ **Lo que el atajo NO cubre, y va escrito en el módulo**: instancias **de Harrop**. Una
+instancia con `∨` o `∃` —lo interesante de la inducción en HA— no lo es, y ahí no hay
+atajo. Cae el esquema para las instancias que hoy existen, no el esquema en general.
+
+⏳ **Quedan TRES**: `hcon` (Gödel, permanente), `hNum` (evaluar 8 de los 13 símbolos sobre
+numerales) y `hIn` (pide inducción sobre listas). ADR-034.
+
+**49 jobs · 16 módulos · 0 sorry · 275 declaraciones.**
+
 ### 2026-09-21 (b) · ⭐ el control que faltaba: `[H]`, declarado y sin uso
 
 `[B]` caza un símbolo **citado** que no existe; `[H]` caza uno que **existe** y nadie usa.

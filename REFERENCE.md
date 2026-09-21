@@ -569,6 +569,10 @@ producción, no en el cuaderno.
 | `slash_axL3` | `ax_L3_in_concat` — bajo `hIn` | `propext, Quot.sound` |
 | 🏁🏁 **`slash_coreAxioms`** | **los 34 axiomas barrados** | `propext, Quot.sound` |
 | 🏁🏁🏁 **`haDisjunctionProperty_core`** | la DP de HA con `coreAxioms` descargado | `propext, Quot.sound` |
+| ⭐ `isHarrop_inductionFormula` | `isHarrop (inductionFormula φ) = isHarrop φ` — por `rfl`, **sin axiomas** | — |
+| 🏁 `slash_inductions` / `inductions_lift` | `hInd` y `hlift` descargadas para instancias de Harrop | `propext, Quot.sound` |
+| 🏁🏁🏁 **`haDisjunctionProperty_harrop`** | …y quedan **tres** hipótesis, las tres de fondo | `propext, Quot.sound` |
+| ✅ **`haDisjunctionProperty_zeroAdd`** | la instancia trabajada con `phiZeroAdd`: **no es vacuo** | `propext, Quot.sound` |
 
 **El patrón de los seis**: barrar una disyunción pide **elegir rama**, y eso es una decisión
 en el META. `hNum` baja los términos del dominio a numerales, se decide sobre números, y la

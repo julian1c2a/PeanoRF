@@ -5,6 +5,7 @@ License: MIT
 -/
 
 import PeanoRF.HA.Domain
+import PeanoRF.HA.Arith
 
 /-! # Los axiomas que NO son de Harrop — barrarlos uno a uno
 
@@ -696,5 +697,115 @@ theorem haDisjunctionProperty_core {insts : List Formula}
   refine haDisjunctionProperty insts hcon (fun g hcore _ => ?_) hInd hAB h
   rw [coreAxioms_sentence g hcore]
   exact slash_coreAxioms hlift hcon hNum hIn g hcore
+
+/-! ## 14 · 🏁 `hInd` y `hlift` — el esquema de inducción, y el contexto cerrado
+
+    Las dos hipótesis baratas de `haDisjunctionProperty_core`, y las dos se reducen a una
+    condición **por instancia** que para una instancia concreta se comprueba con `rfl`.
+
+    ⭐ **El atajo de `hInd`, medido**: `inductionFormula φ` es
+    `φ[0] ⇒ ((∀(φ ⇒ φ[σ])) ⇒ ∀φ)`. En Harrop el antecedente de `⇒` **da igual** y el
+    consecuente final es `∀φ`, luego
+
+    > `isHarrop (inductionFormula φ) = isHarrop φ`, y es `rfl`.
+
+    ⇒ **Si la instancia es de Harrop, el esquema entero lo es** y cae con
+    `slash_of_isHarrop`, sólo con la consistencia. No hace falta nada nuevo.
+
+    ⛔ **Y lo que el atajo NO da, que conviene decirlo**: vale para instancias de Harrop.
+    Una instancia con `∨` o `∃` —que es lo interesante de la inducción en HA— **no** es de
+    Harrop, y ahí no hay atajo ninguno. Lo que cae barato es el esquema para las instancias
+    que hoy existen, no el esquema en general. -/
+
+/-- ⭐ El esquema hereda Harrop de su instancia. Por iota, sin prueba. -/
+theorem isHarrop_inductionFormula (φ : Formula) :
+    isHarrop (inductionFormula φ) = isHarrop φ := rfl
+
+/-- 🏁 **`hInd` para instancias de Harrop.** -/
+theorem slash_inductions {insts : List Formula}
+    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
+    (hH : ∀ φ, List.Mem φ insts → isHarrop φ = true)
+    (hs : ∀ φ, List.Mem φ insts →
+      collapseF LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ) :
+    ∀ g, List.Mem g (insts.map inductionFormula) →
+      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)) := by
+  intro g hg
+  obtain ⟨φ, hφ, rfl⟩ := List.mem_map.mp hg
+  rw [hs φ hφ]
+  exact slash_of_isHarrop _ _ hcon _
+    (by rw [isHarrop_inductionFormula]; exact hH φ hφ) (ind hφ)
+
+/-- 🏁 **`hlift`**: si cada instancia da un esquema cerrado, el contexto entero lo es.
+    `axioms_lift` pone los 34 axiomas; esto pone las instancias. -/
+theorem inductions_lift : ∀ (insts : List Formula),
+    (∀ φ, List.Mem φ insts → liftFormula 0 (inductionFormula φ) = inductionFormula φ) →
+    (insts.map inductionFormula).map (liftFormula 0) = insts.map inductionFormula := by
+  intro insts
+  induction insts with
+  | nil => intro _; rfl
+  | cons a l ih =>
+      intro h
+      simp only [List.map_cons, List.cons.injEq]
+      exact ⟨h a (List.Mem.head _), ih (fun φ hφ => h φ (List.Mem.tail _ hφ))⟩
+
+/-- 🏁🏁🏁 **LA DP DE HA con `hInd` y `hlift` YA DESCARGADAS.** Quedan tres hipótesis, y
+    las tres son de fondo: `hcon` (Gödel), `hNum` y `hIn`. -/
+theorem haDisjunctionProperty_harrop (insts : List Formula)
+    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
+    (hH : ∀ φ, List.Mem φ insts → isHarrop φ = true)
+    (hs : ∀ φ, List.Mem φ insts →
+      collapseF LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ)
+    (hL : ∀ φ, List.Mem φ insts →
+      liftFormula 0 (inductionFormula φ) = inductionFormula φ)
+    (hNum : ∀ t : Term, Grounded LQpp t →
+      ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n)))
+    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+      Or (ctx insts ⊢ᵢ Formula.atom in_sym [x, l])
+         (ctx insts ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom))
+    {A B : Formula}
+    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctx insts ⊢ᵢ Formula.or A B) :
+    Or (ctx insts ⊢ᵢ A) (ctx insts ⊢ᵢ B) :=
+  haDisjunctionProperty_core (ctx_lift (inductions_lift insts hL)) hcon hNum hIn
+    (slash_inductions hcon hH hs) hAB h
+
+/-! ### ⭐ Que las hipótesis por instancia NO sean vacías, medido
+
+    Un teorema con hipótesis insatisfacibles es cierto y hueco. Con la instancia que el
+    proyecto usa de verdad —`phiZeroAdd`, o sea `0 + x = x`— **las tres salen por `rfl`**:
+    es de Harrop porque es una ecuación, y su esquema es una sentencia del lenguaje. -/
+
+theorem phiZeroAdd_harrop : isHarrop phiZeroAdd = true := rfl
+
+theorem phiZeroAdd_lift :
+    liftFormula 0 (inductionFormula phiZeroAdd) = inductionFormula phiZeroAdd := rfl
+
+theorem phiZeroAdd_sentence :
+    collapseF LQpp (substF zeroS (inductionFormula phiZeroAdd))
+      = inductionFormula phiZeroAdd := rfl
+
+/-- 🏁🏁🏁 **LA DP DE HA CON UNA INSTANCIA DE INDUCCIÓN REAL.** Todo lo mecánico está
+    descargado; quedan exactamente las tres de fondo: `hcon` (Gödel), `hNum` y `hIn`. -/
+theorem haDisjunctionProperty_zeroAdd
+    (hcon : ¬ (ctx [phiZeroAdd] ⊢ᵢ Formula.bottom))
+    (hNum : ∀ t : Term, Grounded LQpp t →
+      ∃ n : Nat, ctx [phiZeroAdd] ⊢ᵢ (Formula.eq t (numeralM n)))
+    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+      Or (ctx [phiZeroAdd] ⊢ᵢ Formula.atom in_sym [x, l])
+         (ctx [phiZeroAdd] ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom))
+    {A B : Formula}
+    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctx [phiZeroAdd] ⊢ᵢ Formula.or A B) :
+    Or (ctx [phiZeroAdd] ⊢ᵢ A) (ctx [phiZeroAdd] ⊢ᵢ B) := by
+  refine haDisjunctionProperty_harrop [phiZeroAdd] hcon ?_ ?_ ?_ hNum hIn hAB h
+  · intro φ hφ; cases hφ with
+    | head => exact phiZeroAdd_harrop
+    | tail _ hx => cases hx
+  · intro φ hφ; cases hφ with
+    | head => exact phiZeroAdd_sentence
+    | tail _ hx => cases hx
+  · intro φ hφ; cases hφ with
+    | head => exact phiZeroAdd_lift
+    | tail _ hx => cases hx
 
 end PeanoRF.HA

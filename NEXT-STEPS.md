@@ -83,9 +83,9 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 
 | hipótesis | qué es | siguiente paso |
 |---|---|---|
-| `hInd` | el esquema de inducción barrado | ⭐ **lo más próximo**: `inductionFormula φ` es `(φ[0] ⇒ (∀(φ ⇒ φ[σ])) ⇒ ∀φ)`, y su consecuente es `∀φ` ⇒ **si `φ` es de Harrop, el esquema también lo es** |
+| ✅ `hInd` | **HECHO** (ADR-034): `isHarrop (inductionFormula φ) = isHarrop φ` por `rfl`. ⛔ Para instancias de Harrop; con `∨` o `∃` no hay atajo |
 | `hNum` | todo anclado es demostrablemente un numeral | evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` sobre numerales; algunas piden inducción |
-| `hlift` | contexto invariante bajo levantamiento | ✅ trivial para instancias cerradas; conviene un lema que lo diga |
+| ✅ `hlift` | **HECHO**: `inductions_lift` + `ctx_lift`, reducido a una condición por instancia que es `rfl` |
 | `hIn` | `∈` decidible sobre anclados | ⛔ pide inducción sobre listas; puede que nunca salga de Q⁺⁺ sola |
 | `hcon` | la consistencia de la teoría | ⛔ Gödel. Se queda como hipótesis **para siempre**, y está bien que se vea |
 

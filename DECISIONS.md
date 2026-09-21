@@ -1354,6 +1354,47 @@ error**.
 
 ---
 
+## ADR-034: `hInd` cae por HARROP — y lo que el atajo NO cubre
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: de las cinco hipótesis de `haDisjunctionProperty_core`, dos eran mecánicas
+(`hInd`, `hlift`) y tres de fondo (`hcon`, `hNum`, `hIn`).
+
+**Medición**: `inductionFormula φ` es `φ[0] ⇒ ((∀(φ ⇒ φ[σ])) ⇒ ∀φ)`. En la clase de Harrop
+el **antecedente de `⇒` da igual** y el consecuente final es `∀φ`, luego
+
+```lean
+theorem isHarrop_inductionFormula (φ : Formula) :
+    isHarrop (inductionFormula φ) = isHarrop φ := rfl
+```
+
+— por iota, **sin depender de ningún axioma**. Comprobado además por `#eval` en las dos
+direcciones: `(true, true)` para una instancia atómica y `(false, false)` para una con `∨`.
+
+**Decisión**: `slash_inductions` descarga `hInd` para instancias de Harrop con
+`slash_of_isHarrop`, **sólo con la consistencia**. Y `inductions_lift` + `ctx_lift` descargan
+`hlift`. Las dos se reducen a una condición **por instancia** que para una instancia concreta
+es `rfl`.
+
+**⛔ Lo que el atajo NO cubre, y va dicho en el módulo**: vale para instancias **de Harrop**.
+Una instancia con `∨` o `∃` —que es lo interesante de la inducción en HA— **no** es de
+Harrop, y ahí no hay atajo. Lo que cae barato es el esquema para las instancias que hoy
+existen, no el esquema en general.
+
+**Consecuencias**:
+- 🏁 `haDisjunctionProperty_harrop`: la DP de HA con `hInd` y `hlift` descargadas. Quedan
+  **tres**, y las tres son de fondo.
+- ✅ **Y NO es vacuo, medido**: `haDisjunctionProperty_zeroAdd` lo instancia con `phiZeroAdd`
+  —`0 + x = x`, la instancia que el proyecto usa de verdad— y **las tres condiciones por
+  instancia salen por `rfl`**. Un teorema con hipótesis insatisfacibles es cierto y hueco;
+  éste tiene testigo.
+- ⏳ Lo que queda: `hcon` (Gödel, permanente), `hNum` (evaluar 8 de los 13 símbolos sobre
+  numerales) y `hIn` (pide inducción sobre listas).
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

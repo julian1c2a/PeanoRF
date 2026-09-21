@@ -109,7 +109,13 @@
 > 1. la **consistencia** de la teoría — el precio clásico de la barra, no demostrable aquí;
 > 2. 🏁 **LOS 6 YA ESTÁN** (`HA/SlashAxioms.lean`): `ax13`, `ax14`, `ax19`, `ax21`,
 >    `ax_L2` y `ax_L3`. ⇒ **34 de 34.**
-> 3. el **esquema de inducción**.
+> 3. ✅ **el esquema de inducción — DESCARGADO** (2026-09-21, ADR-034) para instancias de
+>    **Harrop**, que es lo que `isHarrop (inductionFormula φ) = isHarrop φ` (por `rfl`,
+>    **sin axiomas**) permite. Y con él `hlift`. ⇒ `haDisjunctionProperty_harrop`, y una
+>    instancia trabajada con `phiZeroAdd` donde las tres condiciones salen por `rfl`: **no
+>    es vacuo**. ⛔ El atajo NO cubre instancias con `∨` o `∃`.
+>
+> ⇒ **Quedan TRES hipótesis, y las tres son de fondo**: `hcon` (Gödel), `hNum` y `hIn`.
 >
 > 🏁🏁 `haDisjunctionProperty_core`: **la DP de HA con `coreAxioms` YA DESCARGADO**.
 > Lo que queda va como hipótesis, **todas dichas y ninguna escondida**:
@@ -163,7 +169,7 @@
 |--------|-------|
 | Módulos propios | 16 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms}`) |
 | Módulos con 0 `sorry` | 16 / 16 |
-| Teoremas propios | 147 |
+| Teoremas propios | 155 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

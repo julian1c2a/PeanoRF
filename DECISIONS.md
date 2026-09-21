@@ -1504,6 +1504,47 @@ qDisjunctionProperty_arith : ¬(ctxA [] ⊢ᵢ ⊥) →
 
 ---
 
+## ADR-037: el fragmento NO es maximal — `τ` entra, y el mapa de por qué los demás no
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: ADR-035 fijó el fragmento aritmético (17 axiomas, 5 símbolos) como «el techo
+real del método». **Eso era demasiado grueso**, y medirlo lo dejó claro.
+
+**Medición**, símbolo a símbolo:
+
+| | axiomas | ¿de Harrop? | ¿determina el numeral? |
+|---|---|---|---|
+| `τ` | `ax25 : τ 0 = 0`, `ax26 : ∀n. τ(σn) = n` | ✅ los dos | ✅ **sin inducción ninguna** |
+| `%₂` | ax16, ax21, ax24 | ✅ ax16, ax24; ⛔ ax21 | ✅ con inducción **meta** + consistencia |
+| `/₂` | ax17 | ✅ | ⛔ pide cancelación de `+` y `·` |
+| `√` | ax14, ax15 (desigualdades) | ⛔ ax14 | ⛔ habría que casar sobre `√n̄`, que es un término |
+| `::` | ax_L0 | ✅ | ⛔ **`pair` usa `/₂`** (medido) |
+| `##`, `Π_p` | recursión sobre lista | ✅ | ⛔ pide saber si un numeral es `nil` o `cons` |
+| `−` | **ax29, y sólo ése**, con `x ≤ y` | ✅ | ⛔ la teoría **calla** fuera de `x ≤ y` |
+
+**Decisión**: añadir `τ`. `LQt`, `arithTAxioms` (19), `ctxT`, y
+`qDisjunctionProperty_arithT` con **la misma única hipótesis**.
+
+**Justificación**: `τ` es el caso límpio de lo que el método puede: sus dos axiomas son una
+**recursión primitiva completa** —base y paso—, así que `τ n̄` se evalúa por un caso del
+meta, no por inducción. `numeralI_pred` mide **`[propext]`**, sin `Quot.sound` siquiera.
+
+🔑 **El criterio que sale de aquí, y es lo reutilizable**: un símbolo entra si sus axiomas
+lo definen por **recursión sobre el constructor** (`0` / `σ`). `τ` y `%₂` lo hacen; `/₂`, `√`
+y `−` están **caracterizados por propiedades**, no definidos por recursión, y de una
+caracterización no se despeja sin inducción en el objeto.
+
+**Consecuencias**:
+- ✅ 19 axiomas, 6 símbolos, y `arithTAxioms_hard` mide que **añadir `τ` no añade dureza**.
+- ⏳ `%₂` es el siguiente, y llevaría a 22 de 34.
+- ⚠️ **Tres de las casillas ⛔ son ARGUMENTOS, no mediciones**: que `−` esté subdeterminado
+  pide separar dos modelos; que `√` y `/₂` no se dejen pide un teorema de imposibilidad.
+  Queda escrito como deuda, igual que la no-derivabilidad del contraejemplo de `junk_probe`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

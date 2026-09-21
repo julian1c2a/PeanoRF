@@ -140,6 +140,13 @@
 > (`hNum_fragment`, vía `closed_of_grounded`); `hIn` no aparece; `hInd` y `hlift` salen por
 > `rfl`. Todo en `[propext, Quot.sound]`.
 >
+> ⚠️ **Y el fragmento de 17 NO es maximal.** `τ` entra casi gratis — `ax25` y `ax26` son de
+> Harrop y **determinan `τ` sobre todo numeral SIN inducción ninguna**. Hecho:
+> `qDisjunctionProperty_arithT`, **19 axiomas, 6 símbolos y la misma única hipótesis**.
+> ⏳ `%₂` es el siguiente (22 axiomas), con inducción meta y consistencia. ⛔ `/₂` bloquea a
+> `::`, `##` y `Π_p` (porque `pair` usa `/₂`, medido), `√` no se deja fijar, y `−` está
+> **subdeterminado**: aparece en UN solo axioma y condicionado.
+>
 > 🏁🏁 `haDisjunctionProperty_core`: **la DP de HA con `coreAxioms` YA DESCARGADO**.
 > Lo que queda va como hipótesis, **todas dichas y ninguna escondida**:
 >
@@ -192,7 +199,7 @@
 |--------|-------|
 | Módulos propios | 17 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment}`) |
 | Módulos con 0 `sorry` | 17 / 17 |
-| Teoremas propios | 170 |
+| Teoremas propios | 186 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

@@ -15,6 +15,37 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (f) · ⭐ el fragmento CRECE: `τ` — 19 axiomas, 6 símbolos, la misma hipótesis
+
+⚠️ **Dije que el fragmento de 17 era «el techo real del método». Era demasiado grueso.**
+
+`τ` entra casi gratis, y la razón se ve en sus dos axiomas: `ax25 : τ 0 = 0` y
+`ax26 : ∀n. τ(σn) = n` son **una recursión primitiva completa** —base y paso—, así que
+`τ n̄` se evalúa por un **caso del meta**, sin inducción ninguna. `numeralI_pred` mide
+**`[propext]`**, ni siquiera `Quot.sound`.
+
+```lean
+qDisjunctionProperty_arithT : ¬(ctxT [] ⊢ᵢ ⊥) →
+  ctxT [] ⊢ᵢ A ∨ B → (ctxT [] ⊢ᵢ A) ∨ (ctxT [] ⊢ᵢ B)
+```
+
+Y `arithTAxioms_hard` mide que **añadir `τ` no añade dureza**: los duros siguen siendo
+`ax13` y `ax19`, que ya estaban.
+
+🔑 **El criterio que sale de aquí**: un símbolo entra si sus axiomas lo definen por
+**recursión sobre el constructor**. `τ` y `%₂` lo hacen; `/₂`, `√` y `−` están
+**caracterizados por propiedades** —una ecuación de la que hay que despejar, dos
+desigualdades, una implicación condicionada— y de una caracterización no se sale sin
+inducción en el objeto.
+
+⚠️ Y tres de las negativas **son argumentos míos, no mediciones**: que `−` esté
+subdeterminado pide separar dos modelos; que `√` y `/₂` no se dejen pide un teorema de
+imposibilidad. Escrito como deuda en ADR-037.
+
+⏳ Siguiente: `%₂`, que llevaría el fragmento a **22 de 34**.
+
+ADR-037. **50 jobs · 17 módulos · 0 sorry · 308 declaraciones.**
+
 ### 2026-09-21 (e) · 🏁🏁🏁 LA DP DEL FRAGMENTO ARITMÉTICO — una sola hipótesis
 
 ```lean

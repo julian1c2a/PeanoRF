@@ -130,6 +130,16 @@
 > ⭐ La capa `LQ`, etiquetada como ANDAMIO por no tener uso portante, resulta ser **la
 > signatura de ese fragmento**. El andamio era el camino.
 >
+> 🏁🏁🏁 **Y LA DP DEL FRAGMENTO YA ESTÁ** (2026-09-21, ADR-036):
+>
+> ```
+> qDisjunctionProperty_arith : ¬(ctxA [] ⊢ᵢ ⊥) → ctxA [] ⊢ᵢ A ∨ B → ⊢ᵢ A ó ⊢ᵢ B
+> ```
+>
+> **Una sola hipótesis: la consistencia.** `hNum` dejó de ser hipótesis y es un teorema
+> (`hNum_fragment`, vía `closed_of_grounded`); `hIn` no aparece; `hInd` y `hlift` salen por
+> `rfl`. Todo en `[propext, Quot.sound]`.
+>
 > 🏁🏁 `haDisjunctionProperty_core`: **la DP de HA con `coreAxioms` YA DESCARGADO**.
 > Lo que queda va como hipótesis, **todas dichas y ninguna escondida**:
 >
@@ -182,7 +192,7 @@
 |--------|-------|
 | Módulos propios | 17 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment}`) |
 | Módulos con 0 `sorry` | 17 / 17 |
-| Teoremas propios | 159 |
+| Teoremas propios | 170 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

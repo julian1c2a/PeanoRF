@@ -15,6 +15,35 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (e) · 🏁🏁🏁 LA DP DEL FRAGMENTO ARITMÉTICO — una sola hipótesis
+
+```lean
+qDisjunctionProperty_arith : ¬(ctxA [] ⊢ᵢ ⊥) →
+  ctxA [] ⊢ᵢ A ∨ B → (ctxA [] ⊢ᵢ A) ∨ (ctxA [] ⊢ᵢ B)
+```
+
+**La consistencia, y nada más.** `hNum` dejó de ser hipótesis y es un **teorema**
+(`hNum_fragment`); `hIn` **no aparece**; `hInd` es vacía y `hlift` sale por `rfl`.
+`[propext, Quot.sound]`.
+
+**La pieza que faltaba**: `closed_of_grounded : Grounded LQ t → ClosedQTerm t`. Los dos
+describen lo mismo desde dos lados —por CLAUSURAS y por CONSTRUCTORES— y esa dirección es
+la que convierte `closed_term_eq_numeral` en `hNum`.
+
+**Y el trabajo de fondo**: generalizar **por CONTEXTO** lo que estaba clavado a `ctx` — los
+tres homomorfismos de numerales, `closed_term_eq_numeral`, `numeralI_ne/lt/not_lt`,
+`slash_ax13`, `slash_ax19` y `grounded_numeralM`. ⭐ La familia `hΓ` pasó de `coreAxioms` a
+`arithAxioms` **sin tocar una cadena de pertenencia**: los índices 0–11 coinciden, porque
+`coreAxioms` empieza por el núcleo aritmético.
+
+⭐ Es mejora en sí: los lemas valen ahora en `ctx`, en `ctxA` y en cualquier contexto que
+satisfaga el fragmento — incluidos los **extendidos** de dentro de `elim_ex`.
+
+🔑 De método: `injection h with a b` **cierra la meta** cuando la ecuación resultante es la
+meta. El `exact` de detrás daba «No goals to be solved», que no se parece a su causa.
+
+ADR-036. **50 jobs · 17 módulos · 0 sorry · 291 declaraciones.**
+
 ### 2026-09-21 (d) · ⛔ `hNum` es INALCANZABLE sobre el lenguaje completo — y el fragmento donde sí sale
 
 Antes de construir `hNum` se midió qué determina Q⁺⁺ sobre los ocho símbolos no aritméticos.

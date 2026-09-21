@@ -47,8 +47,16 @@ set_option autoImplicit false
 
 /-! ## 1 · Debilitamiento desde `ctx []` -/
 
-/-- Lo demostrado sin instancias de inducción vale con ellas. Es lo que deja usar
-    `numeralI_add` y compañía, que están enunciados sobre `ctx []`. -/
+/-- El contexto de HA satisface el **fragmento aritmético**: es lo que deja usar los
+    homomorfismos de numerales, que desde el 2026-09-21 van parametrizados por el contexto
+    y no clavados a `ctx []`. -/
+theorem arith_ctx {insts : List Formula} : ∀ g, List.Mem g arithAxioms → ctx insts ⊢ᵢ g :=
+  fun g hg => ax' (arithAxioms_sub g hg)
+
+/-- Lo demostrado sin instancias de inducción vale con ellas.
+
+    🏗️ **ANDAMIO**: quedó sin uso el 2026-09-21, cuando los homomorfismos de numerales
+    pasaron a ir parametrizados por el contexto y ya no hubo que debilitar desde `ctx []`. -/
 theorem ctx_weaken {insts : List Formula} {f : Formula} (h : ctx [] ⊢ᵢ f) :
     ctx insts ⊢ᵢ f := by
   refine Derivesᵢ.weakening _ _ _ h ?_
@@ -60,11 +68,11 @@ theorem ctx_weaken {insts : List Formula} {f : Formula} (h : ctx [] ⊢ᵢ f) :
     Es la primera pieza reutilizable: la dirección `⇐` de `ax13_lt_def` convierte un testigo
     aritmético en una desigualdad, y el testigo lo da `numeralI_add`. -/
 
-theorem numeralI_lt {insts : List Formula} {a b : Nat} (h : a < b) :
-    ctx insts ⊢ᵢ lt (numeralM a) (numeralM b) := by
-  have h13 : ctx insts ⊢ᵢ ax13_lt_def := ax' (by simp [coreAxioms])
+theorem numeralI_lt {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) {a b : Nat} (h : a < b) :
+    Γ ⊢ᵢ lt (numeralM a) (numeralM b) := by
+  have h13 : Γ ⊢ᵢ ax13_lt_def := hΓ ax13_lt_def (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
   have hi := specI (specI h13 (numeralM a)) (numeralM b)
-  have hback : ctx insts ⊢ᵢ
+  have hback : Γ ⊢ᵢ
       Formula.impl (Formula.ex (Formula.eq (add (numeralM a) (succ (Term.var 0)))
                                            (numeralM b)))
                    (lt (numeralM a) (numeralM b)) := by
@@ -74,7 +82,7 @@ theorem numeralI_lt {insts : List Formula} {a b : Nat} (h : a < b) :
   refine Derivesᵢ.elim_impl _ _ _ hback ?_
   refine Derivesᵢ.intro_ex _ _ (numeralM (b - a - 1)) ?_
   have harith : a + (b - a - 1 + 1) = b := by omega
-  have hadd := ctx_weaken (insts := insts) (numeralI_add a (b - a - 1 + 1))
+  have hadd := (numeralI_add hΓ a (b - a - 1 + 1))
   rw [harith] at hadd
   simpa [substFormula, substTerms, substTerm, add, succ, numeralM,
     substTerm_numeralM] using hadd
@@ -90,23 +98,23 @@ theorem numeralI_lt {insts : List Formula} {a b : Nat} (h : a < b) :
     El patrón es el de los seis: `hNum` baja los dos términos a numerales, `Nat.lt_trichotomy`
     decide **en el meta**, y `numeralI_lt` + la reescritura dentro del predicado suben la
     decisión al objeto. -/
-theorem slash_ax19 {insts : List Formula}
-    (hNum : ∀ t : Term, Grounded LQpp t →
-      ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (ctx insts) (Grounded LQpp) ax19_lt_trichotomy := by
-  have hax : ctx insts ⊢ᵢ ax19_lt_trichotomy := ax' (by simp [coreAxioms])
+theorem slash_ax19 {Γ : List Formula} (L : String → Nat → Bool) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hNum : ∀ t : Term, Grounded L t →
+      ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
+    Slash (Γ) (Grounded L) ax19_lt_trichotomy := by
+  have hax : Γ ⊢ᵢ ax19_lt_trichotomy := hΓ ax19_lt_trichotomy (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
-  simp only [substFormula, grounded_liftTerm LQpp hDt] at h1 ⊢
+  simp only [substFormula, grounded_liftTerm L hDt] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun u hDu => ?_⟩
   simp only [substFormula, substTerms, substTerm, lt, reduceIte,
-    grounded_substTerm LQpp hDt]
+    grounded_substTerm L hDt]
   obtain ⟨n, hn⟩ := hNum t hDt
   obtain ⟨m, hm⟩ := hNum u hDu
   rcases Nat.lt_trichotomy n m with hlt | heq | hgt
   · refine (slash_or _ _ _ _).mpr (Or.inl ((slash_atom _ _ _ _).mpr ?_))
     exact eqI_rw_atom2_r lt_sym t (eqI_symm hm)
-      (eqI_rw_atom2_l lt_sym (numeralM m) (eqI_symm hn) (numeralI_lt hlt))
+      (eqI_rw_atom2_l lt_sym (numeralM m) (eqI_symm hn) (numeralI_lt hΓ hlt))
   · subst heq
     refine (slash_or _ _ _ _).mpr (Or.inr ((slash_or _ _ _ _).mpr
       (Or.inl ((slash_eq _ _ _ _).mpr ?_))))
@@ -114,7 +122,7 @@ theorem slash_ax19 {insts : List Formula}
   · refine (slash_or _ _ _ _).mpr (Or.inr ((slash_or _ _ _ _).mpr
       (Or.inr ((slash_atom _ _ _ _).mpr ?_))))
     exact eqI_rw_atom2_r lt_sym u (eqI_symm hn)
-      (eqI_rw_atom2_l lt_sym (numeralM n) (eqI_symm hm) (numeralI_lt hgt))
+      (eqI_rw_atom2_l lt_sym (numeralM n) (eqI_symm hm) (numeralI_lt hΓ hgt))
 
 /-! ## 4 · ⭐ `n ≠ m` en el objeto — la versión CONSTRUCTIVA
 
@@ -123,8 +131,9 @@ theorem slash_ax19 {insts : List Formula}
     Q⁺⁺ tiene: `ax2` (`σx ≠ 0`) para las bases y `ax3` (`σ` inyectiva) para el paso. -/
 
 /-- `⊢ᵢ ¬(n̄ = m̄)` cuando `n ≠ m`. Inducción META en el primero, generalizando el segundo. -/
-theorem numeralI_ne {insts : List Formula} : ∀ {a b : Nat}, a ≠ b →
-    ctx insts ⊢ᵢ neg (Formula.eq (numeralM a) (numeralM b)) := by
+theorem numeralI_ne {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) : ∀ {a b : Nat}, a ≠ b →
+    Γ ⊢ᵢ neg (Formula.eq (numeralM a) (numeralM b)) := by
   intro a
   induction a with
   | zero =>
@@ -132,7 +141,7 @@ theorem numeralI_ne {insts : List Formula} : ∀ {a b : Nat}, a ≠ b →
       match b with
       | 0 => exact absurd rfl hne
       | k + 1 =>
-          have h2 : ctx insts ⊢ᵢ ax2_peano_succ_neq_zero := ax' (by simp [coreAxioms])
+          have h2 : Γ ⊢ᵢ ax2_peano_succ_neq_zero := hΓ ax2_peano_succ_neq_zero (List.Mem.head _)
           have hi := specI h2 (numeralM k)
           simp only [substFormula, substTerms, substTerm, reduceIte,
             neg, succ, zero] at hi
@@ -146,12 +155,12 @@ theorem numeralI_ne {insts : List Formula} : ∀ {a b : Nat}, a ≠ b →
       intro b hne
       match b with
       | 0 =>
-          have h2 : ctx insts ⊢ᵢ ax2_peano_succ_neq_zero := ax' (by simp [coreAxioms])
+          have h2 : Γ ⊢ᵢ ax2_peano_succ_neq_zero := hΓ ax2_peano_succ_neq_zero (List.Mem.head _)
           have hi := specI h2 (numeralM j)
           simpa only [forall_, substFormula, substTerms, substTerm, reduceIte,
             neg, succ, zero, numeralM, substTerm_numeralM] using hi
       | k + 1 =>
-          have h3 : ctx insts ⊢ᵢ ax3_peano_succ_inj := ax' (by simp [coreAxioms])
+          have h3 : Γ ⊢ᵢ ax3_peano_succ_inj := hΓ ax3_peano_succ_inj (List.Mem.tail _ (List.Mem.head _))
           have hi := specI (specI h3 (numeralM j)) (numeralM k)
           simp only [substFormula, substTerms, substTerm,
             reduceIte, succ, substTerm_numeralM, liftTerm_numeralM] at hi
@@ -193,14 +202,14 @@ theorem slash_ax21 {insts : List Formula}
         Formula.bottom h1 ?_ ?_
       · refine Derivesᵢ.elim_impl _ (Formula.eq (numeralM (n + 2)) (numeralM 0))
           Formula.bottom
-          (Derivesᵢ.weakening _ _ _ (numeralI_ne (a := n + 2) (b := 0) (by omega))
+          (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := n + 2) (b := 0) (by omega))
             (fun x hx => List.Mem.tail _ hx)) ?_
         exact eqI_trans
           (eqI_symm (Derivesᵢ.weakening _ _ _ hk (fun x hx => List.Mem.tail _ hx)))
           (Derivesᵢ.hyp _ _ (List.Mem.head _))
       · refine Derivesᵢ.elim_impl _ (Formula.eq (numeralM (n + 2)) (numeralM 1))
           Formula.bottom
-          (Derivesᵢ.weakening _ _ _ (numeralI_ne (a := n + 2) (b := 1) (by omega))
+          (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := n + 2) (b := 1) (by omega))
             (fun x hx => List.Mem.tail _ hx)) ?_
         exact eqI_trans
           (eqI_symm (Derivesᵢ.weakening _ _ _ hk (fun x hx => List.Mem.tail _ hx)))
@@ -255,7 +264,7 @@ theorem slash_axL2 {insts : List Formula}
         (Formula.atom in_sym [x, l]) hdis ?_ (Derivesᵢ.hyp _ _ (List.Mem.head _))
       refine Derivesᵢ.bot_elim _ _ ?_
       refine Derivesᵢ.elim_impl _ (Formula.eq (numeralM n) (numeralM m)) Formula.bottom
-        (Derivesᵢ.weakening _ _ _ (numeralI_ne hnm) (fun _ hz => List.Mem.tail _ hz)) ?_
+        (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx hnm) (fun _ hz => List.Mem.tail _ hz)) ?_
       exact eqI_trans
         (eqI_symm (Derivesᵢ.weakening _ _ _ hn (fun _ hz => List.Mem.tail _ hz)))
         (eqI_trans (Derivesᵢ.hyp _ _ (List.Mem.head _))
@@ -272,33 +281,33 @@ theorem slash_axL2 {insts : List Formula}
     literalmente — hay que meterlos por la invariancia de `Γ` bajo levantamiento. Con `hΓ`
     los mismos lemas sirven a los dos lados. -/
 
-theorem addI_zero {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g) (t : Term) :
+theorem addI_zero {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t : Term) :
     Γ ⊢ᵢ (Formula.eq (add t zero) t) := by
   have h := specI (hΓ ax4_add_zero (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))) t
   simpa (config := { decide := true }) only [ax4_add_zero, forall_, substFormula,
     substTerms, substTerm, ite_true, ite_false, add, zero] using h
 
-theorem addI_succ {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g) (t u : Term) :
+theorem addI_succ {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u : Term) :
     Γ ⊢ᵢ (Formula.eq (add t (succ u)) (succ (add t u))) := by
   have h := specI (specI (hΓ ax5_add_succ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))) t) u
   simpa (config := { decide := true }) only [ax5_add_succ, forall_2, substFormula,
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, add, succ,
     substTerm_liftTerm] using h
 
-theorem addI_comm {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g) (t u : Term) :
+theorem addI_comm {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u : Term) :
     Γ ⊢ᵢ (Formula.eq (add t u) (add u t)) := by
   have h := specI (specI (hΓ ax6_add_comm (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))) t) u
   simpa (config := { decide := true }) only [ax6_add_comm, forall_2, substFormula,
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, add,
     substTerm_liftTerm] using h
 
-theorem succI_ne_zero {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g)
+theorem succI_ne_zero {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (t : Term) : Γ ⊢ᵢ Formula.impl (Formula.eq (succ t) zero) Formula.bottom := by
   have h := specI (hΓ ax2_peano_succ_neq_zero (List.Mem.head _)) t
   simpa (config := { decide := true }) only [ax2_peano_succ_neq_zero, forall_, neg,
     substFormula, substTerms, substTerm, ite_true, ite_false, succ, zero] using h
 
-theorem succI_inj {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g) (t u : Term) :
+theorem succI_inj {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u : Term) :
     Γ ⊢ᵢ Formula.impl (Formula.eq (succ t) (succ u)) (Formula.eq t u) := by
   have h := specI (specI (hΓ ax3_peano_succ_inj (List.Mem.tail _ (List.Mem.head _))) t) u
   simpa (config := { decide := true }) only [ax3_peano_succ_inj, forall_2, substFormula,
@@ -306,8 +315,8 @@ theorem succI_inj {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ
     substTerm_liftTerm] using h
 
 /-- Los axiomas sobreviven a meter una hipótesis en el contexto. -/
-theorem hyps_cons {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g)
-    (A : Formula) : ∀ g, List.Mem g coreAxioms → (A :: Γ) ⊢ᵢ g :=
+theorem hyps_cons {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (A : Formula) : ∀ g, List.Mem g arithAxioms → (A :: Γ) ⊢ᵢ g :=
   fun g hg => Derivesᵢ.weakening _ _ _ (hΓ g hg) (fun _ hz => List.Mem.tail _ hz)
 
 /-! ## 8 · ⭐⭐ Ningún numeral es `x + σy`
@@ -317,7 +326,7 @@ theorem hyps_cons {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ
     pero **para un numeral concreto** la recursión meta la sustituye: `σc̄ + σj = σc̄` se
     reduce por conmutatividad, `ax5` y la inyectividad de `σ` a `c̄ + σj = c̄`, que es la
     hipótesis de inducción. La base la cierra `ax2`. -/
-theorem addI_succ_ne {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g) :
+theorem addI_succ_ne {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) :
     ∀ (b : Nat) (j : Term), Γ ⊢ᵢ Formula.impl
       (Formula.eq (add (numeralM b) (succ j)) (numeralM b)) Formula.bottom := by
   intro b
@@ -352,7 +361,7 @@ theorem addI_succ_ne {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms →
 
 /-- Asociatividad, con los dos primeros argumentos NUMERALES. Basta para lo que hace falta y
     evita pelearse con el doble levantamiento de `forall_3`. -/
-theorem addI_assoc_num {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms → Γ ⊢ᵢ g)
+theorem addI_assoc_num {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (p q : Nat) (v : Term) :
     Γ ⊢ᵢ (Formula.eq (add (add (numeralM p) (numeralM q)) v)
                      (add (numeralM p) (add (numeralM q) v))) := by
@@ -364,11 +373,12 @@ theorem addI_assoc_num {Γ : List Formula} (hΓ : ∀ g, List.Mem g coreAxioms �
     substTerm_numeralM, liftTerm_numeralM] using h
 
 /-- Los numerales están anclados: sólo llevan `0` y `σ`, y no tienen variables. -/
-theorem grounded_numeralM : ∀ n : Nat, Grounded LQpp (numeralM n) := by
+theorem grounded_numeralM (L : String → Nat → Bool) (hs : L succ_sym 1 = true) :
+    ∀ n : Nat, Grounded L (numeralM n) := by
   intro n
   induction n with
-  | zero => exact grounded_zero LQpp
-  | succ k ih => exact grounded_func1 LQpp (by decide) ih
+  | zero => exact grounded_zero L
+  | succ k ih => exact grounded_func1 L hs ih
 
 /-! ## 9 · ⭐ `¬(ā < b̄)` cuando `b ≤ a`
 
@@ -381,13 +391,13 @@ theorem grounded_numeralM : ∀ n : Nat, Grounded LQpp (numeralM n) := by
     ⚠️ **Pide que el contexto sea invariante bajo levantamiento**, y va dicho como hipótesis:
     dentro de `elim_ex` el contexto se levanta, y los axiomas tienen que seguir estando.
     `coreAxioms` lo es (`axioms_lift`); las instancias de inducción, sólo si son cerradas. -/
-theorem numeralI_not_lt {insts : List Formula}
-    (hlift : (ctx insts).map (liftFormula 0) = ctx insts)
+theorem numeralI_not_lt {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
     {a b : Nat} (hba : b ≤ a) :
-    ctx insts ⊢ᵢ Formula.impl (lt (numeralM a) (numeralM b)) Formula.bottom := by
-  have h13 : ctx insts ⊢ᵢ ax13_lt_def := ax' (by simp [coreAxioms])
+    Γ ⊢ᵢ Formula.impl (lt (numeralM a) (numeralM b)) Formula.bottom := by
+  have h13 : Γ ⊢ᵢ ax13_lt_def := hΓ ax13_lt_def (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
   have hi := specI (specI h13 (numeralM a)) (numeralM b)
-  have hfwd : ctx insts ⊢ᵢ
+  have hfwd : Γ ⊢ᵢ
       Formula.impl (lt (numeralM a) (numeralM b))
         (Formula.ex (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b))) := by
     have := Derivesᵢ.elim_and_l _ _ _ hi
@@ -399,27 +409,27 @@ theorem numeralI_not_lt {insts : List Formula}
     (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_ex _ _ _ hex ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, lt, liftTerm_numeralM]
-  have hΓ1 : ∀ g, List.Mem g coreAxioms →
+  have hΓ1 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b)
-      :: lt (numeralM a) (numeralM b) :: ctx insts) ⊢ᵢ g :=
-    hyps_cons (hyps_cons (fun g hg => ax' (insts := insts) hg)
+      :: lt (numeralM a) (numeralM b) :: Γ) ⊢ᵢ g :=
+    hyps_cons (hyps_cons (hΓ)
       (lt (numeralM a) (numeralM b)))
       (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b))
   have hA : (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b)
-      :: lt (numeralM a) (numeralM b) :: ctx insts) ⊢ᵢ Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b) :=
+      :: lt (numeralM a) (numeralM b) :: Γ) ⊢ᵢ Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b) :=
     Derivesᵢ.hyp _ _ (List.Mem.head _)
   have hbd : (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b)
-      :: lt (numeralM a) (numeralM b) :: ctx insts) ⊢ᵢ Formula.eq (add (numeralM b) (numeralM (a - b))) (numeralM a) := by
-    have h := ctx_weaken (insts := insts) (numeralI_add b (a - b))
+      :: lt (numeralM a) (numeralM b) :: Γ) ⊢ᵢ Formula.eq (add (numeralM b) (numeralM (a - b))) (numeralM a) := by
+    have h := (numeralI_add hΓ b (a - b))
     rw [show b + (a - b) = a from by omega] at h
     exact Derivesᵢ.weakening _ _ _ h
       (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz))
   have hstep2 : (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b)
-      :: lt (numeralM a) (numeralM b) :: ctx insts) ⊢ᵢ Formula.eq
+      :: lt (numeralM a) (numeralM b) :: Γ) ⊢ᵢ Formula.eq
       (add (add (numeralM b) (numeralM (a - b))) (succ (Term.var 0))) (numeralM b) :=
     eqI_trans (eqI_congr_fun2_l add_sym (succ (Term.var 0)) hbd) hA
   have hcomb : (Formula.eq (add (numeralM a) (succ (Term.var 0))) (numeralM b)
-      :: lt (numeralM a) (numeralM b) :: ctx insts) ⊢ᵢ Formula.eq
+      :: lt (numeralM a) (numeralM b) :: Γ) ⊢ᵢ Formula.eq
       (add (add (numeralM b) (numeralM (a - b))) (succ (Term.var 0)))
       (add (numeralM b) (succ (add (numeralM (a - b)) (Term.var 0)))) :=
     eqI_trans (addI_assoc_num hΓ1 b (a - b) (succ (Term.var 0)))
@@ -436,42 +446,43 @@ theorem numeralI_not_lt {insts : List Formula}
     elegir rama: `hNum` baja `t` y `u` a numerales, y si `n < m` el testigo es `m-n-1`,
     con `numeralI_add` dando la ecuación. Si no, `numeralI_not_lt` refuta la hipótesis y la
     consistencia cierra. -/
-theorem slash_ax13 {insts : List Formula}
-    (hlift : (ctx insts).map (liftFormula 0) = ctx insts)
-    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
-      ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (ctx insts) (Grounded LQpp) ax13_lt_def := by
-  have hax : ctx insts ⊢ᵢ ax13_lt_def := ax' (by simp [coreAxioms])
+theorem slash_ax13 {Γ : List Formula} (L : String → Nat → Bool)
+    (hs : L succ_sym 1 = true) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
+    (hNum : ∀ t : Term, Grounded L t →
+      ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
+    Slash (Γ) (Grounded L) ax13_lt_def := by
+  have hax : Γ ⊢ᵢ ax13_lt_def := hΓ ax13_lt_def (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
   simp only [ax13_lt_def, forall_2, iff, lt] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm LQpp hDt] at h1 ⊢
+    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm L hDt] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun u hDu => ?_⟩
   have h2 := specI h1 u
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
     ite_true, ite_false, Nat.reduceAdd, add, succ,
-    grounded_substTerm LQpp hDt, grounded_liftTerm LQpp hDu] at h2 ⊢
+    grounded_substTerm L hDt, grounded_liftTerm L hDu] at h2 ⊢
   refine (slash_and _ _ _ _).mpr ⟨?_, ?_⟩
   · refine (slash_impl _ _ _ _).mpr ⟨Derivesᵢ.elim_and_l _ _ _ h2, fun hA => ?_⟩
-    have hlt : ctx insts ⊢ᵢ Formula.atom lt_sym [t, u] := (slash_atom _ _ _ _).mp hA
+    have hlt : Γ ⊢ᵢ Formula.atom lt_sym [t, u] := (slash_atom _ _ _ _).mp hA
     obtain ⟨n, hn⟩ := hNum t hDt
     obtain ⟨m, hm⟩ := hNum u hDu
     by_cases hnm : n < m
-    · refine (slash_ex _ _ _).mpr ⟨numeralM (m - n - 1), grounded_numeralM _, ?_⟩
-      have hadd : ctx insts ⊢ᵢ Formula.eq
+    · refine (slash_ex _ _ _).mpr ⟨numeralM (m - n - 1), grounded_numeralM L hs _, ?_⟩
+      have hadd : Γ ⊢ᵢ Formula.eq
           (add (numeralM n) (numeralM (m - n - 1 + 1))) (numeralM m) := by
-        have h := ctx_weaken (insts := insts) (numeralI_add n (m - n - 1 + 1))
+        have h := (numeralI_add hΓ n (m - n - 1 + 1))
         rw [show n + (m - n - 1 + 1) = m from by omega] at h
         exact h
       simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-        ite_true, ite_false, grounded_substTerm LQpp hDt, grounded_substTerm LQpp hDu]
+        ite_true, ite_false, grounded_substTerm L hDt, grounded_substTerm L hDu]
       exact (slash_eq _ _ _ _).mpr
         (eqI_trans (eqI_trans
           (eqI_congr_fun2_l add_sym (succ (numeralM (m - n - 1))) hn) hadd) (eqI_symm hm))
     · refine absurd ?_ hcon
-      exact Derivesᵢ.elim_impl _ _ _ (numeralI_not_lt hlift (by omega))
+      exact Derivesᵢ.elim_impl _ _ _ (numeralI_not_lt hΓ hlift (by omega))
         (eqI_rw_atom2_r lt_sym (numeralM n) hm (eqI_rw_atom2_l lt_sym u hn hlt))
   · refine (slash_impl _ _ _ _).mpr ⟨Derivesᵢ.elim_and_r _ _ _ h2, fun hB => ?_⟩
     exact (slash_atom _ _ _ _).mpr
@@ -504,7 +515,7 @@ theorem slash_ax14 {insts : List Formula}
   rcases Nat.lt_trichotomy p q with hlt | heq | hgt
   · refine (slash_or _ _ _ _).mpr (Or.inl ((slash_atom _ _ _ _).mpr ?_))
     exact eqI_rw_atom2_r lt_sym _ (eqI_symm hq)
-      (eqI_rw_atom2_l lt_sym (numeralM q) (eqI_symm hp) (numeralI_lt hlt))
+      (eqI_rw_atom2_l lt_sym (numeralM q) (eqI_symm hp) (numeralI_lt arith_ctx hlt))
   · subst heq
     exact (slash_or _ _ _ _).mpr
       (Or.inr ((slash_eq _ _ _ _).mpr (eqI_trans hp (eqI_symm hq))))
@@ -512,7 +523,7 @@ theorem slash_ax14 {insts : List Formula}
     refine Derivesᵢ.elim_or _ (Formula.atom lt_sym [mul (sqrt t) (sqrt t), t])
       (Formula.eq (mul (sqrt t) (sqrt t)) t) Formula.bottom h1 ?_ ?_
     · refine Derivesᵢ.elim_impl _ _ _
-        (Derivesᵢ.weakening _ _ _ (numeralI_not_lt hlift (Nat.le_of_lt hgt))
+        (Derivesᵢ.weakening _ _ _ (numeralI_not_lt arith_ctx hlift (Nat.le_of_lt hgt))
           (fun _ hz => List.Mem.tail _ hz)) ?_
       exact eqI_rw_atom2_r lt_sym (numeralM p)
         (Derivesᵢ.weakening _ _ _ hq (fun _ hz => List.Mem.tail _ hz))
@@ -520,7 +531,7 @@ theorem slash_ax14 {insts : List Formula}
           (Derivesᵢ.weakening _ _ _ hp (fun _ hz => List.Mem.tail _ hz))
           (Derivesᵢ.hyp _ _ (List.Mem.head _)))
     · refine Derivesᵢ.elim_impl _ _ _
-        (Derivesᵢ.weakening _ _ _ (numeralI_ne (a := p) (b := q) (by omega))
+        (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := p) (b := q) (by omega))
           (fun _ hz => List.Mem.tail _ hz)) ?_
       exact eqI_trans
         (eqI_symm (Derivesᵢ.weakening _ _ _ hp (fun _ hz => List.Mem.tail _ hz)))
@@ -631,7 +642,7 @@ theorem slash_coreAxioms {insts : List Formula}
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_of_isHarrop _ _ hcon ax12_mul_distrib rfl (ax' (by simp [coreAxioms]))
   rcases hg with _ | ⟨_, hg⟩
-  · exact slash_ax13 hlift hcon hNum
+  · exact slash_ax13 LQpp (by decide) arith_ctx hlift hcon hNum
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_ax14 hlift hcon hNum
   rcases hg with _ | ⟨_, hg⟩
@@ -643,7 +654,7 @@ theorem slash_coreAxioms {insts : List Formula}
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_of_isHarrop _ _ hcon ax18_lt_irrefl rfl (ax' (by simp [coreAxioms]))
   rcases hg with _ | ⟨_, hg⟩
-  · exact slash_ax19 hNum
+  · exact slash_ax19 LQpp arith_ctx hNum
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_ax21 hcon hNum
   rcases hg with _ | ⟨_, hg⟩

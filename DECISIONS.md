@@ -1451,6 +1451,59 @@ portante, **es la signatura de este fragmento**. El andamio era el camino.
 
 ---
 
+## ADR-036: la DP del FRAGMENTO ARITMÉTICO, con una sola hipótesis
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: ADR-035 midió que `hNum` sobre los trece símbolos es inalcanzable, y señaló el
+fragmento aritmético (17 de los 34 axiomas) como el techo real del método. Faltaba
+construirlo.
+
+**Decisión**: `ctxA insts := arithAxioms ++ insts.map inductionFormula`, con dominio
+`Grounded LQ`, y **generalizar por CONTEXTO** lo que estaba clavado a `ctx`:
+
+| antes | ahora |
+|---|---|
+| `numeralI_add/mul/pow`, `closed_term_eq_numeral` sobre `ctx []` | `{Γ}` + `hΓ : ∀ g ∈ arithAxioms, Γ ⊢ᵢ g` |
+| `numeralI_ne/lt/not_lt` sobre `ctx insts` | idem |
+| `slash_ax13`, `slash_ax19` sobre `ctx insts` y `LQpp` | `{Γ}` + `(L)` + `hΓ` |
+| `grounded_numeralM` clavado a `LQpp` | `(L) (hs : L succ_sym 1 = true)` |
+
+⭐ La familia `hΓ` pasó de `coreAxioms` a `arithAxioms` **sin tocar una sola cadena de
+pertenencia**: los índices 0–11 coinciden en las dos listas. Eso no es suerte, es que
+`coreAxioms` empieza por el núcleo aritmético.
+
+**La pieza que faltaba**: `closed_of_grounded : Grounded LQ t → ClosedQTerm t`. `Grounded` y
+`ClosedQTerm` describen lo mismo desde dos lados —por CLAUSURAS y por CONSTRUCTORES— y esta
+dirección convierte `closed_term_eq_numeral` en `hNum`.
+
+**Resultado**:
+
+```lean
+qDisjunctionProperty_arith : ¬(ctxA [] ⊢ᵢ ⊥) →
+  collapseF LQ (substF zeroS (A ∨ B)) = A ∨ B →
+  ctxA [] ⊢ᵢ A ∨ B → (ctxA [] ⊢ᵢ A) ∨ (ctxA [] ⊢ᵢ B)
+```
+
+**UNA sola hipótesis de fondo: la consistencia.** `hNum` dejó de serlo y es `hNum_fragment`;
+`hIn` no aparece; `hInd` es vacía y `hlift` sale por `rfl`. Todo en `[propext, Quot.sound]`.
+
+**Consecuencias**:
+- 🏁 Es el teorema al que llevaba H3ter, con el alcance que la medición permite y no el que
+  se había anunciado. La DP para HA **completa** sigue condicionada, y ADR-035 dice por qué
+  no es cuestión de trabajo.
+- ⭐ La generalización por contexto es mejora en sí: los lemas valen ahora en `ctx`, en `ctxA`
+  y en cualquier contexto que satisfaga el fragmento — incluidos los **extendidos** que
+  aparecen dentro de `elim_ex`.
+- ⚠️ `ctx_weaken` quedó sin uso al desaparecer la necesidad de debilitar desde `ctx []`.
+  Etiquetado como ANDAMIO; `[H]` lo habría cazado de no hacerlo.
+- 🔑 Y una de método: `injection h with a b` **cierra la meta** cuando la ecuación resultante
+  es la meta. El `exact` que venía detrás daba «No goals to be solved», que no se parece a
+  su causa.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

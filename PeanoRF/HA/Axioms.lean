@@ -104,6 +104,64 @@ theorem mono {insts insts' : List Formula} {ψ : Formula}
   · obtain ⟨φ, hφ, rfl⟩ := List.mem_map.mp hx
     exact List.mem_append_right _ (List.mem_map_of_mem (hsub hφ))
 
+/-! ### El FRAGMENTO ARITMÉTICO
+
+    ⛔ Vive aquí y no en `HA/Fragment.lean` por una razón de orden: los homomorfismos de
+    numerales (`HA/Numerals.lean`) tienen que poder hablar de él, y `Numerals` va antes.
+    Las **mediciones** que lo justifican sí están en `Fragment`. -/
+
+/-- Los 17 axiomas de `coreAxioms` cuyos símbolos de función son sólo `0`, `σ`, `+`, `*`, `^`.
+    Medidos, no elegidos: `sondeos/fragmento_probe.lean`. -/
+def arithAxioms : List Formula :=
+  [ax2_peano_succ_neq_zero, ax3_peano_succ_inj, ax4_add_zero, ax5_add_succ,
+   ax6_add_comm, ax7_add_assoc, ax8_mul_zero, ax9_mul_succ,
+   ax10_mul_comm, ax11_mul_assoc, ax12_mul_distrib, ax13_lt_def,
+   ax18_lt_irrefl, ax19_lt_trichotomy, ax_L1_in_nil, ax_pow_zero, ax_pow_succ]
+
+/-- El fragmento es parte de Q⁺⁺: todo lo suyo es derivable donde lo sea `coreAxioms`.
+
+    🏗️ **ANDAMIO**: sin uso hoy; es la pieza por la que entra el fragmento cuando se
+    construya su DP. -/
+theorem arithAxioms_sub : ∀ g, List.Mem g arithAxioms → List.Mem g coreAxioms := by
+  intro g hg
+  simp only [arithAxioms] at hg
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.head _
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.head _)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))))))))))
+  cases hg
+
+
 /-! ### Generalización finitaria — el sustituto de la ω-regla -/
 
 /-- Los axiomas de Q⁺⁺ son **sentencias cerradas**: `liftFormula 0` los deja igual.

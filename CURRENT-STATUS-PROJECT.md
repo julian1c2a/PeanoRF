@@ -143,7 +143,9 @@
 > ⚠️ **Y el fragmento de 17 NO es maximal.** `τ` entra casi gratis — `ax25` y `ax26` son de
 > Harrop y **determinan `τ` sobre todo numeral SIN inducción ninguna**. Hecho:
 > `qDisjunctionProperty_arithT`, **19 axiomas, 6 símbolos y la misma única hipótesis**.
-> ⏳ `%₂` es el siguiente (22 axiomas), con inducción meta y consistencia. ⛔ `/₂` bloquea a
+> ✅ **`%₂` también HECHO**: `qDisjunctionProperty_arithTM`, **22 de los 34**, siete
+> símbolos, la misma única hipótesis. ⭐ Y evaluarlo **NO necesitó consistencia**: la
+> refutación va dentro de una rama de `elim_or`, bajo hipótesis. ⛔ `/₂` bloquea a
 > `::`, `##` y `Π_p` (porque `pair` usa `/₂`, medido), `√` no se deja fijar, y `−` está
 > **subdeterminado**: aparece en UN solo axioma y condicionado.
 >
@@ -199,7 +201,7 @@
 |--------|-------|
 | Módulos propios | 17 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment}`) |
 | Módulos con 0 `sorry` | 17 / 17 |
-| Teoremas propios | 186 |
+| Teoremas propios | 202 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |

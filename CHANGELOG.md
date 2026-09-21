@@ -15,6 +15,30 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (g) · 🏁 `%₂` entra — **22 de los 34**, y el criterio confirmado
+
+```lean
+qDisjunctionProperty_arithTM : ¬(ctxTM [] ⊢ᵢ ⊥) →
+  ctxTM [] ⊢ᵢ A ∨ B → (ctxTM [] ⊢ᵢ A) ∨ (ctxTM [] ⊢ᵢ B)
+```
+
+**22 axiomas, 7 símbolos, la misma única hipótesis.** `[propext, Quot.sound]`.
+
+Cómo entra `%₂`: **base** por `ax24` en `(0,0)` con `0 = 2·0` vía `ax8`; **paso `0→1`** por
+la dirección `⇒` de `ax16`; y **paso `1→0`**, que `ax16` no da, saliendo de `ax21`
+**refutando** la otra rama con `numeralI_ne`.
+
+⭐ **Y esa refutación va DENTRO de una rama de `elim_or`, bajo hipótesis** — así que
+`numeralI_mod2` **NO necesita la consistencia**. Mismo patrón que `ax_L2_in_cons`: cuando una
+rama se refuta localmente, la disyunción del objeto entrega la otra sin pagar `hcon`.
+
+Y `arithTMAxioms_hard` mide que `%₂` añade **un** duro —`ax21`— **que ya estaba barrado**.
+
+✅ El criterio de ADR-037 —entra el que está **definido por recursión sobre el
+constructor**— queda confirmado por una segunda instancia, no sólo enunciado.
+
+ADR-038. **50 jobs · 17 módulos · 0 sorry · 325 declaraciones.**
+
 ### 2026-09-21 (f) · ⭐ el fragmento CRECE: `τ` — 19 axiomas, 6 símbolos, la misma hipótesis
 
 ⚠️ **Dije que el fragmento de 17 era «el techo real del método». Era demasiado grueso.**

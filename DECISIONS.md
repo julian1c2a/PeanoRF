@@ -1545,6 +1545,39 @@ caracterización no se despeja sin inducción en el objeto.
 
 ---
 
+## ADR-038: `%₂` entra — 22 de 34, y el criterio de ADR-037 confirmado
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: ADR-037 fijó el criterio —un símbolo entra si sus axiomas lo **definen por
+recursión sobre el constructor**— y predijo que `%₂` entraría. Construido.
+
+**Cómo entra `%₂`**, que cuesta un poco más verlo que `τ`:
+
+* **base**: `ax24 : ∀x∀y. (x = 2·y) ⇒ (%₂x = 0)` instanciada en `(0,0)`, con `0 = 2·0` vía
+  `ax8`;
+* **paso `0 → 1`**: la dirección `⇒` de `ax16 : ∀x. (%₂x = 0) ⇔ (%₂(σx) = 1)`;
+* **paso `1 → 0`**: `ax16` **no lo da**. Se saca de `ax21` (la disyunción) **refutando** la
+  otra rama con `numeralI_ne`.
+
+⭐ **Y la refutación va DENTRO de una rama de `elim_or`, bajo hipótesis** — así que
+`numeralI_mod2` **no necesita la consistencia**. Es el mismo patrón de `ax_L2_in_cons`:
+cuando una de las ramas se puede refutar localmente, la disyunción del objeto entrega la
+otra sin pagar `hcon`. La consistencia sí la necesita `slash_ax21`, que es otra cosa.
+
+**Resultado**: `LQtm` (7 símbolos), `arithTMAxioms` (22), `qDisjunctionProperty_arithTM`.
+`arithTMAxioms_hard` mide que `%₂` añade **un** duro, `ax21`, **y ya estaba barrado**.
+
+**Consecuencias**:
+- 🏁 **22 de los 34**, con la misma única hipótesis de fondo.
+- ✅ El criterio de ADR-037 queda **confirmado por una segunda instancia**, no sólo
+  enunciado.
+- ⏳ Los cinco que faltan (`/₂`, `√`, `::`, `##`, `Π_p`, `−`) están **caracterizados**, no
+  definidos por recursión. Ahí el método se para, y ADR-037 dice por qué.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

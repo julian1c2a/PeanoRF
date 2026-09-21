@@ -183,16 +183,18 @@ theorem numeralI_ne {Γ : List Formula}
 
     ⚠️ Aquí es donde la consistencia deja de ser decorativa: es lo que convierte «la teoría
     demuestra que `%₂t` vale 0 ó 1» en «**yo sé cuál de los dos**». -/
-theorem slash_ax21 {insts : List Formula}
-    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
-      ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (ctx insts) (Grounded LQpp) ax21_mod2_range := by
-  have hax : ctx insts ⊢ᵢ ax21_mod2_range := ax' (by simp [coreAxioms])
+theorem slash_ax21 {Γ : List Formula} (L : String → Nat → Bool)
+    (hm : L mod2_sym 1 = true)
+    (haxA : Γ ⊢ᵢ ax21_mod2_range) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
+    (hNum : ∀ t : Term, Grounded L t →
+      ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
+    Slash (Γ) (Grounded L) ax21_mod2_range := by
+  have hax : Γ ⊢ᵢ ax21_mod2_range := haxA
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   refine (slash_or _ _ _ _).mpr ?_
-  obtain ⟨k, hk⟩ := hNum (mod2 t) (grounded_func1 LQpp (by decide) hDt)
+  obtain ⟨k, hk⟩ := hNum (mod2 t) (grounded_func1 L hm hDt)
   match k, hk with
   | 0, hk => exact Or.inl ((slash_eq _ _ _ _).mpr hk)
   | 1, hk => exact Or.inr ((slash_eq _ _ _ _).mpr hk)
@@ -202,14 +204,14 @@ theorem slash_ax21 {insts : List Formula}
         Formula.bottom h1 ?_ ?_
       · refine Derivesᵢ.elim_impl _ (Formula.eq (numeralM (n + 2)) (numeralM 0))
           Formula.bottom
-          (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := n + 2) (b := 0) (by omega))
+          (Derivesᵢ.weakening _ _ _ (numeralI_ne hΓ (a := n + 2) (b := 0) (by omega))
             (fun x hx => List.Mem.tail _ hx)) ?_
         exact eqI_trans
           (eqI_symm (Derivesᵢ.weakening _ _ _ hk (fun x hx => List.Mem.tail _ hx)))
           (Derivesᵢ.hyp _ _ (List.Mem.head _))
       · refine Derivesᵢ.elim_impl _ (Formula.eq (numeralM (n + 2)) (numeralM 1))
           Formula.bottom
-          (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := n + 2) (b := 1) (by omega))
+          (Derivesᵢ.weakening _ _ _ (numeralI_ne hΓ (a := n + 2) (b := 1) (by omega))
             (fun x hx => List.Mem.tail _ hx)) ?_
         exact eqI_trans
           (eqI_symm (Derivesᵢ.weakening _ _ _ hk (fun x hx => List.Mem.tail _ hx)))
@@ -656,7 +658,7 @@ theorem slash_coreAxioms {insts : List Formula}
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_ax19 LQpp arith_ctx hNum
   rcases hg with _ | ⟨_, hg⟩
-  · exact slash_ax21 hcon hNum
+  · exact slash_ax21 LQpp (by decide) (ax' (by simp [coreAxioms])) arith_ctx hcon hNum
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_of_isHarrop _ _ hcon ax24_mod2_of_even rfl (ax' (by simp [coreAxioms]))
   rcases hg with _ | ⟨_, hg⟩

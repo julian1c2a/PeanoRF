@@ -108,6 +108,7 @@ import PeanoRF.HA.Numerals
 import PeanoRF.HA.Domain
 import PeanoRF.HA.SlashAxioms
 import PeanoRF.HA.Fragment
+import PeanoRF.HA.Model
 
 set_option autoImplicit false
 

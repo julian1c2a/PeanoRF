@@ -1445,9 +1445,14 @@ portante, **es la signatura de este fragmento**. El andamio era el camino.
 - ⏳ Falta construir la DP del fragmento. Pide parametrizar por el contexto lo que hoy está
   clavado a `ctx` (`numeralI_add/mul/pow`, `closed_term_eq_numeral`, `numeralI_ne/lt/not_lt`),
   igual que ya lo está la familia `addI_*`.
-- 🔑 Sobre `hcon`: **no es una deuda, es el precio, y es demostrable que no se puede pagar
-  por dentro.** Gödel II —que ROB++ va a demostrar— lo dice. ⚠️ Con la reserva de que su
-  Gödel será sobre `⊢`/`axioms`, no sobre `⊢ᵢ`/`arithAxioms`: transportarlo no es automático.
+- ⛔⛔ **RECTIFICADO el 2026-09-21 por ADR-039.** Aquí se escribió que `hcon` «no es una
+  deuda, es el precio, y es demostrable que no se puede pagar por dentro — Gödel II lo
+  dice», y de ahí se dedujo que se quedaba **para siempre**. **La deducción es falsa.**
+  Gödel II dice que HA no prueba su PROPIA consistencia, no que no la pruebe nadie: un
+  modelo estándar sobre `ℕ` la descarga, y `hcon_fragment` lo hace. Lo único que se
+  sostiene de aquel párrafo es que el pago **no puede venir del propio cálculo**, sino de
+  la semántica. ⚠️ La reserva sí sigue viva: el Gödel de ROB++ será sobre `⊢`/`axioms`,
+  no sobre `⊢ᵢ`/`arithAxioms`, y transportarlo no es automático.
 
 ---
 
@@ -1486,7 +1491,8 @@ qDisjunctionProperty_arith : ¬(ctxA [] ⊢ᵢ ⊥) →
   ctxA [] ⊢ᵢ A ∨ B → (ctxA [] ⊢ᵢ A) ∨ (ctxA [] ⊢ᵢ B)
 ```
 
-**UNA sola hipótesis de fondo: la consistencia.** `hNum` dejó de serlo y es `hNum_fragment`;
+**UNA sola hipótesis de fondo: la consistencia** —⛔ y desde ADR-039 **ninguna**, porque
+`hcon_fragment` la descarga con un modelo estándar—. `hNum` dejó de serlo y es `hNum_fragment`;
 `hIn` no aparece; `hInd` es vacía y `hlift` sale por `rfl`. Todo en `[propext, Quot.sound]`.
 
 **Consecuencias**:
@@ -1542,6 +1548,10 @@ caracterización no se despeja sin inducción en el objeto.
 - ⚠️ **Tres de las casillas ⛔ son ARGUMENTOS, no mediciones**: que `−` esté subdeterminado
   pide separar dos modelos; que `√` y `/₂` no se dejen pide un teorema de imposibilidad.
   Queda escrito como deuda, igual que la no-derivabilidad del contraejemplo de `junk_probe`.
+  ✅ **La de `−` está PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
+  con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
+  â **La de `−` estÃ¡ PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
+  con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
 
 ---
 
@@ -1570,11 +1580,91 @@ otra sin pagar `hcon`. La consistencia sí la necesita `slash_ax21`, que es otra
 `arithTMAxioms_hard` mide que `%₂` añade **un** duro, `ax21`, **y ya estaba barrado**.
 
 **Consecuencias**:
-- 🏁 **22 de los 34**, con la misma única hipótesis de fondo.
+- 🏁 **22 de los 34**, con la misma única hipótesis de fondo —⛔ y desde ADR-039, **con
+  ninguna**: `hcon_fragment` la descarga.
 - ✅ El criterio de ADR-037 queda **confirmado por una segunda instancia**, no sólo
   enunciado.
 - ⏳ Los cinco que faltan (`/₂`, `√`, `::`, `##`, `Π_p`, `−`) están **caracterizados**, no
   definidos por recursión. Ahí el método se para, y ADR-037 dice por qué.
+
+---
+
+## ADR-039: un MODELO estándar ⇒ `hcon` DESCARGADA, y `−` MEDIDO
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado. ⚠️ **Rectifica ADR-035 y ADR-036**, y **paga una de las tres deudas
+de ADR-037**.
+
+**Contexto**: ADR-035 y ADR-036 escribieron que la consistencia del fragmento «no es una
+deuda, es el precio, y es demostrable que no se puede pagar por dentro — Gödel II lo dice»,
+y de ahí concluyeron que `hcon` **se quedaba como hipótesis para siempre**. NEXT-STEPS lo
+repitió en su tabla, `Fragment.lean` en su encabezado, y la memoria en su índice.
+
+⛔ **La conclusión no se seguía.** Gödel II dice que HA no prueba su **propia**
+consistencia. No dice que no la pruebe nadie: se demuestra en cualquier metalenguaje que
+exceda la teoría, y Lean la excede de sobra. Se confundió «no demostrable DENTRO» con «no
+demostrable». Lo que sí se sostiene de aquella frase —y es lo que hay que conservar— es que
+**el pago no puede venir de una derivación del propio cálculo**: tiene que venir de la
+semántica.
+
+⭐ Y el patrón ya estaba en el árbol un piso más abajo desde H3: `derivesI_consistent`
+descarga la consistencia de la **lógica** exhibiendo un modelo de un punto. No se vio que
+subía.
+
+**Decisión**: `PeanoRF/HA/Model.lean`. Un **único** modelo con un parámetro:
+
+```lean
+def natModelK (k : Nat) : Model Nat where
+  func s ds := if s = succ_sym then ds.headD 0 + 1 else … else if s = sub_sym then
+    (if ds.tail.headD 0 ≤ ds.headD 0 then ds.headD 0 - ds.tail.headD 0 else k) else 0
+  rel s ds := And (s = lt_sym) (ds.headD 0 < ds.tail.headD 0)
+```
+
+`natModelK_sat` verifica los **23** axiomas —los 22 de `arithTMAxioms` más
+`ax29_sub_witness`— **para todo `k`**. El parámetro hace dos trabajos de golpe:
+
+| con `k` fijo | `hcon_fragment` ⇒ **`qDisjunctionProperty_arithTM_final`, sin hipótesis** |
+|---|---|
+| **variando `k`** | `sub_neither` ⇒ **`5̄ − 7̄` es indeterminado**, y `hNum_false_on_sub` |
+
+**Justificación**: la segunda mitad es la que no se veía venir. ADR-037 dejó **tres
+casillas ⛔ que eran ARGUMENTOS y no mediciones**, y una era `−`. La forma de medirla —dos
+modelos que sólo difieren en `sub` fuera del rango— resultó ser **el mismo modelo** que
+descarga `hcon`, porque el axioma `ax29_sub_witness` condiciona `−` a `x ≤ y` y deja el
+resto libre: *el valor de `5̄ − 7̄` en el modelo **es** el parámetro*.
+
+⇒ `sub_neither n` da las **dos** direcciones: la teoría no demuestra `5̄ − 7̄ = n̄` (falla en
+`k = n+1`) **ni** su negación (falla en `k = n`). Eso es «indeterminado» en el sentido
+fuerte, y está medido.
+
+**Resultado**, todo en `[propext, Quot.sound]`:
+
+```lean
+hcon_fragment                        : ¬(ctxTM [] ⊢ᵢ ⊥)
+qDisjunctionProperty_arithTM_final   : ctxTM [] ⊢ᵢ A ∨ B → (ctxTM [] ⊢ᵢ A) ∨ (ctxTM [] ⊢ᵢ B)
+sub_neither (n)                      : ¬(subAxioms ⊢ᵢ 5̄−7̄ = n̄) ∧ ¬(subAxioms ⊢ᵢ ¬(5̄−7̄ = n̄))
+hNum_false_on_sub                    : ¬(∀ t, Grounded LQpp t → ∃ n, subAxioms ⊢ᵢ t = n̄)
+```
+
+**Consecuencias**:
+- 🏁🏁🏁 **La DP del fragmento aritmético de Q⁺⁺ es un teorema INCONDICIONAL.** 22 de los
+  34 axiomas de `coreAxioms`, siete símbolos, **cero hipótesis**.
+- ⛔ **El alcance de la medición de `−` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo
+  pide un modelo de `coreAxioms` entero —listas, pares de Cantor, `√`, `Π_p`—, que este
+  proyecto no tiene. Queda **dicho**, no supuesto. Es exactamente el error que ADR-037
+  cometió y este ADR no repite.
+- ⏳ De las tres casillas de ADR-037 quedan **dos**: `√` y `/₂`. Y el camino está claro —un
+  modelo que las mueva—, sólo que ninguna de las dos es libre como `−`: sus axiomas son
+  desigualdades que sí acotan.
+- 🔑 **De método, y es lo reutilizable**: «la teoría no dice nada de `t`» se mide
+  **parametrizando el modelo por el valor de `t`**, no exhibiendo dos modelos sueltos. Un
+  parámetro es más fuerte y más corto que un par.
+- ⚠️ `omega` aparece en cinco metas y **todas son aritméticas** (`<`, `≤`, `+`, `%`): el
+  footprint se midió y sale `[propext, Quot.sound]`. No es el caso de
+  `shift_updateEnv_comm`, donde `omega` cerraba por contradicción una meta que no era
+  aritmética. La regla de [[feedback-omega-classical]] sigue en pie: **medir, no suponer**.
+- ⚠️ En `Model.lean` la notación `∧` es `Formula.and` (la de FOL), así que la conjunción de
+  Lean va escrita `And` a mano. Costó el primer error de compilación del módulo.
 
 ---
 

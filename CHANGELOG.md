@@ -1,6 +1,6 @@
 # Changelog
 
-**Last updated:** 2026-09-17
+**Last updated:** 2026-09-21
 **Author**: Julián Calderón Almendros
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +14,63 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ---
 
 ## [Unreleased]
+
+### 2026-09-21 (h) · 🏁🏁🏁 un MODELO ⇒ `hcon` DESCARGADA, y `−` MEDIDO
+
+```lean
+hcon_fragment                      : ¬(ctxTM [] ⊢ᵢ ⊥)
+qDisjunctionProperty_arithTM_final : ctxTM [] ⊢ᵢ A ∨ B → (ctxTM [] ⊢ᵢ A) ∨ (ctxTM [] ⊢ᵢ B)
+```
+
+**La DP del fragmento aritmético de Q⁺⁺ es INCONDICIONAL.** 22 de los 34 axiomas de
+`coreAxioms`, siete símbolos, **cero hipótesis**. `[propext, Quot.sound]`.
+
+⛔ **Y esto rectifica lo que este mismo fichero escribió tres entradas más arriba** —y
+ADR-035, y ADR-036, y la tabla de NEXT-STEPS, y el encabezado de `Fragment.lean`—: que
+`hcon` «no es deuda, es el precio, y Gödel II dice que no se puede pagar por dentro».
+**La conclusión era falsa.** Gödel II dice que HA no prueba su **propia** consistencia; no
+dice que no la pruebe nadie. Se demuestra en cualquier metalenguaje que exceda la teoría, y
+Lean la excede. Lo que sí se sostiene: el pago **no puede venir del propio cálculo**, tiene
+que venir de la semántica.
+
+⭐ Y el patrón estaba en el árbol desde H3, un piso más abajo: `derivesI_consistent` descarga
+la consistencia de la **lógica** con un modelo de un punto. No se vio que subía.
+
+**El modelo tiene un parámetro, y con eso hace dos trabajos:**
+
+```lean
+def natModelK (k : Nat) : Model Nat where
+  func s ds := … else if s = sub_sym then
+    (if ds.tail.headD 0 ≤ ds.headD 0 then ds.headD 0 - ds.tail.headD 0 else k) else 0
+```
+
+`natModelK_sat` verifica **23** axiomas —los 22 más `ax29_sub_witness`— **para todo `k`**,
+porque el axioma condiciona `−` a `x ≤ y` y deja el resto libre.
+
+⇒ con `k` fijo, `hcon`. ⇒ **variando `k`**, el valor de `5̄ − 7̄` en el modelo **es** el
+parámetro, y de ahí:
+
+```lean
+sub_neither (n) : ¬(subAxioms ⊢ᵢ 5̄−7̄ = n̄) ∧ ¬(subAxioms ⊢ᵢ ¬(5̄−7̄ = n̄))
+hNum_false_on_sub : ¬(∀ t, Grounded LQpp t → ∃ n, subAxioms ⊢ᵢ t = n̄)
+```
+
+✅ **Una de las tres casillas ⛔ de ADR-037 que eran ARGUMENTO pasa a ser MEDICIÓN.** Quedan
+`√` y `/₂`.
+
+⛔ **Y el alcance queda DICHO**: `subAxioms` son 23, no los 34. Subirlo pide un modelo de
+`coreAxioms` entero —listas, pares de Cantor, `√`, `Π_p`—, que no existe. Es justo el error
+que ADR-037 cometió y que aquí no se repite.
+
+🔑 De método: «la teoría no dice nada de `t`» se mide **parametrizando el modelo por el valor
+de `t`**, no exhibiendo dos modelos sueltos. Un parámetro es más fuerte y más corto.
+
+⚠️ `omega` sale en cinco metas y **las cinco son aritméticas** (`<`, `≤`, `+`, `%`):
+footprint medido, `[propext, Quot.sound]`. No es el caso de `shift_updateEnv_comm`.
+
+ADR-039. **51 jobs · 18 módulos · 0 sorry · 340 declaraciones.**
+
+---
 
 ### 2026-09-21 (g) · 🏁 `%₂` entra — **22 de los 34**, y el criterio confirmado
 
@@ -126,6 +183,10 @@ que menciona `∈` —`ax_L1_in_nil`— es de Harrop porque **`nil` es `zero`**.
 
 ⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`.** Y ésa no es deuda: es el precio, y
 Gödel II —que ROB++ va a demostrar— dice que no se puede pagar por dentro.
+
+> ⛔ **RECTIFICADO el mismo día, entrada (h):** la conclusión es falsa. Gödel II dice que HA
+> no prueba su PROPIA consistencia, no que no la pruebe nadie. `hcon_fragment` la descarga
+> con un modelo estándar sobre `ℕ`.
 
 ⭐ Cierra un círculo: la capa `LQ`, etiquetada como ANDAMIO esta misma mañana por no tener
 uso portante, **es la signatura de este fragmento**. El andamio era el camino.

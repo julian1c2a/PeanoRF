@@ -101,6 +101,7 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo |
 | `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | ✅ 6 de 6 |
 | `HA/Fragment.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | ✅ la medición, en código |
+| `HA/Model.lean` | `PeanoRF.HA` | `HA.Fragment`, `Calculus.Soundness` | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido |
 | `Calculus/Slash.lean` | `PeanoRF.Calculus` | `Calculus.{Consistency,SubstDerives,Eq}` | ✅ Completo |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo |
 | `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress |

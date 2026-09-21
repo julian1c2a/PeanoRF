@@ -10,6 +10,14 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
+> 🏁🏁🏁 **2026-09-21 · LA DP DEL FRAGMENTO ES INCONDICIONAL.** `hcon` cayó con un modelo
+> estándar sobre `ℕ` (ADR-039): `qDisjunctionProperty_arithTM_final` no tiene **ninguna**
+> hipótesis. 22 de los 34 axiomas, siete símbolos. Y el mismo modelo, parametrizado por el
+> valor de `−` fuera del rango de `ax29`, **mide** que `5̄ − 7̄` es indeterminado.
+>
+> ▶ **Punto de reanudación**: `√` y `/₂`, las dos casillas de ADR-037 que siguen siendo
+> argumento; y el modelo de `coreAxioms` entero, que subiría la medición de `−` de 23 a 34.
+
 **H3ter — y lo primero es mirar si FOL ha contestado.**
 
 ⛔ **El enunciado ingenuo de H3ter es FALSO, y está medido** (`sondeos/junk_probe.lean`):
@@ -87,15 +95,21 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 | `hNum` | todo anclado es demostrablemente un numeral | evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` sobre numerales; algunas piden inducción |
 | ✅ `hlift` | **HECHO**: `inductions_lift` + `ctx_lift`, reducido a una condición por instancia que es `rfl` |
 | `hIn` | `∈` decidible sobre anclados | ⛔ pide inducción sobre listas; puede que nunca salga de Q⁺⁺ sola |
-| `hcon` | la consistencia de la teoría | ⛔ Gödel. Se queda como hipótesis **para siempre**, y está bien que se vea |
+| ✅ `hcon` | la consistencia de la teoría | 🏁 **DESCARGADA el 2026-09-21** (ADR-039): `hcon_fragment`, por un modelo estándar sobre `ℕ` y `derivesI_soundness`. ⛔ Aquí ponía «se queda para siempre, Gödel II» — **era falso**: Gödel II dice que HA no prueba su PROPIA consistencia |
 
 ### ⚠️ Deudas vivas
 
 - **Formalizar la no-derivabilidad de las ramas** del contraejemplo. Hoy es argumento por
-  solidez; en esta familia un argumento no es una medición.
+  solidez; en esta familia un argumento no es una medición. ⭐ Y desde ADR-039 se sabe **con
+  qué herramienta**: un modelo. `sub_neither` es la plantilla.
+- ⛔ **`√` y `/₂`**: las dos casillas de ADR-037 que siguen siendo ARGUMENTO. La de `−` se
+  pagó con ADR-039; éstas no son libres —sus axiomas son desigualdades que sí acotan—, así
+  que el modelo que las mueva hay que buscarlo.
+- ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
+  un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
-- `SYMBOL_PREFIXES` vacío ⇒ control [B] de docsync apagado.
+- ✅ ~~`SYMBOL_PREFIXES` vacío ⇒ control [B] apagado~~ activado el 2026-09-21, con 15+ familias.
 - ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.
 
 ⚠️ Y la comprobación de siempre antes de escribir nada: **re-medir**.

@@ -3,6 +3,18 @@
 **Última actualización:** 2026-09-21
 **Autor**: Julián Calderón Almendros
 
+> 🏁🏁🏁 **2026-09-21 · LA DP DEL FRAGMENTO ARITMÉTICO ES INCONDICIONAL** (ADR-039).
+> `hcon` cayó: `hcon_fragment` la descarga con un **modelo estándar sobre `ℕ`** y
+> `derivesI_soundness`. `qDisjunctionProperty_arithTM_final` no tiene ninguna hipótesis —
+> 22 de los 34 axiomas de `coreAxioms`, siete símbolos—. ⛔ Y eso **rectifica** lo que este
+> mismo documento decía tres párrafos más abajo: «`hcon` no se puede pagar, Gödel II».
+> Gödel II dice que HA no prueba su **propia** consistencia; no dice que no la pruebe nadie.
+>
+> ⭐ El mismo modelo, **parametrizado por el valor de `−` fuera del rango de `ax29`**, mide
+> que `5̄ − 7̄` es indeterminado: `sub_neither` y `hNum_false_on_sub`. Una de las tres
+> casillas ⛔ de ADR-037 que eran ARGUMENTO pasa a ser MEDICIÓN; quedan `√` y `/₂`.
+> ⛔ Alcance dicho: `subAxioms` son **23**, no los 34.
+>
 > 🚨 **AUDITORÍA EXTERNA 2026-09-21** — con los tres controles locales en verde, la **CI
 > llevaba dos días en ROJO** (mi propio control `[D]` miente bajo checkout shallow) y **el
 > gate se había quedado ciego a `Derives₀`** porque FOL generizó su sintaxis: 45
@@ -29,7 +41,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **50 jobs · 17 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **51 jobs · 18 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -115,17 +127,23 @@
 >    instancia trabajada con `phiZeroAdd` donde las tres condiciones salen por `rfl`: **no
 >    es vacuo**. ⛔ El atajo NO cubre instancias con `∨` o `∃`.
 >
-> ⇒ **Quedan TRES hipótesis**: `hcon`, `hNum` y `hIn`.
+> ⇒ **Quedan TRES hipótesis**: `hcon`, `hNum` y `hIn` — 🏁 y `hcon` cayó el 2026-09-21
+> (ADR-039), así que sobre el fragmento **no queda ninguna**.
 >
 > ⛔ **Y medido el 2026-09-21: `hNum` sobre el lenguaje COMPLETO es INALCANZABLE, y para `−`
 > es FALSA.** `−` aparece **en un único axioma de los 34**, y condicionado a `x ≤ y`: Q⁺⁺ no
 > dice nada de `5̄ − 7̄`. No es falta de ingenio, es falta de axioma.
 >
+> ⭐ Esto empezó siendo **argumento** y hoy es **medición**: `hNum_false_on_sub` (ADR-039),
+> con `5̄ − 7̄` de testigo y un modelo parametrizado por su valor. ⛔ Sobre `subAxioms`, que
+> son 23 — para los 34 haría falta un modelo de `coreAxioms` entero.
+>
 > ✅ **Lo que SÍ se alcanza — el FRAGMENTO ARITMÉTICO** (`HA/Fragment.lean`): **17 de los 34**
 > axiomas usan sólo `0 σ + * ^`; **son sentencias del lenguaje de los numerales** (por `rfl`);
 > de ellos **sólo dos no son de Harrop** —`ax13` y `ax19`— y **los dos ya están barrados**.
 > Ahí `hNum` **ya está demostrada**: es `closed_term_eq_numeral`. Y **`hIn` desaparece**.
-> ⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`.**
+> ⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`** — 🏁 y desde el 2026-09-21,
+> **ninguna**: `hcon_fragment` la descarga con un modelo estándar sobre `ℕ` (ADR-039).
 >
 > ⭐ La capa `LQ`, etiquetada como ANDAMIO por no tener uso portante, resulta ser **la
 > signatura de ese fragmento**. El andamio era el camino.
@@ -154,7 +172,7 @@
 >
 > | hipótesis | qué es | ¿se puede demostrar aquí? |
 > |---|---|---|
-> | `hcon` | la consistencia de la teoría | ⛔ no (Gödel) |
+> | ✅ `hcon` | la consistencia de la teoría | 🏁 **SÍ, y está hecho** (ADR-039): `hcon_fragment`, por modelo + `derivesI_soundness`. ⛔ Aquí ponía «no (Gödel)» y **era falso**: Gödel II es sobre la teoría probando su PROPIA consistencia |
 > | `hlift` | el contexto invariante bajo levantamiento | ✅ si las instancias son cerradas |
 > | `hNum` | todo término anclado es demostrablemente un numeral | ⏳ faltan 8 de los 13 símbolos |
 > | `hIn` | `∈` decidible sobre términos anclados | ⛔ pide inducción sobre listas |
@@ -199,13 +217,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 17 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment}`) |
-| Módulos con 0 `sorry` | 17 / 17 |
-| Teoremas propios | 202 |
-| Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
+| Módulos propios | 18 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment,Model}`) |
+| Módulos con 0 `sorry` | 18 / 18 |
+| Teoremas propios | 215 |
+| Definiciones propias | 11 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 50 jobs (ver la reserva del banner) |
+| Build | ✅ 51 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |
@@ -224,6 +242,7 @@
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🏁 **H3**: solidez **CONSTRUCTIVA** (`propext, Quot.sound`) |
+| `PeanoRF/HA/Model.lean` | 13 | 2 | 0 | 🏁 **ADR-039**: modelo estándar sobre `ℕ` ⇒ `hcon` descargada, y `−` medido |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 

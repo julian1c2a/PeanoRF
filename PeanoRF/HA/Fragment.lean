@@ -42,8 +42,14 @@ import PeanoRF.HA.SlashAxioms
   `ax_L3_in_concat`) no son aritméticos y no están aquí. El único que menciona `∈` es
   `ax_L1_in_nil` (`∀x. ¬(x ∈ 0)`, porque `nil` **es** `zero`), y ése es de Harrop.
 
-  ⇒ **Queda una sola hipótesis: `hcon`.** Y ésa no es una deuda: Gödel II —que ROB++ va a
-  demostrar— dice que es el precio exacto y que no se puede pagar por dentro.
+  ⇒ **Queda una sola hipótesis: `hcon`** — 🏁 y desde el 2026-09-21, **ninguna**:
+  `PeanoRF/HA/Model.lean` la descarga con un modelo estándar sobre `ℕ`, y
+  `qDisjunctionProperty_arithTM_final` es **incondicional** (ADR-039).
+
+  ⛔ Aquí ponía que `hcon` «no es una deuda: Gödel II dice que es el precio exacto y que no
+  se puede pagar por dentro». **La segunda mitad es cierta y la conclusión era falsa**:
+  Gödel II dice que HA no prueba su PROPIA consistencia, no que no la pruebe nadie. El pago
+  no viene del cálculo, viene de la semántica.
 -/
 
 namespace PeanoRF.HA

@@ -20,6 +20,7 @@ import PeanoRF.Calculus.SubstDerives
 import PeanoRF.HA.Arith
 import PeanoRF.HA.Axioms
 import PeanoRF.HA.Domain
+import PeanoRF.HA.Fragment
 import PeanoRF.HA.Numerals
 import PeanoRF.HA.SlashAxioms
 import PeanoRF.Meta.AxiomCheck

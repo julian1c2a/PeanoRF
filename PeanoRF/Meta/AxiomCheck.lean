@@ -107,6 +107,7 @@ import PeanoRF.HA.Arith
 import PeanoRF.HA.Numerals
 import PeanoRF.HA.Domain
 import PeanoRF.HA.SlashAxioms
+import PeanoRF.HA.Fragment
 
 set_option autoImplicit false
 

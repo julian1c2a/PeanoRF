@@ -417,8 +417,12 @@ else
     [ -n "$used" ] || used=0
     # 1 = su propia línea de declaración. Más de 1 ⇒ alguien lo usa.
     [ "$used" -gt 1 ] && continue
-    # ¿Lleva marcador en su docstring o en la cabecera de su sección?
-    start=$((line>30?line-30:1))
+    # ¿Lleva marcador EN SU DOCSTRING? La ventana es el `/--` inmediatamente anterior, no
+    # un número fijo de líneas: medido el 2026-09-21, con una ventana de 30 la PROSA de la
+    # cabecera del módulo eximía a declaraciones que no llevaban marcador ninguno. Una
+    # exención falsa es un agujero silencioso, que es justo lo que este control evita.
+    start=$(awk -v L="$line" 'NR<L && /^[[:space:]]*\/--/ {s=NR} END{print s+0}' "$file")
+    if [ "$start" -eq 0 ] || [ $((line-start)) -gt 40 ]; then start=$line; fi
     if sed -n "${start},${line}p" "$file" | LC_ALL=C grep -qE "$UNUSED_MARKERS"; then continue; fi
     echo "  ✗ \`$name\` se declara y NADIE lo usa, y no lleva marcador:"
     echo "      ${file#./}:${line}"

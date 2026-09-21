@@ -15,6 +15,44 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (d) · ⛔ `hNum` es INALCANZABLE sobre el lenguaje completo — y el fragmento donde sí sale
+
+Antes de construir `hNum` se midió qué determina Q⁺⁺ sobre los ocho símbolos no aritméticos.
+**No es alcanzable, y para `−` es FALSA**:
+
+> `−` aparece **en UN único axioma de los 34**, condicionado a `x ≤ y`. Q⁺⁺ **no dice nada**
+> de `5̄ − 7̄`. No es falta de ingenio: es falta de axioma.
+
+Los otros siete piden **inducción en el objeto** para evaluarse, y la que haría falta no es
+de Harrop, así que el atajo de ADR-034 tampoco vale. Y no se arregla encogiendo el dominio:
+`L` tiene que FIJAR los axiomas y `D` contiene todos los cerrados de `L`.
+
+✅ **Lo que SÍ se alcanza: `HA/Fragment.lean`**, los **17 de los 34** axiomas cuyos símbolos
+son sólo `0 σ + * ^`. Las tres cifras, verificadas por el kernel con `rfl`:
+
+```
+arithAxioms_length    : arithAxioms.length = 17
+arithAxioms_sentences : son sentencias del lenguaje de los NUMERALES
+arithAxioms_hard      : sólo `ax13_lt_def` y `ax19_lt_trichotomy` no son de Harrop
+```
+
+⭐ Y los dos duros **ya están barrados**. Ahí `hNum` **es `closed_term_eq_numeral`**, que ya
+está. Y **`hIn` desaparece**: los dos axiomas que la pedían no son aritméticos, y el único
+que menciona `∈` —`ax_L1_in_nil`— es de Harrop porque **`nil` es `zero`**.
+
+⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`.** Y ésa no es deuda: es el precio, y
+Gödel II —que ROB++ va a demostrar— dice que no se puede pagar por dentro.
+
+⭐ Cierra un círculo: la capa `LQ`, etiquetada como ANDAMIO esta misma mañana por no tener
+uso portante, **es la signatura de este fragmento**. El andamio era el camino.
+
+⚠️ De paso, `[H]` se ajustó: su ventana de marcador era de 30 líneas y **la PROSA de la
+cabecera de un módulo eximía a declaraciones sin marcador**. Ahora la ventana es el `/--`
+inmediatamente anterior. Al ajustarla apareció una quinta que estaba exenta en silencio:
+`consistI_syn`.
+
+ADR-035. **50 jobs · 17 módulos · 0 sorry · 280 declaraciones.**
+
 ### 2026-09-21 (c) · 🏁 `hInd` y `hlift` descargadas — quedan TRES hipótesis, las tres de fondo
 
 **El atajo de `hInd`, ahora medido y no afirmado.** `inductionFormula φ` es

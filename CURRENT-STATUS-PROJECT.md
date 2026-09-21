@@ -29,7 +29,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **49 jobs · 16 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **50 jobs · 17 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -115,7 +115,20 @@
 >    instancia trabajada con `phiZeroAdd` donde las tres condiciones salen por `rfl`: **no
 >    es vacuo**. ⛔ El atajo NO cubre instancias con `∨` o `∃`.
 >
-> ⇒ **Quedan TRES hipótesis, y las tres son de fondo**: `hcon` (Gödel), `hNum` y `hIn`.
+> ⇒ **Quedan TRES hipótesis**: `hcon`, `hNum` y `hIn`.
+>
+> ⛔ **Y medido el 2026-09-21: `hNum` sobre el lenguaje COMPLETO es INALCANZABLE, y para `−`
+> es FALSA.** `−` aparece **en un único axioma de los 34**, y condicionado a `x ≤ y`: Q⁺⁺ no
+> dice nada de `5̄ − 7̄`. No es falta de ingenio, es falta de axioma.
+>
+> ✅ **Lo que SÍ se alcanza — el FRAGMENTO ARITMÉTICO** (`HA/Fragment.lean`): **17 de los 34**
+> axiomas usan sólo `0 σ + * ^`; **son sentencias del lenguaje de los numerales** (por `rfl`);
+> de ellos **sólo dos no son de Harrop** —`ax13` y `ax19`— y **los dos ya están barrados**.
+> Ahí `hNum` **ya está demostrada**: es `closed_term_eq_numeral`. Y **`hIn` desaparece**.
+> ⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`.**
+>
+> ⭐ La capa `LQ`, etiquetada como ANDAMIO por no tener uso portante, resulta ser **la
+> signatura de ese fragmento**. El andamio era el camino.
 >
 > 🏁🏁 `haDisjunctionProperty_core`: **la DP de HA con `coreAxioms` YA DESCARGADO**.
 > Lo que queda va como hipótesis, **todas dichas y ninguna escondida**:
@@ -167,13 +180,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 16 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms}`) |
-| Módulos con 0 `sorry` | 16 / 16 |
-| Teoremas propios | 155 |
+| Módulos propios | 17 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment}`) |
+| Módulos con 0 `sorry` | 17 / 17 |
+| Teoremas propios | 159 |
 | Definiciones propias | 9 (el álgebra de sustituciones, `fdepth`, `Slash`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 49 jobs (ver la reserva del banner) |
+| Build | ✅ 50 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

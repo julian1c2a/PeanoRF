@@ -48,7 +48,11 @@ set_option autoImplicit false
 /-- **Consistencia de `⊢ᵢ`, por la vía sintáctica.** Ni un modelo en toda la cadena.
 
     Mide `[propext, Quot.sound]`, igual que la versión semántica: lo que gana no es
-    footprint, es no depender de la existencia de una estructura. -/
+    footprint, es no depender de la existencia de una estructura.
+
+    🏁 **ENTREGABLE**: nada del árbol la usa, y es lo correcto — es un resultado. ⚠️ Y es
+    la consistencia de la **LÓGICA**, sobre contexto vacío. La de la TEORÍA (`hcon`) no se
+    sigue de ésta y no es demostrable aquí: eso es Gödel II. -/
 theorem consistI_syn : Not (([] : List Formula) ⊢ᵢ Formula.bottom) :=
   fun h => FOL.Finitary0.derives0_consistent_fin (derivesI_to_derives0 h)
 

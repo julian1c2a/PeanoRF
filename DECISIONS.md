@@ -1395,6 +1395,62 @@ existen, no el esquema en general.
 
 ---
 
+## ADR-035: `hNum` es INALCANZABLE sobre el lenguaje completo — y el fragmento donde sí sale
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: tras descargar `hInd` y `hlift` (ADR-034) quedaban tres hipótesis. Antes de
+atacar `hNum` —«todo término anclado es demostrablemente igual a un numeral»— se midió qué
+determina de verdad Q⁺⁺ sobre los ocho símbolos no aritméticos.
+
+**⛔ Y no es alcanzable. Para `−` es directamente FALSA**:
+
+> `−` aparece **en UN único axioma de los 34** (`ax29_sub_witness`), condicionado a `x ≤ y`:
+> `∀x∀y. (x ≤ y) ⇒ (x + (y − x) = y)`.
+
+Q⁺⁺ **no dice nada** de `5̄ − 7̄`. Ningún numeral es demostrablemente igual a ese término, y
+no por falta de ingenio: **por falta de axioma**. Los otros siete (`√`, `/₂`, `%₂`, `::`,
+`##`, `Π_p`, `τ`) están caracterizados por desigualdades, ecuaciones condicionadas o
+recursiones sobre la estructura de lista, y evaluarlos pide **inducción en el objeto** — que
+además no sería de Harrop, así que el atajo de ADR-034 tampoco valdría.
+
+**⛔ Y no se arregla encogiendo el dominio**: `L` tiene que FIJAR los axiomas (si no, `hT` es
+insatisfacible y el teorema sale cierto y vacío, ADR-029), y `D` tiene que contener todos los
+términos cerrados de `L`. Con 34 axiomas, `L` son 13 símbolos y `D` los incluye todos.
+
+**Decisión**: encoger **la TEORÍA**, no el dominio. `arithAxioms` (`HA/Fragment.lean`), los
+**17 de los 34** cuyos símbolos de función son sólo `0 σ + * ^`. Medido, no elegido:
+
+| | cómo se comprueba |
+|---|---|
+| son **17** | `arithAxioms_length`, `rfl` |
+| son **sentencias del lenguaje de los numerales** | `arithAxioms_sentences`, `rfl` |
+| sólo **dos** no son de Harrop: `ax13` y `ax19` | `arithAxioms_hard`, `rfl` |
+
+**Justificación**: sobre ese fragmento todo encaja y **ya está hecho**:
+- `hNum` **es `closed_term_eq_numeral`**, que habla exactamente de esos cinco símbolos;
+- los dos axiomas duros que quedan **ya están barrados** (`slash_ax13`, `slash_ax19`);
+- **`hIn` desaparece**: los dos axiomas que la pedían no son aritméticos. El único que
+  menciona `∈` es `ax_L1_in_nil` — y es de Harrop, porque `nil` **es** `zero`.
+
+⇒ **Sobre el fragmento queda UNA sola hipótesis: `hcon`.**
+
+⭐ Y cierra un círculo: la capa `LQ`, etiquetada como ANDAMIO el 2026-09-21 por no tener uso
+portante, **es la signatura de este fragmento**. El andamio era el camino.
+
+**Consecuencias**:
+- ⚠️ La DP para **HA completa** queda condicionada a `hNum`/`hIn`, y ahora se sabe que no es
+  cuestión de trabajo: **el fragmento es el techo de este método sobre Q⁺⁺**.
+- ⏳ Falta construir la DP del fragmento. Pide parametrizar por el contexto lo que hoy está
+  clavado a `ctx` (`numeralI_add/mul/pow`, `closed_term_eq_numeral`, `numeralI_ne/lt/not_lt`),
+  igual que ya lo está la familia `addI_*`.
+- 🔑 Sobre `hcon`: **no es una deuda, es el precio, y es demostrable que no se puede pagar
+  por dentro.** Gödel II —que ROB++ va a demostrar— lo dice. ⚠️ Con la reserva de que su
+  Gödel será sobre `⊢`/`axioms`, no sobre `⊢ᵢ`/`arithAxioms`: transportarlo no es automático.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

@@ -1,6 +1,6 @@
 # Technical Reference — PeanoRF
 
-**Last updated:** 2026-09-19
+**Last updated:** 2026-09-21
 **Author**: Julián Calderón Almendros
 **Lean version**: v4.31.0
 
@@ -512,7 +512,7 @@ ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, 
 
 | nombre | enunciado | footprint |
 |---|---|---|
-| `LQ` | los cinco símbolos de Q⁺⁺ **con su aridad** | — |
+| 🏗️ `LQ` y su capa (§1–§2) | los cinco símbolos de los NUMERALES, con aridad. ⚠️ **Sin uso portante desde el rediseño a `Grounded LQpp`**: se conserva como EVIDENCIA (`not_closed_add_unary`, ADR-028) y ANDAMIO para `hNum` | — |
 | `collapse_fix_closed` | `ClosedQTerm u → collapseT LQ u = u` | `propext` |
 | ⛔ `not_closed_add_unary` | `¬ ClosedQTerm (func add_sym [zero])` | `propext` |
 | `closed_of_LQ` | símbolo admitido + argumentos en el dominio ⟹ dominio | `propext, Quot.sound` |

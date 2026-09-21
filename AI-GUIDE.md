@@ -1,6 +1,6 @@
 # Guía Maestra de la IA — Estándares de Documentación y Desarrollo
 
-**Última actualización:** 2026-09-19
+**Última actualización:** 2026-09-21
 **Autor:** Julián Calderón Almendros
 
 > Este documento define lo **universal**: aplica a cualquier proyecto Lean 4 que nazca
@@ -422,6 +422,16 @@ funcione.
 recorrer también las tablas resumen, las secciones de «Próximos pasos» y las notas de auditoría
 antiguas.
 
+### (27 bis) La CI corre `check-doc-sync.bash` **sin `--quick`**
+
+`--quick` salta `[A] jobs` y `[E] alcance del gate`, y lo **anuncia** — pero anunciarlo no es
+comprobarlo. Hasta el 2026-09-21 la CI lo usaba, así que **`[E]` no tenía red en remoto**; y
+`[E]` es justo el control que caza que el gate se haya quedado ciego, que es lo que pasó
+cuando FOL generizó su sintaxis (ADR-031).
+
+✅ Medido antes de quitarlo: el segundo `lake build` sale del caché y Lean **reproduce los
+`logInfo`**, así que el gate publica su alcance igual y `[E]` mide. No cuesta tiempo.
+
 ### (28.) Coherencia ENTRE documentos — `check-coherencia.bash` y `/armoniza`
 
 §27 comprueba que los documentos cuadren con el **código**. Esto comprueba que cuadren
@@ -462,6 +472,14 @@ hasta trece días antes de su último cambio commiteado — incluido un `DECISIO
 
 🔑 Es la cuarta forma de dar verde sin comprobar, y la más sutil de las cuatro: las otras
 tres callan o no miden; ésta **mira, pero mira la forma en vez del contenido**.
+
+🚨 **Y `git log` MIENTE en un checkout SHALLOW** (2026-09-21). Con profundidad 1 git
+atribuye cualquier fichero a HEAD: el control recién arreglado puso la CI en rojo con un
+documento que el commit ni tocaba. Hacen falta **las dos** cosas — `fetch-depth: 0` en el
+workflow **y** una guarda `git rev-parse --is-shallow-repository` que ponga `[D]` en ROJO si
+falta — porque una sola se deshace sin que nadie lo note. Ver ADR-030 (enmienda).
+
+🔑 **Un control nuevo no está probado hasta que se ha visto correr donde va a correr.**
 
 ### (23.) Autoría y licencia
 

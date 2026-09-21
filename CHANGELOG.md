@@ -15,6 +15,45 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 · 🚨 auditoría externa — la CI en rojo y el gate ciego, con los controles en verde
+
+Auditoría de lectura de FOL, ROB++ y Peano, y después de PeanoRF. Los tres controles
+locales daban verde. Debajo había dos cosas serias.
+
+**1 · La CI llevaba dos días en ROJO, y la causa era el control que añadí el 09-19.**
+`[D]` lee la frescura con `git log -1 -- <fichero>`, y `actions/checkout@v4` hace un checkout
+**shallow**: con un commit de historia git atribuye CUALQUIER fichero a HEAD. Falló con
+`DEPENDENCIES.md`, que el commit ni siquiera tocaba. ⇒ `fetch-depth: 0` en el workflow **y**
+una guarda `is-shallow-repository` que pone `[D]` en ROJO si falta — las dos, porque una sola
+se deshace sin que nadie lo note. **Probada contra un clon `--depth 1` real.**
+🔑 Y la lección: cerré la sesión diciendo «verde» sin mirar la CI ni una vez.
+
+**2 · El gate se había quedado CIEGO al cálculo de la tesis.** FOL generizó su sintaxis por el
+símbolo (sus ADR-069/071) y `Derives₀` pasó a `{Sym : Type} : List (FormulaG Sym) → …`. El
+telescopio miraba la constante `Formula` ⇒ **21 constructores, 3 de ellos clásicos, dejaron
+de estar vigilados**, y `mentionsFormula` fallaba igual, así que ni salía como
+casi-candidato. Medido: **45 constructores → 42 y 12 clásicos → 9** sin cambiar una línea.
+
+⇒ `isFormulaLike` reconoce `Formula` y `FormulaG _`, y el telescopio **atraviesa los binders
+de sort**. Cifras restauradas **al dígito**: 7 relaciones, 45 constructores, 12 clásicos.
+✅ **Probado** con un teorema que usa `Derives₀.dne_rule`: el gate lo caza como `OBJETO`.
+⚠️ No hubo brecha — PeanoRF usa 18 constructores de `Derives₀`, ninguno clásico.
+
+**3 · La CI deja de correr `--quick`**, que se saltaba `[A] jobs` y `[E] alcance del gate`.
+Anunciarlo no es comprobarlo, y `[E]` es justo el que caza (2). Medido antes: el segundo
+build sale del caché y Lean **reproduce los `logInfo`**, así que `[E]` mide igual.
+
+**4 · La capa `LQ` queda marcada como EVIDENCIA y ANDAMIO.** Sin uso portante desde el
+rediseño a `Grounded LQpp`: sólo se usa entre sí. Se queda — `not_closed_add_unary` es la
+evidencia de ADR-028, el resto es por donde se empezará `hNum` — pero ahora lo **dice**,
+porque el control `[B]` de símbolos muertos está desactivado y nada lo diría si no.
+
+**De los vecinos**: Peano congelado (ADR-018, julio); ROB++ con la superficie que usamos
+congelada desde el 09-16; **FOL en plena generización por el símbolo** — es el que se mueve
+debajo. ADR-030 (enmienda) y ADR-031.
+
+**49 jobs · 16 módulos · 0 sorry · 267 declaraciones.**
+
 ### 2026-09-19 · ARMONIZA — los dos controles en verde, y seis fechas falsas debajo
 
 Pasada de lectura con `check-doc-sync` y `check-coherencia` **los dos en verde**. Hallazgos

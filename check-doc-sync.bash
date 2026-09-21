@@ -273,22 +273,35 @@ D_FAIL=0
 # cambio commiteado — REFERENCE, PLANNING, DECISIONS, AI-GUIDE, CURRENT-STATUS y
 # NEXT-STEPS —, incluido un DECISIONS.md que decía 09-06 con cuatro ADR nuevos dentro.
 # Un control que mira la FORMA y no el CONTENIDO es un control que da verde sin comprobar.
-for f in REFERENCE.md doc/REFERENCE-*.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.md \
-         PLANNING.md NEXT-STEPS.md DECISIONS.md AI-GUIDE.md; do
-  [ -e "$f" ] || continue
-  if ! grep -qE '\*\*(Last updated|Última actualización):\*\*' "$f"; then
-    echo "  ✗ $f sin marca de tiempo"; D_FAIL=1; continue
-  fi
-  MARK=$(grep -oE '\*\*(Last updated|Última actualización):\*\* *[0-9]{4}-[0-9]{2}-[0-9]{2}' "$f" \
-         | head -1 | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
-  [ -n "$MARK" ] || continue          # marca sin fecha ISO: no se puede medir
-  LAST=$(git log -1 --format=%ad --date=short -- "$f" 2>/dev/null || true)
-  [ -n "$LAST" ] || continue          # sin historia todavía
-  if [ "$MARK" \< "$LAST" ]; then
-    echo "  ✗ $f dice $MARK, pero su último cambio commiteado es $LAST"
-    D_FAIL=1
-  fi
-done
+# 🚨 Y la frescura se lee de `git log`, que MIENTE en un checkout SHALLOW: con un solo
+# commit de historia git atribuye CUALQUIER fichero a HEAD, y todo documento cuya marca
+# sea anterior al último push da falso positivo. Le pasó a este proyecto el 2026-09-19 —
+# la CI se puso en rojo con `DEPENDENCIES.md`, que el commit ni siquiera tocaba. La cura
+# es `fetch-depth: 0` en el workflow Y esta guarda: si el repo es shallow, el control NO
+# se puede medir, y falta de medida es ROJO (AI-GUIDE §27.1), nunca un salto silencioso.
+if [ "$(git rev-parse --is-shallow-repository 2>/dev/null || echo unknown)" != "false" ]; then
+  echo "  ✗ NO MEDIBLE: el repositorio es SHALLOW (o no es un repo git)."
+  echo "      \`git log\` atribuiría cualquier fichero a HEAD y este control mentiría."
+  echo "      Cura: \`fetch-depth: 0\` en el checkout. CONTROL VACÍO, no verde."
+  D_FAIL=1
+else
+  for f in REFERENCE.md doc/REFERENCE-*.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.md \
+           PLANNING.md NEXT-STEPS.md DECISIONS.md AI-GUIDE.md; do
+    [ -e "$f" ] || continue
+    if ! grep -qE '\*\*(Last updated|Última actualización):\*\*' "$f"; then
+      echo "  ✗ $f sin marca de tiempo"; D_FAIL=1; continue
+    fi
+    MARK=$(grep -oE '\*\*(Last updated|Última actualización):\*\* *[0-9]{4}-[0-9]{2}-[0-9]{2}' "$f" \
+           | head -1 | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || true)
+    [ -n "$MARK" ] || continue          # marca sin fecha ISO: no se puede medir
+    LAST=$(git log -1 --format=%ad --date=short -- "$f" 2>/dev/null || true)
+    [ -n "$LAST" ] || continue          # sin historia todavía
+    if [ "$MARK" \< "$LAST" ]; then
+      echo "  ✗ $f dice $MARK, pero su último cambio commiteado es $LAST"
+      D_FAIL=1
+    fi
+  done
+fi
 [ "$D_FAIL" = "0" ] \
   && echo "  ✓ marca de tiempo presente y NO anterior al último cambio" \
   || FAIL=1

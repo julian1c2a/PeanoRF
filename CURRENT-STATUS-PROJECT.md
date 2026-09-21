@@ -1,8 +1,15 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-19
+**Última actualización:** 2026-09-21
 **Autor**: Julián Calderón Almendros
 
+> 🚨 **AUDITORÍA EXTERNA 2026-09-21** — con los tres controles locales en verde, la **CI
+> llevaba dos días en ROJO** (mi propio control `[D]` miente bajo checkout shallow) y **el
+> gate se había quedado ciego a `Derives₀`** porque FOL generizó su sintaxis: 45
+> constructores vigilados → 42, y 12 clásicos → 9, sin que este proyecto cambiara nada.
+> Las dos cosas arregladas y **probadas** (ADR-030 enmendado, ADR-031). No hubo brecha en la
+> tesis; lo que estuvo apagado fue la guardia.
+>
 > **Estado: H3bis cerrado — la separación `⊢ᵢ ≠ ⊢₀` es un TEOREMA.**
 > **H3ter en curso: los 34 axiomas de `coreAxioms` ya están BARRADOS; falta el esquema
 > de inducción.**

@@ -54,7 +54,25 @@ open ROBINSON_PlusPlus.Full (inductionFormula)
 
 set_option autoImplicit false
 
-/-! ## La signatura de Q⁺⁺, con aridad -/
+/-! # ⚠️ §1–§2 SON EVIDENCIA Y ANDAMIO, NO MAQUINARIA EN PRODUCCIÓN
+
+    **Auditado el 2026-09-21**: desde que el dominio pasó a `Grounded LQpp` (§3), toda esta
+    capa de cinco símbolos **no tiene ningún uso portante**. `LQ`, `collapse_fix_closed`,
+    `closed_of_LQ`, `closed_collapse_subst` y `closed_collapse_substs` sólo se usan **entre
+    sí**; las menciones que aparecen en `Calculus/Slash.lean` son PROSA, no código.
+
+    Se queda, y por dos razones distintas que conviene no confundir:
+
+    | | por qué sigue aquí |
+    |---|---|
+    | ⛔ `not_closed_add_unary` | **EVIDENCIA**. Es el contraejemplo que obligó a meter la ARIDAD en la signatura del colapso (ADR-028). Vive en producción a propósito: es lo que justifica el diseño, y en el cuaderno de sondeos se perdería |
+    | 🏗️ el resto | **ANDAMIO**. `hNum` —la hipótesis que falta de H3ter— dice que todo término anclado es demostrablemente igual a un numeral, y `closed_term_eq_numeral` sólo habla de estos cinco símbolos. Cuando se ataque `hNum`, esta capa es por donde se empieza |
+
+    🔑 Y queda dicho porque **nada lo diría si no**: el control `[B]` de símbolos muertos
+    de `check-doc-sync.bash` está **desactivado** (`SYMBOL_PREFIXES` vacío). Código sin uso
+    y sin etiqueta se lee como código en uso, que es otra forma de dejar leer de más. -/
+
+/-! ## La signatura de Q⁺⁺ (los cinco de los numerales), con aridad -/
 
 /-- Los cinco símbolos de Q⁺⁺ **con su aridad**. Todo lo demás colapsa a `zero`. -/
 def LQ (s : String) (n : Nat) : Bool :=
@@ -212,7 +230,12 @@ def zeroS : Subst := fun _ => zero
 theorem zeroS_grounded : ∀ n, Grounded LQpp (zeroS n) := fun _ => grounded_zero LQpp
 
 /-- Todo `ClosedQTerm` está anclado en la signatura completa. Es el puente con
-    `closed_term_eq_numeral`, que sólo habla de los cinco símbolos de los numerales. -/
+    `closed_term_eq_numeral`, que sólo habla de los cinco símbolos de los numerales.
+
+    🏗️ **ANDAMIO, sin uso portante hoy** (auditado el 2026-09-21): se escribió para
+    `hNum` y `hNum` todavía no está. Es la dirección fácil del puente; la difícil —que todo
+    `Grounded LQpp` sea demostrablemente un numeral— es la que falta, y pide evaluar los
+    ocho símbolos que no son de los numerales. -/
 theorem closed_grounded : ∀ {t : Term}, ClosedQTerm t → Grounded LQpp t := by
   intro t h
   induction h with

@@ -1,6 +1,6 @@
 # Decisiones de Diseño — PeanoRF
 
-**Última actualización:** 2026-09-19
+**Última actualización:** 2026-09-21
 **Autor**: Julián Calderón Almendros
 
 Registro de decisiones arquitectónicas (ADR) de este proyecto. Cada entrada documenta
@@ -1200,9 +1200,76 @@ con marca de tiempo mentirosa es peor que uno sin marca: el segundo se nota.
 - ✅ Probado (ADR-015) contra la realidad del día: sacó los seis a la primera ejecución.
 - ⚠️ Lo caza **un commit tarde**: compara contra el último cambio *commiteado*, no contra el
   árbol de trabajo. Se eligió así a propósito — el `mtime` en Windows + Dropbox es ruido.
+- 🚨 **ENMIENDA del 2026-09-21: `git log` MIENTE en un checkout SHALLOW.** Con profundidad
+  1 git atribuye CUALQUIER fichero a HEAD, así que todo documento cuya marca sea anterior al
+  último push da falso positivo. **La CI se puso en rojo el mismo día** con `DEPENDENCIES.md`,
+  que el commit ni siquiera tocaba — y la sesión se cerró diciendo «verde» sin mirarla. Cura,
+  las **dos** cosas: `fetch-depth: 0` en el workflow **y** una guarda
+  `git rev-parse --is-shallow-repository` que pone `[D]` en ROJO si falta, porque una sola se
+  puede deshacer sin que nadie lo note. Probada contra un clon `--depth 1` real.
+  🔑 Arreglé un control que miraba la FORMA en vez del CONTENIDO y lo sustituí por uno que
+  es cierto en local y miente en remoto. **Un control nuevo no está probado hasta que se ha
+  visto correr donde va a correr.**
 - ⚠️ En la misma pasada se relajó la redacción de la fila de H3ter en `PLANNING.md` para
   quitar un `✅` interior que hacía gritar en falso a [G]. **Un control que grita en falso
   deja de leerse** (ADR-026).
+
+---
+
+## ADR-031: El telescopio del gate reconoce la sintaxis GENÉRICA — y la CI deja de correr `--quick`
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: auditoría externa de FOL/ROB++/Peano. FOL generizó su sintaxis por el símbolo
+(sus ADR-069/071) y `Derives₀` pasó a ser
+
+```lean
+inductive Derives₀ {Sym : Type} : List (FormulaG Sym) → FormulaG Sym → Prop
+```
+
+El parámetro va IMPLÍCITO, así que la notación `⊢₀` sigue valiendo y **PeanoRF compiló sin
+enterarse**. Pero el criterio POR TELESCOPIO de `AxiomCheck.lean` miraba la **constante
+`Formula`**, y `FormulaG Sym` no lo es. Medido:
+
+| | 2026-09-18 | 2026-09-21 (antes del arreglo) |
+|---|---|---|
+| relaciones vigiladas | 6 | 6, **pero sin `Derives₀`** |
+| constructores ajenos | **45** | **42** |
+| de ellos CLÁSICOS | **12** | **9** |
+
+⛔ Y `mentionsFormula` fallaba por lo mismo, así que `Derives₀` **ni siquiera salía como
+casi-candidato**: la red de seguridad que existe «para que el hueco se VEA» estaba agujereada
+por la misma causa. `Derives₀` es el cálculo contra el que se define la tesis
+(`derivesI_ne_derives0`) y el que el propio docstring del gate nombra como una de las reglas
+que este gate existe para vigilar.
+
+**Decisión**:
+1. `isFormulaLike t := t.isConstOf `Formula || t.isAppOfArity `FormulaG 1`, usado en
+   `isObjectArgType` y en `mentionsFormula`.
+2. El telescopio **atraviesa los binders cuyo tipo es un sort** (`{Sym : Type}`): no son
+   argumentos del lenguaje objeto, son su parametrización.
+3. **La CI deja de correr `check-doc-sync.bash --quick`**. Con `--quick` el script se salta
+   `[A] jobs` y `[E] alcance del gate` — y lo dice, pero **decirlo no es comprobarlo**.
+   `[E]` es justo el control que caza que el gate se haya quedado ciego.
+
+**Justificación**: es la **tercera reincidencia** del mismo patrón
+([[feedback-polaridad-de-los-controles]]), ahora por **generización aguas arriba**. Las dos
+anteriores fueron listas por nombre y forma de tipo fijada a mano; ésta es una forma de tipo
+que dejó de ser la vigente porque el vecino la cambió debajo.
+
+**Consecuencias**:
+- ✅ Cifras restauradas **exactamente** a las de antes de la generización: 7 relaciones,
+  **45 constructores, 12 clásicos**. Que coincidan al dígito es lo que prueba que el arreglo
+  repone la cobertura y no inventa nada.
+- ✅ **Probado** (ADR-015) con un teorema que usa `Derives₀.dne_rule`: el gate lo caza como
+  `OBJETO` y rompe el build. Revertido.
+- ✅ Comprobado antes de quitar `--quick`: el segundo `lake build` sale del caché y Lean
+  **reproduce los `logInfo`**, así que `[E]` mide igual. No cuesta tiempo.
+- ⚠️ **No hubo brecha**: PeanoRF usa 18 constructores de `Derives₀`, ninguno clásico. Lo que
+  estuvo apagado tres días fue la guardia, no la tesis.
+- ⏳ Riesgo vivo: FOL seguirá generizando (`Derives₁`, `Derives₂`, `LK*`). El criterio ya los
+  cubre, pero **el que hay que mirar en cada auditoría es el CONTADOR**, no el verde.
 
 ---
 

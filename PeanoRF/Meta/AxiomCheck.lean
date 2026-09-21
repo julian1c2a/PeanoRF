@@ -264,16 +264,38 @@ private def benignForeignCtors : List Name := []
     `FOL.MetaRules.*`, que son **axiomas** y los vigila el eje finitario. -/
 private def omegaAllowedForeignCtors : List Name := []
 
+/-- ¿Es esto «una fórmula»? Las dos formas: la concreta `Formula` y la GENÉRICA
+    `FormulaG Sym`.
+
+    🚨 **Medido el 2026-09-21, y es la tercera reincidencia del mismo patrón.** FOL
+    generizó su sintaxis por el símbolo (su ADR-069/071) y `Derives₀` pasó a ser
+    `{Sym : Type} : List (FormulaG Sym) → FormulaG Sym → Prop`. Como este criterio miraba
+    **la constante `Formula`**, el cálculo desapareció del inventario: 21 constructores, 3
+    de ellos CLÁSICOS, dejaron de estar vigilados — y el gate siguió diciendo OK. El
+    contador bajó de 45 a 42 y de 12 clásicos a 9, sin que este proyecto cambiara una línea.
+
+    ⚠️ Y `mentionsFormula` fallaba igual, así que `Derives₀` **ni siquiera salía como
+    casi-candidato**: la red de seguridad que existe «para que el hueco se VEA» estaba
+    agujereada por la misma razón. `Derives₀` es el cálculo contra el que se define la tesis
+    (`derivesI_ne_derives0`), y es el que esta línea nombra veinte líneas más arriba. -/
+private def isFormulaLike (t : Expr) : Bool :=
+  t.isConstOf `Formula || t.isAppOfArity `FormulaG 1
+
 /-- Tipos que puede tener un argumento de una relación de derivabilidad: fórmulas,
     listas de fórmulas (contextos y secuentes) e índices `Nat` (alturas). -/
 private def isObjectArgType (t : Expr) : Bool :=
-  t.isConstOf `Formula
+  isFormulaLike t
   || t.isConstOf `Nat
-  || (t.isAppOfArity `List 1 && t.appArg!.isConstOf `Formula)
+  || (t.isAppOfArity `List 1 && isFormulaLike t.appArg!)
 
-/-- El TELESCOPIO entero: todos los argumentos de lenguaje objeto y final `Prop`. -/
+/-- El TELESCOPIO entero: todos los argumentos de lenguaje objeto y final `Prop`.
+
+    ⚠️ Los binders cuyo tipo es un **sort** (`{Sym : Type}`) se ATRAVIESAN: no son
+    argumentos del lenguaje objeto, son la parametrización de la sintaxis. Sin esto, un
+    cálculo genérico se rechaza en su primer binder y no hay criterio de argumentos que
+    valga. -/
 private partial def telescopeIsObjectProp : Expr → Bool
-  | .forallE _ ty body _ => isObjectArgType ty && telescopeIsObjectProp body
+  | .forallE _ ty body _ => (ty.isSort || isObjectArgType ty) && telescopeIsObjectProp body
   | .sort lvl => lvl.isZero
   | _ => false
 
@@ -284,7 +306,7 @@ private partial def telescopeEndsInProp : Expr → Bool
   | _ => false
 
 private def mentionsFormula (t : Expr) : Bool :=
-  (t.find? (fun e => e.isConstOf `Formula)).isSome
+  (t.find? (fun e => e.isConstOf `Formula || e.isConstOf `FormulaG)).isSome
 
 /-- ¿Es `iv` una **relación de derivabilidad**? Criterio por TELESCOPIO (2026-09-17 b).
 

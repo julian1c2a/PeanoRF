@@ -19,6 +19,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: PeanoRF
+          # 🚨 `fetch-depth: 0` NO es opcional: el control [D] de check-doc-sync
+          # compara la marca de tiempo de cada documento con `git log -1 -- <fichero>`,
+          # y en un checkout SHALLOW (el de por defecto, profundidad 1) git atribuye
+          # CUALQUIER fichero a HEAD. El 2026-09-19 eso puso la CI en rojo con
+          # `DEPENDENCIES.md`, que el commit ni siquiera tocaba. El script lleva además
+          # su propia guarda `is-shallow-repository`, que se pone ROJA si esto falta:
+          # las dos cosas, porque una sola se puede deshacer sin que nadie lo note.
+          fetch-depth: 0
 
       - name: Checkout FOL
         uses: actions/checkout@v4
@@ -84,7 +92,15 @@ jobs:
         working-directory: PeanoRF
         run: bash check-sorry.bash
 
-      # `--quick` porque el build ya se ha hecho arriba (AI-GUIDE §27).
+      # ⛔ SIN `--quick`, y es deliberado. Con `--quick` el script se salta DOS controles
+      # y lo dice — pero decirlo no es comprobarlo: `[A] jobs` y sobre todo **`[E] alcance
+      # del gate`** quedaban sin red en remoto. Y `[E]` es justo el que caza que el gate se
+      # haya quedado ciego, que es lo que pasó el 2026-09-21 cuando FOL generizó su
+      # sintaxis y `Derives₀` desapareció del inventario sin que nadie se enterara.
+      #
+      # ✅ Medido antes de quitarlo: el segundo `lake build` sale del caché y Lean
+      # **reproduce los `logInfo`**, así que el gate publica su alcance igual y `[E]` mide.
+      # No cuesta tiempo y cierra el agujero.
       - name: Doc sync
         working-directory: PeanoRF
-        run: bash check-doc-sync.bash --quick
+        run: bash check-doc-sync.bash

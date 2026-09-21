@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-19
+**Última actualización:** 2026-09-21
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -56,9 +56,11 @@ slash_of_derives (T) (D) (L)
 ```
 
 y las dos clausuras de `HA/Domain.lean` **son exactamente `hDfix` y `hDsub`**, sin adaptador.
-De ahí salen `qDisjunctionProperty` y `qExistenceProperty_numeral` — la DP y la EP para
-**cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados**, con el testigo demostrablemente
-igual a un numeral.
+De ahí salen `qDisjunctionProperty` y `qExistenceProperty` — la DP y la EP para
+**cualquier teoría de Q⁺⁺ cuyos axiomas estén barrados**, con el testigo **anclado**
+(`Grounded LQpp`). ⚠️ **No «igual a un numeral»**: eso lo decía esta línea y dejó de ser
+cierto el 2026-09-18, cuando el dominio pasó de los cinco símbolos de los numerales a los
+**trece** del lenguaje. La cláusula del numeral vuelve cuando esté `hNum`.
 
 ⭐ Y **H3bis no se debilitó**: con `L` total el colapso es la identidad (`collapseF_trivial`)
 y con `D` total la clausura es trivial, así que `disjunction_property` y `existence_property`

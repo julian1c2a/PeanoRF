@@ -505,10 +505,10 @@ ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, 
 ### 3.3decies HA/Domain.lean — el dominio de la barra
 
 **Namespace**: `PeanoRF.HA`
-**Dependencies**: `PeanoRF.Calculus.{Collapse,Subst}`, `PeanoRF.HA.Numerals`
-**Last updated**: 2026-09-18
+**Dependencies**: `PeanoRF.Calculus.{Collapse,Subst}`, `PeanoRF.HA.Numerals`, `Calculus.Slash`
+**Last updated**: 2026-09-21
 **Status**: ✅ Completo
-****: **foundational**
+**@importance**: **foundational**
 
 | nombre | enunciado | footprint |
 |---|---|---|
@@ -517,11 +517,20 @@ ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, 
 | ⛔ `not_closed_add_unary` | `¬ ClosedQTerm (func add_sym [zero])` | `propext` |
 | `closed_of_LQ` | símbolo admitido + argumentos en el dominio ⟹ dominio | `propext, Quot.sound` |
 | ⭐⭐ `closed_collapse_subst` | `(∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))` | `propext, Quot.sound` |
-| `zeroS` / `zeroS_closed` | la sustitución que cierra, todo índice a `zero` | — |
+| `LQpp` | la signatura COMPLETA de Q⁺⁺: **trece** símbolos, medidos sobre `coreAxioms` | — |
+| `zeroS` / `zeroS_grounded` | la sustitución que cierra, todo índice a `zero` | — |
+| 🏗️ `closed_grounded` | `ClosedQTerm t → Grounded LQpp t` — ANDAMIO para `hNum`, sin uso hoy | `propext` |
 | 🏁 **`qDisjunctionProperty`** | la DP para **cualquier teoría de Q⁺⁺** con los axiomas barrados | `propext, Quot.sound` |
-| 🏁 **`qExistenceProperty`** | la EP, con el testigo **en el dominio** | `propext, Quot.sound` |
-| ⭐ **`qExistenceProperty_numeral`** | …y el testigo es **demostrablemente un NUMERAL** | `propext, Quot.sound` |
-| `closed_zeroS` | el dominio no es vacío | — |
+| 🏁 **`qExistenceProperty`** | la EP, con el testigo **anclado** (`Grounded LQpp`) | `propext, Quot.sound` |
+| `eq_of_map_self` | de `l.map f = l` a `∀ g ∈ l, f g = g` | `propext` |
+| ⭐ `coreAxioms_sentence` | **los 34 axiomas son sentencias del lenguaje**, por `rfl` | `propext` |
+| ⭐⭐ `slash_coreAxioms_harrop` | los 28 de Harrop caen solos, sólo con la consistencia | `propext, Quot.sound` |
+| 🏁🏁 **`haDisjunctionProperty`** | la DP de HA reducida a TRES obligaciones | `propext, Quot.sound` |
+
+⚠️ **`qExistenceProperty_numeral` y `closed_zeroS` NO EXISTEN.** Se anunciaron aquí el
+2026-09-18 y se retiraron del código el mismo día al rehacer §3 sobre `Grounded LQpp`; la
+tabla se quedó con las filas. Lo destapó el control `[B]` en su primera ejecución
+(2026-09-21), tres días después, y es exactamente lo que `[B]` existe para cazar.
 
 **Para qué**: la barra de H3ter lleva un parámetro de dominio `Slash T D`, y L2 necesita
 **dos clausuras** de ese dominio: que el colapso lo **fije** (caso `intro_forall`) y que el
@@ -741,7 +750,7 @@ heredada de la codificación `String` de RPP.
 |---|---|---|---|
 | `Γ ⊢ᵢ f` | `PeanoRF.Calculus.Derivesᵢ Γ f` | `Calculus/DerivesI.lean` | `infix:50` |
 
-Misma precedencia que `⊢` (FOL) y `⊢₀` (`Derives0`), a propósito: los tres se leen igual
+Misma precedencia que `⊢` (FOL) y `⊢₀` (`Derives₀`), a propósito: los tres se leen igual
 y se distinguen sólo por el subíndice, que es el estrato.
 
 ---

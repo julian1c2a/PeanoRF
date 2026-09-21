@@ -52,6 +52,25 @@ porque el control `[B]` de símbolos muertos está desactivado y nada lo diría 
 congelada desde el 09-16; **FOL en plena generización por el símbolo** — es el que se mueve
 debajo. ADR-030 (enmienda) y ADR-031.
 
+**5 · Control `[B]` ACTIVADO**, y cazó **seis** a la primera. Llevaba vacío desde el
+2026-09-06 «hasta que existan familias de símbolos propias» — y para entonces ya había
+quince. Lo que encontró, todo en documentos AUTORITATIVOS:
+
+* ⛔ **`qExistenceProperty_numeral` NO EXISTE** y lo anunciaban `REFERENCE`, `NEXT-STEPS` y
+  ADR-029, con 🏁 y footprint. Se retiró del código el 09-18 al rehacer el dominio sobre
+  `Grounded LQpp`; las tres tablas se quedaron con la fila. **Tres días anunciando un
+  teorema que no está.**
+* ⛔ **`closed_zeroS` NO EXISTE**, y también tenía fila en `REFERENCE`.
+* `zeroS_closed` → se llama `zeroS_grounded`.
+* `Derives0` escrito con cero ASCII en vez de `Derives₀`.
+* El `DerivesL` de ADR-029 es hipotético y descartado: marcado como tal.
+* Y de propina, sin que `[B]` lo viera: el `@importance` de la sección de `Domain.lean`
+  estaba **mutilado** (`****:`) por un reemplazo mal hecho.
+
+⚠️ Lo que `[B]` **no** caza es la dirección contraria — declarado y sin usar —, que es lo
+que le pasó a la capa `LQ`. Lo dije al revés en el informe de auditoría: ese control no
+existe, y por eso la capa va etiquetada a mano.
+
 **49 jobs · 16 módulos · 0 sorry · 267 declaraciones.**
 
 ### 2026-09-19 · ARMONIZA — los dos controles en verde, y seis fechas falsas debajo

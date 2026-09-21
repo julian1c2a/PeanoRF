@@ -1133,7 +1133,7 @@ Tres formas se consideraron, y se **midieron** antes de escribir nada
 
 | | qué exige | veredicto |
 |---|---|---|
-| (a) `D = ClosedQTerm` + L2 restringida a derivaciones limpias | un cálculo `DerivesL` indexado | ⛔ la ruta cara |
+| (a) `D = ClosedQTerm` + L2 restringida a derivaciones limpias | un cálculo `DerivesL` indexado — **hipotético, descartado, nunca existió** | ⛔ la ruta cara |
 | (b) `D` cerrado bajo `substT ρ` para `t` arbitrario | `D` ⊇ todos los términos sin variables | ⛔ `ax19` vuelve a fallar |
 | (c) que L2 barre la instancia **colapsada** | una conmutación más | ⭐ la buena |
 
@@ -1154,9 +1154,14 @@ la identidad (`collapseF_trivial`) y con `D` total la clausura es trivial, así 
 `disjunction_property` sale con el enunciado LITERAL de antes.
 
 **Consecuencias**:
-- 🏁 `qDisjunctionProperty` y `qExistenceProperty_numeral`: la DP y la EP para **cualquier
-  teoría de Q⁺⁺ cuyos axiomas estén barrados**, con el testigo demostrablemente igual a un
-  numeral. `[propext, Quot.sound]`.
+- 🏁 `qDisjunctionProperty` y `qExistenceProperty`: la DP y la EP para **cualquier
+  teoría de Q⁺⁺ cuyos axiomas estén barrados**. `[propext, Quot.sound]`.
+  ⚠️ **Enmienda del 2026-09-21**: cuando se escribió este ADR el segundo se llamaba
+  `qExistenceProperty_numeral` — RETIRADO, ya no existe — y daba el testigo **igual a un
+  numeral**. Al rehacer el
+  dominio sobre `Grounded LQpp` —trece símbolos, no cinco— el testigo pasó a estar
+  **anclado**, que es más débil, y aquel teorema se retiró. La cláusula del numeral vuelve
+  cuando esté `hNum`.
 - La hipótesis «`A ∨ B` es una sentencia del lenguaje» va como **una sola ecuación**,
   `collapseF LQ (substF zeroS (A ∨ B)) = A ∨ B`. Comprobado que **no es vacía**.
 - El caso `rewrite_at` obligó a una pieza más: `collapseF_substF`, la conmutación con la

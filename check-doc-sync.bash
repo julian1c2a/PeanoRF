@@ -50,10 +50,21 @@ done
 AUTHORITATIVE_BASE="REFERENCE.md CURRENT-STATUS-PROJECT.md DEPENDENCIES.md DECISIONS.md README.md NEXT-STEPS.md"
 
 # [B] Prefijos de los símbolos del proyecto que se citan en la prosa entre `backticks`.
-# Ajustar a las familias de nombres reales (p. ej. 'prf_|pcc_|ax_' en un proyecto de
-# aritmetización). Vacío ⇒ se salta el control [B].
-# ⏳ PENDIENTE: rellenar cuando existan familias de símbolos propias (NEXT-STEPS, deuda).
-SYMBOL_PREFIXES=''
+# Vacío ⇒ se salta el control [B].
+#
+# ✅ ACTIVADO el 2026-09-21. Estuvo vacío desde el 2026-09-06 «hasta que existan familias
+# propias» — y para entonces ya había quince. Un control desactivado «de momento» es un
+# control desactivado.
+#
+# ⚠️ Lo que [B] caza es la dirección OPUESTA a la que parece: un símbolo **citado en un doc
+# autoritativo que no existe en el árbol**. NO caza lo contrario — declarado y sin usar —,
+# que es lo que le pasó a la capa `LQ` y por eso va etiquetada a mano en `HA/Domain.lean`.
+SYMBOL_PREFIXES='derivesI_|slash|isHarrop|Slash|numeralI_|collapse|grounded|Grounded'
+SYMBOL_PREFIXES="$SYMBOL_PREFIXES"'|eqI_|specI|subst|upS|consS|compS|liftS|singleS|fdepth'
+SYMBOL_PREFIXES="$SYMBOL_PREFIXES"'|ClosedQTerm|closed_|addI_|succI_|hyps_cons|ctx_weaken'
+SYMBOL_PREFIXES="$SYMBOL_PREFIXES"'|consist|notP_syn|notNotP_syn|coreAxioms|zeroS|LQ'
+SYMBOL_PREFIXES="$SYMBOL_PREFIXES"'|qDisjunction|qExistence|haDisjunction|disjunction_|existence_'
+SYMBOL_PREFIXES="$SYMBOL_PREFIXES"'|ax|Derives|LK|Prf|numeral|liftTerm|liftFormula|inductionFormula'
 
 # Directorios extra de declaraciones VIVAS (fuera de la librería: dependencias locales,
 # cuarentenas, sondeos). Separados por espacios; los inexistentes se ignoran.

@@ -107,6 +107,12 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   que el modelo que las mueva hay que buscarlo.
 - ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
+- ⛔ **`[C]` mira la FILA, no la SECCIÓN.** `Fragment` y `Model` llevaban fila en la tabla §1
+  de `REFERENCE.md` y **ninguna sección §3**, y el control daba verde. Proyectados el
+  2026-09-21; **endurecer `[C]` sigue pendiente** y es decisión aparte.
+- ⛔ **`REFERENCE.md` pasa de las mil líneas**, que es justo lo que AI-GUIDE §0.5 prohíbe.
+  Cortar en `REFERENCE-Calculus.md`, `REFERENCE-HA.md` y `REFERENCE-Meta.md` **antes** de
+  seguir añadiendo filas.
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
 - ✅ ~~`SYMBOL_PREFIXES` vacío ⇒ control [B] apagado~~ activado el 2026-09-21, con 15+ familias.

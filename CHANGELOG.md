@@ -15,6 +15,40 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (i) · 📐 PROYECCIÓN — y una laguna que ningún control cazaba
+
+`HA/Fragment.lean` y `HA/Model.lean` tenían **fila en la tabla §1 de `REFERENCE.md` y
+ninguna sección §3**. Proyectados los dos (§3.3duodecies y §3.3terdecies), con las 47 + 15
+declaraciones públicas, sus footprints y las dos advertencias de alcance.
+
+⛔ **La laguna no la caza ningún script, y por qué importa**: el control `[C]` comprueba que
+el módulo **aparezca** en el catálogo —la fila—, no que esté **proyectado** —la sección—.
+Es la cuarta forma de dar verde sin comprobar (mirar la FORMA y no el CONTENIDO) aplicada a
+otro control. Queda como deuda declarada; endurecer `[C]` es decisión aparte.
+
+De paso, tres cosas caducadas que salieron en la pasada de lectura:
+
+* **§1** cerraba con «teoría propia aún por empezar… el primer contenido matemático llega
+  con **H2**». H2 está cerrado desde el 2026-09-16, y detrás van H3, H3′, H3bis y las tres
+  etapas de H3ter.
+* **§2** declaraba `FOL.Semantics` **fuera del grafo a propósito por M-5**. ADR-019 enmendó
+  M-5 el 2026-09-16 y `Calculus/Soundness.lean` la importa desde entonces; `HA/Model.lean`
+  construye modelos con ella. Lo prohibido sigue siendo `FOL.Completeness` y `FOL.Compacity`.
+* **§3.3undecies** y **§7.2** repetían `hcon | ⛔ no (Gödel)` y *«(None) parcialmente
+  proyectados»*. Los dos corregidos.
+
+✅ Añadidos **§4.3** (los teoremas de cabecera de H3/H3bis/H3ter, con lo que **NO** dicen) y
+**§6.1** (lo que exporta `PeanoRF.HA`). §7.1 pasa a ser la tabla de los 18 módulos con su
+fecha de proyección.
+
+⛔ **Y una deuda que conviene que se vea**: `REFERENCE.md` pasa de las mil líneas, que es
+justo lo que AI-GUIDE §0.5 prohíbe. El corte natural son tres nodos —`REFERENCE-Calculus`,
+`REFERENCE-HA`, `REFERENCE-Meta`— y hay que hacerlo antes de seguir añadiendo filas.
+
+**51 jobs · 18 módulos · 0 sorry · 340 declaraciones.** Siete controles en verde.
+
+---
+
 ### 2026-09-21 (h) · 🏁🏁🏁 un MODELO ⇒ `hcon` DESCARGADA, y `−` MEDIDO
 
 ```lean

@@ -80,6 +80,14 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 ✅ **(8)** Continuous update when loading `.lean` files
 ✅ **(9)** Self-sufficient as sole reference (no need to load entire project)
 
+⛔ **(0.5) INCUMPLIDO, y conviene que se vea.** AI-GUIDE §0.5 dice que `REFERENCE.md`
+**nunca** debe crecer como fichero único: el índice raíz lleva la tabla §1 y los nodos
+temáticos van en `doc/REFERENCE-{tema}.md`. Este documento pasa de las mil líneas y
+documenta el detalle de los 18 módulos él solo. El corte natural son **tres** nodos —
+`REFERENCE-Calculus.md` (§3.3bis–3.3nonies), `REFERENCE-HA.md` (§3.3decies–3.5) y
+`REFERENCE-Meta.md` (§3.2–3.3)—, y hay que hacerlo **antes** de seguir añadiendo filas.
+Deuda declarada el 2026-09-21; no la caza ningún control.
+
 ---
 
 ## 1. Module Overview
@@ -109,9 +117,11 @@ This document complies with all requirements specified in [AI-GUIDE.md](AI-GUIDE
 
 *Status codes*: ✅ Complete · 🧊 Frozen · 🔶 Partial · 🔄 In progress · ❌ Pending
 
-> **Teoría propia aún por empezar.** El alcance está fijado (`PLANNING.md` §1) y el
-> andamiaje verificado; este catálogo documenta hoy el módulo de contacto, el gate y la
-> capa ω. El primer contenido matemático llega con **H2** (`NEXT-STEPS.md`).
+> ⛔ **Aquí ponía «teoría propia aún por empezar… el primer contenido matemático llega con
+> H2». Caducó.** Al 2026-09-21 están cerrados **H2** (los axiomas de HA sobre `⊢ᵢ`), **H3**
+> (solidez constructiva), **H3′** (consistencia sin semántica), **H3bis** (`⊢ᵢ ≠ ⊢₀`) y las
+> tres etapas de **H3ter**, con la DP del fragmento aritmético **incondicional**. El
+> catálogo documenta teoría propia desde `Calculus/DerivesI.lean` hasta `HA/Model.lean`.
 
 ---
 
@@ -124,14 +134,42 @@ graph TD
     PL[Peano.PeanoNat.Axioms] --> P
     RPP --> FOL
     P --> OM[PeanoRF.Omega.Basic]
+    P --> DI[Calculus.DerivesI]
+    DI --> CE[Calculus.Eq]
+    DI --> CC[Calculus.Collapse]
+    DI --> CS[Calculus.Subst/SubstDerives]
+    DI --> CN[Calculus.Consistency]
+    SEM["FOL.Semantics"] --> SO[Calculus.Soundness]
+    DI --> SO
+    CN --> SL[Calculus.Slash]
+    CS --> SL
+    CE --> SL
+    P --> HAX[HA.Axioms]
+    HAX --> HN[HA.Numerals]
+    HN --> HD[HA.Domain]
+    CC --> HD
+    SL --> HD
+    HD --> HS[HA.SlashAxioms]
+    HS --> HF[HA.Fragment]
+    HF --> HM[HA.Model]
+    SO --> HM
     P --> AC[PeanoRF.Meta.AxiomCheck]
     OM --> AC
+    HM --> AC
     AC --> R[PeanoRF.lean]
 ```
 
-⚠️ **Fuera del grafo a propósito** (M-5): `FOL.Semantics`, `FOL.Soundness`,
-`FOL.Completeness` y `FOL.Compacity`. Ahí viven los 52 `Classical.choice` de FOL y los
-únicos usos de sus tres axiomas clásicos de nivel objeto.
+⛔ **Caducado el 2026-09-16 y no corregido hasta el 2026-09-21**: aquí ponía que
+`FOL.Semantics` estaba **fuera del grafo a propósito**. ADR-019 enmendó M-5 —`satisfies` no
+tiene footprint; lo clásico está en la PRUEBA, no en la semántica— y `Calculus/Soundness.lean`
+la importa desde entonces. `HA/Model.lean` construye modelos con ella.
+
+⚠️ **Fuera del grafo, y esto sí sigue** (M-5 vigente): `FOL.Completeness` y `FOL.Compacity`,
+**prohibidas**. Ahí viven los `Classical.choice` de FOL y los únicos usos de sus tres
+axiomas clásicos de nivel objeto. `FOL.Soundness0` está **permitida pero no se importa**:
+`derivesI_soundness` se demuestra aquí y mide `[propext, Quot.sound]`, mientras que
+`derives0_soundness` arrastra `Classical.choice` — que es exactamente el precio de las tres
+reglas clásicas de `⊢₀` (ADR-019).
 
 ---
 
@@ -593,7 +631,7 @@ el paso, y mide `[propext, Quot.sound]`.
 
 | hipótesis | qué es | ¿se puede demostrar aquí? |
 |---|---|---|
-| `hcon` | la consistencia de la teoría | ⛔ no (Gödel) |
+| ✅ `hcon` | la consistencia de la teoría | 🏁 **SÍ, y está hecho** (2026-09-21, ADR-039): `hcon_fragment` en `HA/Model.lean`. ⛔ Aquí ponía «no (Gödel)» y **era falso**: Gödel II es sobre la teoría probando su PROPIA consistencia |
 | `hlift` | el contexto invariante bajo levantamiento | ✅ si las instancias son cerradas |
 | `hNum` | todo término anclado es demostrablemente un numeral | ⏳ faltan `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` |
 | `hIn` | `∈` decidible sobre términos anclados | ⛔ pide inducción sobre listas |
@@ -601,6 +639,123 @@ el paso, y mide `[propext, Quot.sound]`.
 ⚠️ **`hIn` es hipótesis, no teorema.** `ax_L2_in_cons` se pudo cerrar sin ella porque una de
 sus dos ramas es una IGUALDAD, refutable con `numeralI_ne`; en `ax_L3_in_concat` las dos
 ramas son `∈` y no hay nada que refutar bajando a numerales.
+
+---
+
+### 3.3duodecies HA/Fragment.lean — el FRAGMENTO donde la DP sí sale
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.HA.SlashAxioms`
+**Last updated**: 2026-09-21
+**Status**: ✅ tres fragmentos encajados, 17 → 19 → 22
+
+⛔ **La medición que manda el módulo**: `hNum` sobre los **trece** símbolos de Q⁺⁺ es
+inalcanzable, y para `−` es **falsa** — ese símbolo aparece en **un solo axioma**
+(`ax29_sub_witness`) y condicionado a `x ≤ y`. Lo que sí sale es un fragmento, y crece.
+
+| | signatura | axiomas | teorema |
+|---|---|---|---|
+| **A** | `LQ` = `0 σ + * ^` | `arithAxioms` (17) | `qDisjunctionProperty_arith` |
+| **T** | `LQt` = A `+ τ` | `arithTAxioms` (19) | `qDisjunctionProperty_arithT` |
+| **TM** | `LQtm` = T `+ %₂` | `arithTMAxioms` (22) | `qDisjunctionProperty_arithTM` |
+
+**Evidencia, toda por `rfl`** — el kernel verifica las cifras y las dos propiedades que el
+fragmento necesita:
+
+| nombre | qué mide |
+|---|---|
+| `arithAxioms_length` | son **17** |
+| `arithAxioms_sentences` / `arithTAxioms_sentences` / `arithTMAxioms_sentences` | cada lista es **invariante bajo `collapseF L ∘ substF zeroS`**: son sentencias de SU lenguaje |
+| `arithAxioms_hard` | de los 17, sólo `ax13_lt_def` y `ax19_lt_trichotomy` no son de Harrop |
+| `arithTAxioms_hard` | ⭐ **`τ` no añade dureza**: la lista dura no cambia |
+| `arithTMAxioms_hard` | `%₂` añade **uno**, `ax21`, **y ya estaba barrado** |
+
+**Las piezas portantes**:
+
+| nombre | enunciado | footprint |
+|---|---|---|
+| ⭐ `closed_of_grounded` (+ `_list`) | `Grounded LQ t → ClosedQTerm t` — el puente entre las dos descripciones del dominio, **por clausuras** y **por constructores** | `propext, Quot.sound` |
+| `ctxA` / `ctxT` / `ctxTM` | `arith*Axioms ++ insts.map inductionFormula` | — |
+| `axA'` / `axT'` / `axTM'` | todo axioma del fragmento es hipótesis del contexto | — |
+| `hNum_fragment` / `hNumT_fragment` / `hNumTM_fragment` | 🏁 **`hNum` deja de ser hipótesis**: es un teorema sobre el fragmento | `propext, Quot.sound` |
+| ⭐ `numeralI_pred` | `⊢ᵢ τ n̄ = (n-1)‾` — **sin inducción en el objeto** | **`propext`** solo |
+| ⭐ `numeralI_mod2` | `⊢ᵢ %₂ n̄ = (n%2)‾` — inducción **META**, y ⭐ **sin consistencia** | `propext, Quot.sound` |
+| `numOf_grounded` / `numOfM_grounded` (+ `_list`) | todo término anclado en la signatura extendida es demostrablemente un numeral | `propext, Quot.sound` |
+| `arithT_of_arith` / `arithTM_of_arithT` / `arithTM_of_arith` | los contextos crecen: lo que valía en A vale en T y en TM | — |
+| `slash_arithAxioms` / `slash_arithTAxioms` / `slash_arithTMAxioms` | ⭐⭐ los 17 / 19 / **22** axiomas **barrados** | `propext, Quot.sound` |
+| `qDisjunctionPropertyA` / `…T` / `…TM` | la DP con instancias de inducción | `propext, Quot.sound` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTM`** | **22 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
+
+🔑 **El criterio que sale de medir, y es lo reutilizable**: un símbolo entra en el fragmento
+si sus axiomas lo **definen por recursión sobre el constructor** (`0` / `σ`). `τ` y `%₂` lo
+hacen. `/₂`, `√` y `−` están **caracterizados por propiedades** —desigualdades, ecuaciones
+condicionadas—, y de una caracterización no se despeja sin inducción en el objeto.
+
+⭐ Y cierra un círculo: la capa `LQ`, etiquetada ANDAMIO por no tener uso portante, **es la
+signatura del fragmento A**. El andamio era el camino.
+
+➡️ La hipótesis que queda —la consistencia— **cae** en [`HA/Model.lean`](#33terdecies-hamodellean--el-modelo-estándar-sobre-ℕ) (§3.3terdecies).
+
+---
+
+### 3.3terdecies HA/Model.lean — el modelo estándar sobre `ℕ`
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.HA.Fragment`, `PeanoRF.Calculus.Soundness`
+**Last updated**: 2026-09-21
+**Status**: 🏁 `hcon` descargada, y `−` medido
+
+**Un solo modelo con un parámetro**, y el parámetro hace **dos** trabajos:
+
+```lean
+def natModelK (k : Nat) : Model Nat where
+  func s ds :=
+    if s = succ_sym then ds.headD 0 + 1
+    else … else if s = sub_sym then
+      (if ds.tail.headD 0 ≤ ds.headD 0 then ds.headD 0 - ds.tail.headD 0 else k)
+    else 0
+  rel s ds := And (s = lt_sym) (ds.headD 0 < ds.tail.headD 0)
+```
+
+⭐ `−` va al **monus dentro del rango que `ax29_sub_witness` fija** (`b ≤ a`) y a `k`
+**fuera**. El axioma no dice nada de `a − b` con `a < b`, así que ahí el valor es libre — y
+eso es lo que convierte el modelo en una **familia**.
+
+| nombre | enunciado | footprint |
+|---|---|---|
+| `subAxioms` | `arithTMAxioms ++ [ax29_sub_witness]` — los 22 más **el único axioma de `coreAxioms` que menciona `−`** | — |
+| `natModelK` | el modelo, parametrizado | — |
+| ⭐⭐ `natModelK_sat` | **los 23 axiomas son verdaderos en `natModelK k`, para TODO `k`** | `propext, Quot.sound` |
+| `natModel_sat` | los 22 del fragmento, con `k = 0` | `propext, Quot.sound` |
+| 🏁 **`hcon_fragment`** | **`ctxTM []` no deriva `⊥`** — por `derivesI_soundness` | `propext, Quot.sound` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTM_final`** | **la DP del fragmento, SIN NINGUNA HIPÓTESIS** | `propext, Quot.sound` |
+| `evalT_zero` / `evalT_succ` / `evalT_sub` | las tres ecuaciones de evaluación que sostienen la sección 4 | `propext, Quot.sound` |
+| `eval_numeralM` | en el modelo, los numerales denotan lo que parecen | `propext, Quot.sound` |
+| ⭐ `eval_sub_5_7` | **el valor de `5̄ − 7̄` ES el parámetro** | `propext, Quot.sound` |
+| ⛔ `sub_neither_of_valid` | la medición **en forma general**: toda teoría válida en `natModelK k` para todo `k` deja `5̄ − 7̄` indeterminado | `propext, Quot.sound` |
+| ⛔ **`sub_neither`** | sobre `subAxioms`: **ni `⊢ᵢ 5̄−7̄ = n̄` ni `⊢ᵢ ¬(5̄−7̄ = n̄)`**, para ningún `n` | `propext, Quot.sound` |
+| `grounded_sub_5_7` | el testigo está anclado en la signatura **completa** (`LQpp`) | `propext, Quot.sound` |
+| ⛔⛔ **`hNum_false_on_sub`** | **`hNum` sobre la signatura completa es FALSA**, con testigo | `propext, Quot.sound` |
+
+⛔ **`∈` se interpreta como siempre falso.** No es un truco: es exactamente lo que
+`ax_L1_in_nil` (`∀x. ¬(x ∈ [])`) pide, y es lo único que esta teoría dice de `∈` — los
+axiomas `ax_L2_in_cons`/`ax_L3_in_concat` se quedaron fuera de los 23. Igual con `√`, `/₂`,
+`::`, `##`, `Π_p`: no se mencionan, así que caen al `else`. **Un modelo sólo tiene que
+satisfacer los axiomas que hay.**
+
+⛔ **Alcance de la medición de `−`: `subAxioms` son 23, no los 34 de `coreAxioms`.** Subirlo
+pide un modelo de `coreAxioms` entero —listas, pares de Cantor, `√`, `Π_p`—, que este
+proyecto no tiene. Queda **dicho y no supuesto**.
+
+🔑 **De método**: «la teoría no dice nada de `t`» se mide **parametrizando el modelo por el
+valor de `t`**, no exhibiendo dos modelos sueltos. Un parámetro es más fuerte y más corto.
+
+⚠️ **Dos trampas del módulo**:
+* en este archivo la notación `∧` es `Formula.and` (la de FOL), así que la conjunción de
+  Lean va escrita **`And`** a mano;
+* `omega` aparece en cinco metas y **las cinco son aritméticas** (`<`, `≤`, `+`, `%`).
+  Footprint **medido**, no argumentado — ver el encabezado de `Calculus/Soundness.lean`
+  para el caso en que `omega` sí contamina.
 
 ---
 
@@ -750,6 +905,33 @@ heredada de la codificación `String` de RPP.
 
 ---
 
+### 4.3 H3 / H3bis / H3ter — los teoremas de cabecera
+
+Todos en **`[propext, Quot.sound]`** salvo donde se diga.
+
+| Teorema | Enunciado matemático | Módulo |
+|---|---|---|
+| 🏁 `derivesI_soundness` | `Γ ⊢ᵢ f → Γ ⊨ f` — **la solidez intuicionista, demostrada intuicionistamente** | `Calculus/Soundness.lean` |
+| `consistI_syn` | la consistencia de `⊢ᵢ` **sin un solo modelo**, por secuentes sin corte | `Calculus/Consistency.lean` |
+| 🏁🏁🏁 `derivesI_ne_derives0` | `∃φ. ([] ⊢₀ φ) ∧ ¬([] ⊢ᵢ φ)` — **el primer teorema que falla clásicamente** | `Calculus/Slash.lean` |
+| `disjunction_property` · `existence_property` | la DP y la EP **de la LÓGICA**, sobre contexto vacío | `Calculus/Slash.lean` |
+| `disjunction_property_of_slashed` | el teorema general: si todo axioma de `T` está barrado, `T` tiene la DP | `Calculus/Slash.lean` |
+| 🏁🏁 `haDisjunctionProperty_core` | la DP de HA **con `coreAxioms` ya descargado** (28 por Harrop + 6 duros) | `HA/SlashAxioms.lean` |
+| `haDisjunctionProperty_harrop` | …y `hInd` + `hlift` descargadas para instancias de Harrop | `HA/SlashAxioms.lean` |
+| 🏁 `qDisjunctionProperty_arith` / `…_arithT` / `…_arithTM` | la DP del fragmento: 17 / 19 / **22** axiomas, con la consistencia como única hipótesis | `HA/Fragment.lean` |
+| 🏁 `hcon_fragment` | **la consistencia del fragmento, DEMOSTRADA** (modelo estándar sobre `ℕ`) | `HA/Model.lean` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTM_final`** | **la DP del fragmento aritmético, SIN NINGUNA HIPÓTESIS** | `HA/Model.lean` |
+| ⛔ `sub_neither` | `5̄ − 7̄` es **indeterminado**: ni la igualdad ni su negación son derivables, para ningún numeral | `HA/Model.lean` |
+| ⛔⛔ `hNum_false_on_sub` | **`hNum` sobre la signatura completa es FALSA**, con testigo | `HA/Model.lean` |
+
+⛔ **Lo que estos teoremas NO dicen.** El enunciado ingenuo de H3ter —«HA tiene la propiedad
+de disyunción»— es **falso** sobre la sintaxis genérica de FOL, y está medido
+(`sondeos/junk_probe.lean`): `ctx [] ⊢ᵢ (foo < bar ∨ foo = bar ∨ bar < foo)` es derivable con
+`foo`, `bar` **ajenos al lenguaje**, y ninguna rama lo es. Por eso el dominio (`Grounded L`)
+y el colapso (`collapseF L`) están **en el enunciado** y no en la letra pequeña.
+
+---
+
 ## 5. Notations
 
 | Símbolo | Expande a | Módulo | Precedencia |
@@ -774,7 +956,24 @@ derivesI_to_derives      -- puente a ⊢   ⇒  consumo de RPP en la dirección 
 eqI_refl  eqI_symm  eqI_trans  eqI_congr_succ  specI
 ```
 
-### 6.1 Prelim.lean
+### 6.1 HA — lo que exporta la Aritmética de Heyting
+
+```lean
+-- PeanoRF.HA
+ctx  ax'  ind  mono  induction_object  gen_closed  Closed   -- HA/Axioms.lean
+arithAxioms  arithAxioms_sub                                -- el fragmento vive aquí
+numeralI_add  numeralI_mul  numeralI_pow                    -- HA/Numerals.lean
+closed_term_eq_numeral                                      -- hNum sobre los numerales
+LQ  LQpp  zeroS  zeroS_grounded  closed_grounded              -- HA/Domain.lean
+qDisjunctionProperty  qExistenceProperty  haDisjunctionProperty
+slash_coreAxioms  haDisjunctionProperty_core                -- HA/SlashAxioms.lean
+LQt  LQtm  arithTAxioms  arithTMAxioms  ctxA  ctxT  ctxTM   -- HA/Fragment.lean
+qDisjunctionProperty_arith  ..._arithT  ..._arithTM
+subAxioms  natModelK  hcon_fragment                         -- HA/Model.lean
+qDisjunctionProperty_arithTM_final  sub_neither  hNum_false_on_sub
+```
+
+### 6.2 Prelim.lean
 
 ```lean
 -- (vacío: el módulo no declara nada propio todavía)
@@ -786,17 +985,37 @@ eqI_refl  eqI_symm  eqI_trans  eqI_congr_succ  specI
 
 ### 7.1 Fully Projected Files
 
-- `Prelim.lean` — proyectado (0 declaraciones propias)
-- `Calculus/DerivesI.lean` — proyectado 2026-09-16 (1 inductivo + 1 notación + 2 teoremas)
-- `Calculus/Eq.lean` — proyectado 2026-09-16 (5 teoremas)
-- `Calculus/Soundness.lean` — proyectado 2026-09-16 (2 teoremas)
-- `HA/Axioms.lean` — reproyectado 2026-09-16 tras la migración a `⊢ᵢ` (1 def + 1 structure + 9 teoremas)
-- `HA/Arith.lean` — reproyectado 2026-09-16 (2 defs + 2 teoremas)
-- `Omega/Basic.lean`, `Meta/AxiomCheck.lean` — proyectados
+Los **18** módulos del árbol, con la fecha de su última proyección:
+
+| módulo | proyectado | §  |
+|---|---|---|
+| `Prelim.lean` | 2026-09-06 (0 declaraciones propias) | 3.1 |
+| `Meta/AxiomCheck.lean` | 2026-09-18 | 3.2 |
+| `Omega/Basic.lean` | 2026-09-06 | 3.3 |
+| `Calculus/DerivesI.lean` | 2026-09-16 | 3.3bis |
+| `Calculus/Eq.lean` | 2026-09-18 | 3.3ter |
+| `Calculus/Soundness.lean` | 2026-09-16 | 3.3quater |
+| `Calculus/Consistency.lean` | 2026-09-17 | 3.3quinquies |
+| `Calculus/Slash.lean` | 2026-09-18 | 3.3sexies |
+| `Calculus/Subst.lean` | 2026-09-17 | 3.3septies |
+| `Calculus/SubstDerives.lean` | 2026-09-17 | 3.3octies |
+| `Calculus/Collapse.lean` | 2026-09-18 | 3.3nonies |
+| `HA/Domain.lean` | 2026-09-18 | 3.3decies |
+| `HA/SlashAxioms.lean` | 2026-09-18 | 3.3undecies |
+| **`HA/Fragment.lean`** | **2026-09-21** | 3.3duodecies |
+| **`HA/Model.lean`** | **2026-09-21** | 3.3terdecies |
+| `HA/Axioms.lean` | 2026-09-16 | 3.4 |
+| `HA/Numerals.lean` | 2026-09-18 | 3.4bis |
+| `HA/Arith.lean` | 2026-09-16 | 3.5 |
+
+⛔ **`Fragment` y `Model` llevaban fila en la tabla §1 y NINGUNA sección §3.** El control
+`[C]` da verde con la fila —mira que el módulo **aparezca** en el catálogo, no que esté
+**proyectado**—, así que la laguna no la caza ningún script: es de la pasada de lectura.
+Proyectados los dos el 2026-09-21.
 
 ### 7.2 Partially Projected Files
 
-*(None)*
+*(Ninguno.)*
 
 ### 7.3 Notes
 

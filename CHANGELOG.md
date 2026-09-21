@@ -15,6 +15,47 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-21 (b) · ⭐ el control que faltaba: `[H]`, declarado y sin uso
+
+`[B]` caza un símbolo **citado** que no existe; `[H]` caza uno que **existe** y nadie usa.
+Era la dirección por la que se coló la capa `LQ`, que hizo falta auditar a mano.
+
+🔑 **La polaridad es todo**: no pregunta «¿está muerto?» sino **«¿está usado O ETIQUETADO?»**.
+Tres razones legítimas, y las tres se declaran: 🏁 `ENTREGABLE`, 🏗️ `ANDAMIO`, ⛔ `EVIDENCIA`.
+AVISO, no objetivo. Excluye `@[simp]` e instancias, que se usan sin nombrarse.
+
+**Siete hallazgos a la primera, todos legítimos**: cuatro entregables que nadie usa porque
+son resultados (`derivesI_to_derives`, `derivesI_consistent`, `succ_add`, `mono`) y tres
+andamios (`eqI_congr_fun1`, `closed_zero`, `closed_term_eq_numeral`). Todos etiquetados.
+
+⚠️ De paso delató que **`closed_term_eq_numeral` se quedó sin consumidor el 2026-09-18**, al
+retirarse `qExistenceProperty_numeral`. Nadie lo había notado.
+
+✅ **Probado en las dos direcciones a la vez** (ADR-015): un teorema sin marcador —lo caza—
+y otro con él —lo exime—, en la misma pasada.
+
+### 🚨 Y la QUINTA forma de dar verde sin comprobar: el `grep` del entorno
+
+El marcador no eximía a `existence_property`, que lleva un 🏁. Medido:
+
+| | bytes | `grep` | `LC_ALL=C grep` |
+|---|---|---|---|
+| `✅` `⏳` `⛔` | 3 | ✓ | ✓ |
+| `🏁` `🏗` `🗑` `🔶` | 4 | **✗** | ✓ |
+
+Bajo `es_ES.UTF-8`, `grep` casa los emoji del plano básico y **falla sin decir nada** con los
+del astral. Un patrón que no casa nunca es una **alternativa muerta**, y el control sigue en
+verde — `[B]` llevaba desde su nacimiento con `🗑` muerto en `DEAD_MARKER`.
+
+⇒ `LC_ALL=C grep` en los tres sitios donde se comparan marcadores (`[H]`, `[B]` y el `✅` de
+`[G]`, que hoy funciona pero se invertiría el día que alguien marque con 🏁). Y palabras
+ASCII como marcador primario. ADR-032 y ADR-033.
+
+🔑 No basta con escribir bien el control: hay que comprobar que **la herramienta hace lo
+que uno cree**. Esta quinta no es del código, es del ENTORNO.
+
+**49 jobs · 16 módulos · 0 sorry · 267 declaraciones.**
+
 ### 2026-09-21 · 🚨 auditoría externa — la CI en rojo y el gate ciego, con los controles en verde
 
 Auditoría de lectura de FOL, ROB++ y Peano, y después de PeanoRF. Los tres controles

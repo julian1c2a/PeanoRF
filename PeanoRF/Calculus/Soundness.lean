@@ -168,7 +168,11 @@ theorem derivesI_soundness {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) :
 /-- **Consistencia de `⊢ᵢ`**: no se deriva `⊥` sin hipótesis.
 
     Primer corolario de la solidez, y el que justifica todo lo demás: si `[] ⊢ᵢ ⊥`, `⊥`
-    sería verdadera en cualquier modelo, y basta exhibir uno. -/
+    sería verdadera en cualquier modelo, y basta exhibir uno.
+
+    🏁 **ENTREGABLE**: nada lo usa porque es un RESULTADO, no una pieza. ⚠️ Y no es el
+    que usa el proyecto: la consistencia que se emplea es `consistI_syn`, **sintáctica**
+    (`Calculus/Consistency.lean`). Ésta pasa por la semántica, y se expone por comparación. -/
 theorem derivesI_consistent (h : ([] : List Formula) ⊢ᵢ Formula.bottom) : False := by
   have hv := derivesI_soundness h
   exact hv Unit ⟨fun _ _ => (), fun _ _ => True⟩ (fun _ => ())

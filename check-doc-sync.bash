@@ -81,6 +81,13 @@ GATE_SCOPE_MARKER='[gate · alcance]'
 # Módulos que legítimamente NO aparecen en ese alcance: el propio módulo del gate (se está
 # elaborando cuando lo imprime) y las plantillas.
 GATE_SCOPE_EXEMPT='PeanoRF.Meta.AxiomCheck PeanoRF._template'
+
+# [H] Marcadores que hacen LEGÍTIMO que algo se declare y no se use. Vacío ⇒ se salta [H].
+#   🏁 entregable (nadie «usa» el resultado final) · 🏗️ andamio · ⛔ evidencia
+# 🚨 Se compara con `LC_ALL=C grep`, y NO es decorativo: medido el 2026-09-21, `grep`
+# bajo `es_ES.UTF-8` casa los emoji de 3 bytes (✅ ⏳ ⛔) y **falla en SILENCIO con los de 4**
+# (🏁 🏗 🗑 🔶). Un patrón que no casa nunca es una alternativa muerta, y nadie se entera.
+UNUSED_MARKERS='🏁|🏗|⛔|ANDAMIO|EVIDENCIA|ENTREGABLE|andamio|evidencia|entregable|sin uso portante'
 # ═══════════════════════════════════════════════════════════════════════════
 
 # ─── 0. DETECCIÓN DEL PROYECTO (misma lógica que gen-root.bash) ─────────────
@@ -233,7 +240,7 @@ else
   # Marcadores que hacen LEGÍTIMA la mención de un símbolo inexistente:
   #   (a) se declara retirado;  (b) es hipotético/propuesto/descartado;  (c) va en una
   #   entrada fechada (histórico por diseño);  (d) es un OBJETIVO declarado.
-  DEAD_MARKER='YA NO EXISTE|NO EXISTEN|retirad|RETIRADO|eliminad|borrad|legacy|histórico|ANTERIORES|🗑️|muert|tampoco existe|inexistente|desapareci|ya no son|se borró'
+  DEAD_MARKER='YA NO EXISTE|NO EXISTEN|retir|RETIRADO|eliminad|borrad|legacy|histórico|ANTERIORES|🗑️|muert|tampoco existe|inexistente|desapareci|ya no son|se borró'
   DEAD_MARKER="$DEAD_MARKER"'|propuest|candidat|hipot[eé]tic|har[ií]a falta|si se |habr[ií]a que|añadir |descartad|no existe|NO EXISTE|sin materializar|20[0-9]{2}-[0-9]{2}-[0-9]{2}'
   DEAD_MARKER="$DEAD_MARKER"'|falta|FALTA|construir|objetivo|medir|sin medir|pendiente|⏳|abiert|necesita|exige|pide|TAREA|hace falta'
   DECLS=$(mktemp)
@@ -246,7 +253,7 @@ else
   for sym in $CANDS; do
     grep -qE "^${sym}" "$DECLS" && continue
     # shellcheck disable=SC2086
-    bad=$(grep -rn "\`${sym}\`" $DOCS 2>/dev/null | grep -vE "$DEAD_MARKER" || true)
+    bad=$(grep -rn "\`${sym}\`" $DOCS 2>/dev/null | LC_ALL=C grep -vE "$DEAD_MARKER" || true)
     if [ -n "$bad" ]; then
       echo "  ✗ \`$sym\` no existe en el árbol activo, y se cita sin marcar como retirado:"
       echo "$bad" | head -2 | sed 's/^/      /' | cut -c1-140
@@ -354,6 +361,74 @@ else
   fi
 fi
 rm -f "$BUILDLOG"
+
+# ─── 7. [H] DECLARADO Y SIN USO ─────────────────────────────────────────────
+# La dirección CONTRARIA a [B]. [B] caza un símbolo CITADO en la prosa que no existe en el
+# árbol; éste caza uno que EXISTE en el árbol y que nadie usa.
+#
+# ⚠️ Nace de un fallo real (2026-09-21). Tras rediseñar el dominio sobre `Grounded LQpp`,
+# toda la capa de cinco símbolos de `HA/Domain.lean` —`LQ`, `collapse_fix_closed`,
+# `closed_of_LQ`, `closed_collapse_subst`— dejó de tener uso portante: ~130 líneas que sólo
+# se usaban ENTRE SÍ. Ningún control lo vio, porque ninguno miraba en esta dirección. Hizo
+# falta una auditoría a mano, y lo que una auditoría a mano encuentra una vez, lo vuelve a
+# perder la siguiente.
+#
+# 🔑 La POLARIDAD, que es lo único que importa aquí: no se pregunta «¿está esto muerto?»
+# sino «¿está esto usado O ETIQUETADO?». Código sin uso y sin etiqueta se lee como código en
+# uso, y ésa es otra forma de dejar leer de más. El silencio significa SOSPECHOSO.
+#
+# Es AVISO, no objetivo: hay tres razones legítimas para que algo no se use —ser un
+# ENTREGABLE (nadie usa `disjunction_property`: es el resultado), ser ANDAMIO de un paso
+# futuro, o ser EVIDENCIA de un diseño— y las tres se declaran con un marcador.
+echo
+echo "════ [H] DECLARADO Y SIN USO — AVISO, requiere juicio ════"
+if [ -z "$UNUSED_MARKERS" ]; then
+  echo "  — desactivado (UNUSED_MARKERS vacío en la CONFIGURACIÓN de este script)"
+else
+  echo "   (no rompe el check: entregable, andamio y evidencia son razones legítimas.)"
+  H_FAIL=0
+  CODE=$(mktemp); DECLS_H=$(mktemp)
+
+  # Corpus SIN COMENTARIOS: un símbolo citado en su propio docstring no es un uso.
+  # shellcheck disable=SC2086
+  find "$LIB" -name '*.lean' -not -path '*_template*' -print0 \
+    | xargs -0 awk 'BEGIN{b=0}
+        {l=$0; out=""
+         while(length(l)>0){
+           if(b){p=index(l,"-/"); if(p==0){l="";break} l=substr(l,p+2); b=0}
+           else {p=index(l,"/-"); if(p==0){out=out l; l=""; break}
+                 out=out substr(l,1,p-1); l=substr(l,p+2); b=1}}
+         sub(/--.*$/,"",out); print out}' > "$CODE"
+
+  # Declaraciones propias: fichero, línea y nombre.
+  grep -rn -E '^(private |noncomputable )*(theorem|lemma|def|abbrev|structure|inductive) +' \
+       "$LIB" --include='*.lean' 2>/dev/null \
+    | grep -v '_template' \
+    | awk -F: '{f=$1; n=$2; $1="";$2=""; sub(/^::/,"");
+                gsub(/^(private |noncomputable )+/,"");
+                split($0,a," "); print f"\t"n"\t"a[2]}' > "$DECLS_H"
+
+  while IFS=$'\t' read -r file line name; do
+    [ -n "$name" ] || continue
+    # `@[simp]` y las instancias se usan SIN nombrarse: no se pueden medir así.
+    prev=$(sed -n "$((line>1?line-1:1))p" "$file")
+    case "$prev" in *'@[simp]'*|*'@[instance]'*|*'instance'*) continue ;; esac
+    used=$(grep -cE "(^|[^A-Za-z0-9_'])${name}([^A-Za-z0-9_']|$)" "$CODE" 2>/dev/null || true)
+    [ -n "$used" ] || used=0
+    # 1 = su propia línea de declaración. Más de 1 ⇒ alguien lo usa.
+    [ "$used" -gt 1 ] && continue
+    # ¿Lleva marcador en su docstring o en la cabecera de su sección?
+    start=$((line>30?line-30:1))
+    if sed -n "${start},${line}p" "$file" | LC_ALL=C grep -qE "$UNUSED_MARKERS"; then continue; fi
+    echo "  ✗ \`$name\` se declara y NADIE lo usa, y no lleva marcador:"
+    echo "      ${file#./}:${line}"
+    H_FAIL=1
+  done < "$DECLS_H"
+  rm -f "$CODE" "$DECLS_H"
+  [ "$H_FAIL" = "0" ] \
+    && echo "  ✓ todo lo declarado se usa, o dice por qué no" \
+    || echo "  ⚠️  revisar: ¿es ENTREGABLE, ANDAMIO o EVIDENCIA? Pues que lo diga. ¿No? Pues fuera."
+fi
 
 # ─── RESUMEN ────────────────────────────────────────────────────────────────
 echo

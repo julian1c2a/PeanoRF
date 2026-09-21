@@ -139,7 +139,12 @@ inductive ClosedQTerm : Term → Prop where
     la barra a través de la igualdad.
 
     La prueba es inducción sobre la estructura del término, y cada caso binario es
-    `congruencia + homomorfismo`. -/
+    `congruencia + homomorfismo`.
+
+    🏗️ **ANDAMIO, sin uso portante desde el 2026-09-18**: su único consumidor era
+    `qExistenceProperty_numeral`, que se retiró al rehacer el dominio sobre `Grounded LQpp`
+    — trece símbolos, y este lema sólo habla de los cinco de los numerales. Vuelve a ser
+    portante el día que se ataque `hNum`, que es justo lo que le falta a H3ter. -/
 theorem closed_term_eq_numeral : ∀ {t : Term}, ClosedQTerm t →
     ∃ n : Nat, ctx [] ⊢ᵢ (t =eq numeralM n) := by
   intro t h

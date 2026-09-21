@@ -1278,6 +1278,82 @@ que dejó de ser la vigente porque el vecino la cambió debajo.
 
 ---
 
+## ADR-032: `[H]` — declarado y sin uso, la dirección que faltaba
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: `[B]` caza un símbolo **citado en la prosa que no existe en el árbol**. La
+dirección contraria —**existe en el árbol y nadie lo usa**— no la miraba ningún control, y
+por ahí se coló la capa `LQ` de `HA/Domain.lean`: ~130 líneas que tras rediseñar el dominio
+sobre `Grounded LQpp` sólo se usaban **entre sí**. Hizo falta una auditoría a mano, y lo que
+una auditoría a mano encuentra una vez lo vuelve a perder la siguiente.
+
+**Decisión**: control `[H]`, con la polaridad puesta donde importa. No pregunta «¿está esto
+muerto?» —eso no se puede decidir— sino **«¿está usado O ETIQUETADO?»**. Hay tres razones
+legítimas para que algo no se use, y las tres se **declaran**:
+
+| | qué significa | ejemplo |
+|---|---|---|
+| 🏁 `ENTREGABLE` | es un RESULTADO, no una pieza | `derivesI_ne_derives0`, `succ_add` |
+| 🏗️ `ANDAMIO` | sin uso hoy, con destino escrito | `closed_term_eq_numeral` (espera a `hNum`) |
+| ⛔ `EVIDENCIA` | sostiene una decisión de diseño | `not_closed_add_unary` (ADR-028) |
+
+Es **AVISO**, no objetivo, por la regla de ADR-026: un control que grita en falso deja de
+leerse. Y se excluyen los `@[simp]` y las instancias, que **se usan sin nombrarse** y por
+tanto no se pueden medir así.
+
+**Justificación**: código sin uso y **sin etiqueta** se lee como código en uso. El silencio
+vuelve a significar SOSPECHOSO, que es la polaridad de todo este proyecto.
+
+**Consecuencias**:
+- ✅ Siete hallazgos en su primera ejecución, **todos legítimos y ninguno basura**: cuatro
+  entregables que nadie usa porque son resultados, y tres andamios. Todos etiquetados.
+- ✅ **Probado en las dos direcciones a la vez** (ADR-015): con un teorema sin marcador
+  —lo caza— y otro con él —lo exime—, en la misma pasada.
+- ⚠️ Delató que **`closed_term_eq_numeral` se quedó sin consumidor** el 2026-09-18, cuando
+  se retiró `qExistenceProperty_numeral`. Nadie lo había notado.
+- 🚨 **Y destapó una trampa del entorno**: ver abajo.
+
+---
+
+## ADR-033: `grep` falla en SILENCIO con los emoji de 4 bytes
+
+**Fecha**: 2026-09-21
+**Estado**: Aceptado
+
+**Contexto**: el marcador de `[H]` no eximía a `existence_property`, que lleva un `🏁` en su
+docstring. Medido:
+
+| | bytes | `grep` | `LC_ALL=C grep` |
+|---|---|---|---|
+| `✅` `⏳` `⛔` | 3 | ✓ | ✓ |
+| `🏁` `🏗` `🗑` `🔶` | 4 | **✗** | ✓ |
+
+Bajo `es_ES.UTF-8`, el `grep` de este entorno casa los emoji del plano básico y **falla sin
+decir nada** con los del plano astral. Un patrón que no casa nunca es una **alternativa
+muerta dentro de una alternancia**, y nadie se entera: el control sigue dando verde.
+
+**Decisión**: `LC_ALL=C grep` en los tres sitios donde un control compara contra marcadores:
+`[H]` (`UNUSED_MARKERS`), `[B]` (`DEAD_MARKER`, que lleva `🗑`) y `[G]` de
+`check-coherencia.bash` (que hoy usa `✅`, de 3 bytes, y funciona — pero el día que alguien
+marque el roadmap con `🏁` el control se invierte sin avisar).
+
+**Justificación**: es **la quinta forma de dar verde sin comprobar**, y no es del código sino
+del ENTORNO. No basta con escribir bien el control: hay que comprobar que la herramienta con
+la que se escribe hace lo que uno cree. Familia de «`σ` no es un identificador válido» y de
+«`∧` está tomada por `FormulaG`»: el error no se parece a su causa, aquí porque **no hay
+error**.
+
+**Consecuencias**:
+- ⚠️ `[B]` llevaba desde su nacimiento con `🗑` como alternativa muerta en `DEAD_MARKER`.
+  Impacto bajo —hay diez alternativas más— pero era un agujero silencioso.
+- ✅ Preferir **palabras ASCII** (`ANDAMIO`, `EVIDENCIA`, `ENTREGABLE`) como marcador
+  primario, y el emoji como adorno legible. Un marcador que hay que reconocer por su glifo
+  es un marcador frágil.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

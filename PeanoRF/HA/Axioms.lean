@@ -91,7 +91,10 @@ theorem ind {insts : List Formula} {φ : Formula} (h : φ ∈ insts) :
     ctx insts ⊢ᵢ inductionFormula φ :=
   Derivesᵢ.hyp _ _ (List.mem_append_right _ (List.mem_map_of_mem h))
 
-/-- Monotonía en las instancias. -/
+/-- Monotonía en las instancias.
+
+    🏁 **ENTREGABLE**: parte de la API de `ctx`. Nada del árbol la usa todavía porque
+    todos los teoremas fijan sus instancias de una vez. -/
 theorem mono {insts insts' : List Formula} {ψ : Formula}
     (hsub : insts ⊆ insts') (h : ctx insts ⊢ᵢ ψ) : ctx insts' ⊢ᵢ ψ := by
   refine Derivesᵢ.weakening _ _ _ h ?_
@@ -140,7 +143,10 @@ structure Closed (a : Term) : Prop where
   lift  : ∀ k, liftTerm k a = a
   subst : ∀ k t, substTerm k t a = a
 
-/-- `zero` es cerrado. (El caso `a := zero` sale además por `rfl` directo.) -/
+/-- `zero` es cerrado. (El caso `a := zero` sale además por `rfl` directo.)
+
+    🏗️ **ANDAMIO**: el testigo más simple de `Closed`, para quien instancie `succ_add`
+    y compañía con un parámetro concreto. -/
 theorem closed_zero : Closed zero := ⟨fun _ => rfl, fun _ _ => rfl⟩
 
 /-! ### Inducción object-level, finitaria -/

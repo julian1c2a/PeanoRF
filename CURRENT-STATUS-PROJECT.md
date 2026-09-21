@@ -8,7 +8,10 @@
 > gate se había quedado ciego a `Derives₀`** porque FOL generizó su sintaxis: 45
 > constructores vigilados → 42, y 12 clásicos → 9, sin que este proyecto cambiara nada.
 > Las dos cosas arregladas y **probadas** (ADR-030 enmendado, ADR-031). No hubo brecha en la
-> tesis; lo que estuvo apagado fue la guardia.
+> tesis; lo que estuvo apagado fue la guardia. Y se activó `[B]` —que cazó **dos teoremas
+> anunciados que no existían**— y se escribió `[H]`, la dirección contraria (ADR-032). Van
+> **siete controles**, y una trampa nueva medida: `grep` falla en silencio con los emoji de
+> 4 bytes (ADR-033).
 >
 > **Estado: H3bis cerrado — la separación `⊢ᵢ ≠ ⊢₀` es un TEOREMA.**
 > **H3ter en curso: los 34 axiomas de `coreAxioms` ya están BARRADOS; falta el esquema

@@ -432,6 +432,33 @@ cuando FOL generizó su sintaxis (ADR-031).
 ✅ Medido antes de quitarlo: el segundo `lake build` sale del caché y Lean **reproduce los
 `logInfo`**, así que el gate publica su alcance igual y `[E]` mide. No cuesta tiempo.
 
+### (29.) `[H]` — declarado y sin uso, y la trampa del `grep`
+
+`[B]` caza un símbolo **citado** que no existe; `[H]` caza uno que **existe** y nadie usa.
+Nace del 2026-09-21: la capa `LQ` de `HA/Domain.lean` llevaba tres días sin uso portante y
+hizo falta una auditoría a mano para verla.
+
+🔑 **La polaridad**: no pregunta «¿está muerto?» —eso no se decide— sino **«¿está usado O
+ETIQUETADO?»**. Tres razones legítimas, y las tres se **declaran** en el docstring:
+
+* 🏁 **`ENTREGABLE`** — es un resultado, no una pieza (`derivesI_ne_derives0`, `succ_add`);
+* 🏗️ **`ANDAMIO`** — sin uso hoy, con destino escrito (`closed_term_eq_numeral`, que espera
+  a `hNum`);
+* ⛔ **`EVIDENCIA`** — sostiene una decisión de diseño (`not_closed_add_unary`, ADR-028).
+
+Es AVISO, no objetivo (§28: un control que grita en falso deja de leerse). Y excluye los
+`@[simp]` y las instancias, que **se usan sin nombrarse**.
+
+🚨 **Y la trampa que destapó**: bajo `es_ES.UTF-8` el `grep` de este entorno casa los emoji
+de **3 bytes** (`✅` `⏳` `⛔`) y **falla en silencio con los de 4** (`🏁` `🏗` `🗑` `🔶`). Un
+patrón que no casa nunca es una alternativa muerta dentro de una alternancia, y el control
+sigue en verde. Cura: **`LC_ALL=C grep`** donde se comparan marcadores, y **palabras ASCII**
+como marcador primario. Ver ADR-033.
+
+🔑 No basta con escribir bien el control: hay que comprobar que **la herramienta hace lo
+que uno cree**. Es la quinta forma de dar verde sin comprobar, y no es del código: es del
+entorno.
+
 ### (28.) Coherencia ENTRE documentos — `check-coherencia.bash` y `/armoniza`
 
 §27 comprueba que los documentos cuadren con el **código**. Esto comprueba que cuadren

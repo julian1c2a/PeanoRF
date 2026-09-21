@@ -143,7 +143,10 @@ theorem derivesI_to_derives0 : ∀ {Γ : List Formula} {f : Formula}, (Γ ⊢ᵢ
 
 /-- Y de ahí a `⊢`, componiendo con el encaje de aguas arriba. Se expone por comodidad:
     permite consumir los teoremas de ROBINSON_PlusPlus **en la dirección correcta**
-    (lo nuestro entra en su mundo; lo suyo NO entra en el nuestro). -/
+    (lo nuestro entra en su mundo; lo suyo NO entra en el nuestro).
+
+    🏁 **ENTREGABLE**: nada del árbol lo usa, y está bien — es una puerta de salida
+    para quien consuma esta librería, no una pieza interna. -/
 theorem derivesI_to_derives {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) : Γ ⊢ f :=
   -- ⚠️ `Derives₀` y su puente viven en la RAÍZ, no bajo `FOL` (`Derives0.lean` no abre
   -- namespace). De ahí el `_root_`.

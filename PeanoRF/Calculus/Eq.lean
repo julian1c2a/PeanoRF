@@ -106,7 +106,11 @@ theorem specI {A : Formula} (h : Γ ⊢ᵢ Formula.forall A) (t : Term) :
     operaciones son `Term.func s […]`, así que **una sola prueba por aridad** las cubre
     todas, presentes y futuras. -/
 
-/-- Congruencia para un símbolo UNARIO. Testigo `f(t₁↑) = f(#0)`. -/
+/-- Congruencia para un símbolo UNARIO. Testigo `f(t₁↑) = f(#0)`.
+
+    🏗️ **ANDAMIO**: hoy sólo se usan las binarias (`add`, `mul`, `pow`). Ésta existe
+    porque la familia se hizo **por aridad y no por símbolo**, a propósito: `σ`, `√`, `τ`,
+    `%₂`, `/₂` y `Π_p` son unarios y la van a necesitar. -/
 theorem eqI_congr_fun1 (s : String) {t₁ t₂ : Term} (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) :
     Γ ⊢ᵢ (Formula.eq (Term.func s [t₁]) (Term.func s [t₂])) := by
   have hS1 : substFormula 0 t₁ (Formula.eq (Term.func s [liftTerm 0 t₁])

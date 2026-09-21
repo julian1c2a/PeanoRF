@@ -103,7 +103,10 @@ def phiSuccAdd (a : Term) : Formula :=
     y con un parámetro el contexto sólo lo es si el parámetro lo es. `liftTerm 0 a = a` **no
     basta** — hacen falta las invariancias a todo nivel y bajo sustitución, porque
     `inductionFormula` usa `liftFormula 1 φ`. Con un parámetro ABIERTO no hay generalización
-    finitaria: habría que meter en el contexto la **clausura universal** de la instancia. -/
+    finitaria: habría que meter en el contexto la **clausura universal** de la instancia.
+
+    🏁 **ENTREGABLE**: es el resultado de H2 — el caso CON parámetro, que es el que costaba.
+    Nada lo usa porque nada tiene por qué usarlo. -/
 theorem succ_add (a : Term) (hc : Closed a) :
     ctx [phiSuccAdd a] ⊢ᵢ Formula.forall (phiSuccAdd a) := by
   refine induction_object (List.mem_singleton_self _) ?base ?step

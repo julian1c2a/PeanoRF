@@ -99,7 +99,10 @@ if [ -n "${REGISTERED:-}" ]; then
     ROW=$(grep -E "^\| \*\*$h\*\* \|" "$ROADMAP_FILE" 2>/dev/null | head -1)
     [ -z "$ROW" ] && continue
     # shellcheck disable=SC2086
-    if echo "$ROW" | grep -q '✅'; then
+    # 🚨 `LC_ALL=C` por si algún día el roadmap marca con un emoji de 4 bytes: bajo
+    # `es_ES.UTF-8` grep falla en SILENCIO con ésos (medido el 2026-09-21). ✅ es de 3 y hoy
+    # casa, pero el día que alguien ponga 🏁 este control se invierte sin avisar.
+    if echo "$ROW" | LC_ALL=C grep -q '✅'; then
       HITS=$(grep -rnE "\b$h\b" $CORPUS_G 2>/dev/null | grep -iE "$PEND" | grep -viE '~~|anterior|hist|antes de|ya no' || true)
       LABEL="está ✅ en el roadmap pero la prosa habla de pendiente"
     else

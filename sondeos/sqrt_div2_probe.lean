@@ -427,9 +427,73 @@ theorem numeralI_div2 (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
         | List.Mem.head _ => List.Mem.head _
         | List.Mem.tail _ h => List.Mem.tail _ (List.Mem.tail _ h)))
 
+
+
+/-! ## Paso 8 · hacia `√`: lo que el cuadrado pide
+
+    `√` se caracteriza por DOS desigualdades (`ax14`: `(√n)² ≤ n`, `ax15`: `n < (σ√n)²`), así
+    que hace falta monotonía del CUADRADO y la transitividad que `/₂` se pudo saltar. -/
+
+/-- ⭐ **Ningún término anclado cumple `x + σy = x`.** `addI_succ_ne` hacía esto para
+    numerales, con inducción META. Para términos anclados sale GRATIS: `x + σy = x` es
+    justo `x < x` por `ax13`, y `ax18` lo prohíbe. -/
+theorem notI_add_succ_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (L : String → Nat → Bool) {x : Term} (hx : Grounded L x) (y : Term) :
+    Γ ⊢ᵢ Formula.impl (Formula.eq (add x (succ y)) x) Formula.bottom := by
+  refine Derivesᵢ.intro_impl _ (Formula.eq (add x (succ y)) x) Formula.bottom ?_
+  have hΓ1 : ∀ g, List.Mem g arithAxioms →
+      (Formula.eq (add x (succ y)) x :: Γ) ⊢ᵢ g :=
+    hyps_cons hΓ (Formula.eq (add x (succ y)) x)
+  exact Derivesᵢ.elim_impl _ _ _ (ltI_irrefl hΓ1 L hx)
+    (ltI_of_add hΓ1 L hx hx y (Derivesᵢ.hyp _ _ (List.Mem.head _)))
+
+/-- ⭐ **Transitividad de `<`.** `a+σj=b` y `b+σi=c` dan `a + σ(j + σi) = c`. -/
+theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} {a b c : Term}
+    (ha : Grounded L a) (hb : Grounded L b) (hc : Grounded L c) :
+    Γ ⊢ᵢ Formula.impl (lt a b) (Formula.impl (lt b c) (lt a c)) := by
+  refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
+  refine Derivesᵢ.intro_impl _ (lt b c) _ ?_
+  have hex1 := Derivesᵢ.elim_impl _ _ _
+    (Derivesᵢ.weakening Γ (lt b c :: lt a b :: Γ) _ (exI_of_ltI hΓ L ha hb)
+      (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz)))
+    (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+  refine Derivesᵢ.elim_ex _ _ _ hex1 ?_
+  simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt,
+    grounded_liftTerm L ha, grounded_liftTerm L hb, grounded_liftTerm L hc]
+  have hex2 := Derivesᵢ.elim_impl _ _ _
+    (Derivesᵢ.weakening Γ
+      (Formula.eq (add a (succ (Term.var 0))) b :: lt b c :: lt a b :: Γ) _
+      (exI_of_ltI hΓ L hb hc)
+      (fun _ hz => List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ hz))))
+    (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+  refine Derivesᵢ.elim_ex _ _ _ hex2 ?_
+  simp (config := { decide := true }) only [List.map_cons, hlift, liftFormula, liftTerms,
+    liftTerm, lt, add, succ, Nat.reduceAdd, ite_true, ite_false,
+    grounded_liftTerm L ha, grounded_liftTerm L hb, grounded_liftTerm L hc]
+  have hΓ2 : ∀ g, List.Mem g arithAxioms →
+      (Formula.eq (add b (succ (Term.var 0))) c
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b c :: lt a b :: Γ) ⊢ᵢ g :=
+    hyps_cons (hyps_cons (hyps_cons (hyps_cons hΓ _) _) _) _
+  have hC : (Formula.eq (add b (succ (Term.var 0))) c
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b c :: lt a b :: Γ) ⊢ᵢ Formula.eq (add b (succ (Term.var 0))) c :=
+    Derivesᵢ.hyp _ _ (List.Mem.head _)
+  have hB : (Formula.eq (add b (succ (Term.var 0))) c
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b c :: lt a b :: Γ) ⊢ᵢ Formula.eq (add a (succ (Term.var 1))) b :=
+    Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _))
+  refine ltI_of_add hΓ2 L ha hc (add (succ (Term.var 1)) (Term.var 0)) ?_
+  refine eqI_trans ?_ (eqI_trans (eqI_congr_fun2_l add_sym (succ (Term.var 0)) hB) hC)
+  exact eqI_trans
+    (eqI_congr_fun2_r add_sym a
+      (eqI_symm (addI_succ hΓ2 (succ (Term.var 1)) (Term.var 0))))
+    (eqI_symm (addI_assoc hΓ2 L ha (succ (Term.var 1)) (succ (Term.var 0))))
+
 end PeanoRF.HA
 
-#print axioms PeanoRF.HA.zeroI_or_succ
-#print axioms PeanoRF.HA.ltI_add_right
-#print axioms PeanoRF.HA.ltI_mul_two
 #print axioms PeanoRF.HA.numeralI_div2
+#print axioms PeanoRF.HA.notI_add_succ_self
+#print axioms PeanoRF.HA.ltI_trans

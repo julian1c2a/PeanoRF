@@ -115,7 +115,11 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   `addI_assoc` · `ltI_of_add` · ⭐ `ltI_add_right` (monotonía de `+`) · `mulI_two`
   (`t·2̄ = t+t`) · ⭐⭐ `ltI_mul_two` — que **evita la transitividad**: de `y + σj = k̄` se
   calcula `k̄·2̄ = y·2̄ + σ(σj + j)`, que es ya la forma que `ax13` pide.
-  ⏳ Queda `√`: mismo esquema, pero pide `a<b → a·a<b·b` y tratar el `≤` de `ax14`.
+  ⏳ Queda `√`, y ya con dos de sus tres piezas puestas: ⭐ `notI_add_succ_self` —ningún
+  término anclado cumple `x + σy = x`, que para NUMERALES costó inducción meta
+  (`addI_succ_ne`) y para términos anclados sale **gratis**: es `x < x` por `ax13`, y `ax18`
+  lo prohíbe— y `ltI_trans`. Falta `a<b → a·a<b·b` y tratar el `≤` de `ax14`, que es una
+  disyunción.
 - ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
 - ✅ ~~`[C]` mira la FILA, no la SECCIÓN~~ **endurecido el 2026-09-22** (ADR-041): pide fila

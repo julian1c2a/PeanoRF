@@ -2071,6 +2071,78 @@ qDisjunctionProperty_arithTDCS_final : la DP de 26 axiomas, SIN HIPÓTESIS
 
 ---
 
+## ADR-046: los cinco de lista NO piden inducción — la codificación no es SOBREYECTIVA
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado en su parte **medida**; la consecuencia queda ⏳ abierta y dicha.
+
+**Contexto**: el proyecto lleva escrito —en ADR-037, en `SlashAxioms.lean`, en NEXT-STEPS y
+en el tablero— que `##`, `Π_p`, `ax_L2_in_cons` y `ax_L3_in_concat` quedan fuera del
+fragmento porque
+
+> «piden saber si un numeral es `nil` o `cons`, y eso es **inducción sobre listas**, que
+> `coreAxioms` no tiene».
+
+⛔ **Eso es un ARGUMENTO**, y en esta familia los argumentos han salido mal cuatro veces:
+`−` (ADR-039), `/₂` (042), `::` (044) y `√` (045). Al medirlo, sale mal la quinta.
+
+**Lo medido** (`sondeos/listas_probe.lean`, verificado por el kernel):
+
+```lean
+two_le_consNat  : ∀ h t, 2 ≤ consNat h t
+one_ne_consNat  : ∀ h t, consNat h t ≠ 1
+```
+
+En Q⁺⁺, `nil` **es** `zero` y `cons h t = pair h (σt) = π(h, t+1)`. Escribiendo
+`consNat h t = T(h+t+1) + (t+1)` con `T` triangular, los valores de `cons` son
+
+```
+s=1 → 2 · s=2 → 4,5 · s=3 → 7,8,9 · s=4 → 11..14 · …
+```
+
+es decir **todos los naturales menos `{0, 1, 3, 6, 10, …}`**. Y `0` es `nil`.
+
+⇒ 🔑 **`1`, `3`, `6`, `10`, … no son NI `[]` NI `h::t`.** La codificación de listas **no es
+sobreyectiva**, y por tanto «todo término es `[]` o un `::`» **es FALSO en el modelo
+estándar**.
+
+**Decisión**: corregir el diagnóstico en todos los sitios donde está escrito. El obstáculo
+**no es** que falte un esquema de inducción para demostrar esa disyunción: es que **no hay
+nada que demostrar**, porque la disyunción es falsa. Un esquema de inducción sobre listas no
+la arreglaría, porque el problema no está en las listas sino en los **códigos que no son
+listas**.
+
+**Justificación de por qué importa la diferencia**: cambia de clase el problema.
+
+| clase | qué se puede hacer | ejemplos |
+|---|---|---|
+| **libre** — ningún modelo lo fija | los modelos dan un **negativo medible** | `−`, y **probablemente los cinco de lista** |
+| **determinado en todo modelo** | o se demuestra, o se deja abierto | `/₂`, `√`, `::` |
+
+Mientras el diagnóstico era «falta inducción», la conclusión natural era *esperar a un
+sistema más fuerte*. Con el diagnóstico correcto, lo que toca es **medir el negativo**, que
+es una tarea acotada y que este proyecto ya sabe hacer (`sub_neither`).
+
+**Consecuencias**:
+- ⏳ **Lo que falta, y queda dicho**: que de la no-sobreyectividad se siga que `∈`, `##` y
+  `Π_p` están **libres** sobre esos códigos. Pide dos modelos que difieran ahí, y para
+  tenerlos hacen falta dos piezas concretas:
+  * la **inyectividad del emparejamiento de Cantor**, que es lo que hace bien definida la
+    recursión de `∈` sobre los códigos que sí son listas;
+  * una relación `MemN` inductiva (`head`/`tail`) y una variante que además valga en `1`:
+    las dos cumplen `ax_L1` —porque `1 ≠ 0`— y `ax_L2` —porque `1` no es un `cons`—, y
+    difieren en `x ∈ 1̄`.
+- ⚠️ **`ax_C3_concat_assoc` es la que puede estropear la medición**, y hay que mirarla: a
+  diferencia de `ax_C1`/`ax_C2`, la asociatividad **sí** dice algo sobre la basura. El
+  cálculo a mano sale —basta que la basura absorba por la izquierda—, pero **eso no está
+  medido** y no se puede dar por bueno.
+- 🔑 De método, y van cinco: **«no lo sabemos hacer» y «no está determinado» se escriben
+  igual y no son lo mismo.** Este proyecto ha confundido las dos cinco veces en la misma
+  tabla. La regla que sale: antes de cerrar una casilla, preguntar **si el modelo estándar
+  la decide**; si la decide, es demostrable o abierta, nunca «imposible».
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

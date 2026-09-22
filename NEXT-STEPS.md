@@ -19,6 +19,10 @@
 > 📋 **Cuadro de mando: [doc/TABLERO-FRAGMENTO.md](doc/TABLERO-FRAGMENTO.md)** — los 34
 > axiomas y los 14 símbolos con su estado y su razón.
 >
+> ⛔⛔ **2026-09-22 · los cinco de lista NO piden inducción** (ADR-046): la codificación
+> **no es sobreyectiva** —`1, 3, 6, …` no son ni `[]` ni `h::t`—, así que «todo término es
+> `[]` o un `::`» es **falso**. Pasan a la clase de `−`: hay que **medir el negativo**.
+>
 > ▶ **Punto de reanudación**: el **modelo de `coreAxioms` entero** —subiría la medición de
 > `−` de 27 axiomas a 34 y haría MEDIBLE la no-derivabilidad de las ramas de `junk_probe`—
 > y las dos deudas no matemáticas. ⛔ Lo que NO tiene camino por aquí son los cinco de
@@ -100,7 +104,7 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 | ✅ `hInd` | **HECHO** (ADR-034): `isHarrop (inductionFormula φ) = isHarrop φ` por `rfl`. ⛔ Para instancias de Harrop; con `∨` o `∃` no hay atajo |
 | `hNum` | todo anclado es demostrablemente un numeral | evaluar `√`, `/₂`, `%₂`, `τ`, `−`, `::`, `##`, `Π_p` sobre numerales; algunas piden inducción |
 | ✅ `hlift` | **HECHO**: `inductions_lift` + `ctx_lift`, reducido a una condición por instancia que es `rfl` |
-| `hIn` | `∈` decidible sobre anclados | ⛔ pide inducción sobre listas; puede que nunca salga de Q⁺⁺ sola |
+| `hIn` | `∈` decidible sobre anclados | ⛔ no sale de Q⁺⁺ — y ⚠️ **la razón NO es «falta inducción»** (ADR-046): la codificación de listas **no es sobreyectiva**, así que «todo término es `[]` o un `::`» es FALSO |
 | ✅ `hcon` | la consistencia de la teoría | 🏁 **DESCARGADA el 2026-09-21** (ADR-039): `hcon_fragment`, por un modelo estándar sobre `ℕ` y `derivesI_soundness`. ⛔ Aquí ponía «se queda para siempre, Gödel II» — **era falso**: Gödel II dice que HA no prueba su PROPIA consistencia |
 
 ### ⚠️ Deudas vivas

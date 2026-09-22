@@ -51,10 +51,20 @@ qDisjunctionProperty_arithTDCS_final :
 | axioma | símbolo | qué lo bloquea | ¿se puede? |
 |---|---|---|---|
 | `ax29_sub_witness` | `−` | la teoría **calla** fuera de `x ≤ y` | ⛔ **NO, y está MEDIDO**: `sub_neither`, `hNum_false_on_sub` |
-| `ax_L2_in_cons` | `∈`, `::` | pide `hIn` — decidir `∈` sobre anclados | ⏳ pide inducción sobre listas |
-| `ax_L3_in_concat` | `∈`, `##` | idem, **y sus dos ramas son `∈`**: no hay nada que refutar bajando a numerales | ⏳ igual |
-| `ax_C1_concat_nil` `ax_C2_concat_cons` `ax_C3_concat_assoc` | `##` | recursión sobre lista: hay que saber si un numeral es `nil` o `cons` | ⏳ |
-| `ax_prodp_nil` `ax_prodp_cons` | `Π_p` | idem | ⏳ |
+| `ax_L2_in_cons` | `∈`, `::` | pide `hIn` — decidir `∈` sobre anclados | ⛔ **NO por inducción** (ADR-046): ver abajo |
+| `ax_L3_in_concat` | `∈`, `##` | idem, **y sus dos ramas son `∈`**: no hay nada que refutar bajando a numerales | ⛔ igual |
+| `ax_C1_concat_nil` `ax_C2_concat_cons` `ax_C3_concat_assoc` | `##` | recursión sobre lista | ⛔ ver abajo |
+| `ax_prodp_nil` `ax_prodp_cons` | `Π_p` | idem | ⛔ ver abajo |
+
+> ⛔⛔ **RECTIFICADO el 2026-09-22 (ADR-046): NO es que falte inducción sobre listas.**
+> Medido en `sondeos/listas_probe.lean`: `nil` es `0` y `cons h t = π(h, t+1)`, luego los
+> valores de `cons` son **todos menos `{0, 1, 3, 6, 10, …}`** —los triangulares—. Como `0`
+> es `nil`, resulta que **`1`, `3`, `6`, … no son NI `[]` NI `h::t`**: la codificación **no
+> es sobreyectiva**, y «todo término es `[]` o un `::`» es **FALSO en el modelo estándar**.
+>
+> ⇒ no hay nada que demostrar, y un esquema de inducción no lo arreglaría. Lo que toca es
+> **medir el negativo**, como con `−`. ⏳ Falta: inyectividad de Cantor, la relación `MemN`
+> y su variante, y mirar `ax_C3` —la asociatividad **sí** dice algo sobre la basura—.
 
 ---
 
@@ -70,19 +80,23 @@ qDisjunctionProperty_arithTDCS_final :
 | símbolo | clase semántica | qué significa |
 |---|---|---|
 | `−` | **LIBRE** | `ax29` lo condiciona a `x ≤ y` y fuera de ahí **ningún modelo lo fija**. Los modelos deciden, y deciden que no. **Cerrado en negativo.** |
-| `##` | determinado | recursión sobre lista |
-| `Π_p` | determinado | recursión sobre lista |
+| `##` | ⏳ **probablemente LIBRE** | sus axiomas hablan de `nil` y de `cons`, y **hay códigos que no son ninguna de las dos** (ADR-046) |
+| `Π_p` | ⏳ **probablemente LIBRE** | idem |
 | `[]` | — | ⚠️ **no aparece nunca en un término**: `nil` es `zero` por definición, y el símbolo `"[]"` es letra muerta |
 
 > 🔑 **La distinción que ADR-037 no hizo, y es la que manda.** Un símbolo puede estar fuera
 > por dos razones incompatibles:
 > * **libre** — ningún modelo lo fija ⇒ los modelos dan un **negativo** medible (`−`);
 > * **determinado en todo modelo** — ⇒ **la técnica de modelos no puede dar un negativo
->   nunca**: o se demuestra, o se deja abierto (`/₂`, `√`, `::`, y presumiblemente `##`,
->   `Π_p`).
+>   nunca**: o se demuestra, o se deja abierto (`/₂`, `√`, `::`).
+>
+> ⚠️ **Y `##`/`Π_p` cambiaron de casilla el mismo día** (ADR-046): se daban por
+> «determinados, falta inducción», y al medir resultó que **la codificación de listas no es
+> sobreyectiva**, así que sobre los códigos que no son listas no los fija nada. Se esperan
+> en la primera columna, con `−`.
 >
 > ADR-037 escribió los cinco iguales. Sólo uno era del primer tipo, y los otros cuatro han
-> ido cayendo.
+> ido cayendo — y con ADR-046, los de lista apuntan también al primero.
 
 ---
 
@@ -95,7 +109,7 @@ qDisjunctionProperty_arithTDCS_final :
 | **TM** | `+ %₂` | 22 | `…_arithTM` | 038 |
 | **TD** | `+ /₂` | 23 | `…_arithTD` | 042 |
 | **TDC** | `+ ::` | 24 | `…_arithTDC` | 044 |
-| **TDCS** | `+ √` | **26** | **`…_arithTDCS_final`** | *(este paso)* |
+| **TDCS** | `+ √` | **26** | **`…_arithTDCS_final`** | 045 |
 
 Y en paralelo, el modelo: `natModelK k` sobre `ℕ` interpreta los diez símbolos, verifica
 **27** axiomas —los 26 más `ax29_sub_witness`— **para todo `k`**, y de ahí salen las dos
@@ -107,8 +121,8 @@ cosas a la vez: `hcon_fragment*` (con `k` fijo) y la medición de `−` (variand
 
 | | qué es | estado |
 |---|---|---|
-| **`hIn`** | decidir `∈` sobre términos anclados | ⛔ **no se sigue de Q⁺⁺**: haría falta que la teoría probara que todo término es `[]` o un `::`, y eso es inducción sobre listas, que `coreAxioms` no tiene. Es lo que bloquea `ax_L2` y `ax_L3` |
-| **`##` y `Π_p`** | los dos que faltan de la signatura | ⏳ piden lo mismo que `hIn`: distinguir `nil` de `cons` sobre un numeral |
+| **`hIn`** | decidir `∈` sobre términos anclados | ⛔ **no se sigue de Q⁺⁺**, y ⚠️ **la razón NO es la que estaba escrita** (ADR-046): no es que falte inducción para probar «todo término es `[]` o un `::`» — esa disyunción es **FALSA**, porque la codificación no es sobreyectiva |
+| **`##` y `Π_p`** | los dos que faltan de la signatura | ⏳ **probablemente LIBRES sobre la basura**, como `−`: la medición está acotada y descrita en ADR-046 |
 | **modelo de `coreAxioms` entero** | los 34 en un modelo | ⏳ subiría la medición de `−` de 27 axiomas a 34, y haría **medible** la no-derivabilidad de las ramas de `junk_probe` |
 | **no-derivabilidad de `junk_probe`** | la otra mitad del contraejemplo de H3ter | ⏳ hoy es **argumento por solidez**, no medición. La herramienta ya está: un modelo parametrizado por la interpretación de `foo`/`bar` |
 | **el encargo a FOL** | `Calculus/Subst.lean` y `fdepth` duplicados | ⏳ sin contestar |

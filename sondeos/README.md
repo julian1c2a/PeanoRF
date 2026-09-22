@@ -26,6 +26,7 @@ bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 | `audit_2026-09-22.lean` | **2026-09-22**: re-medición contra FOL@`2d5b7c8` (ModelG) y RPP@`132f584` — los siete footprints **intactos** |
 | 📋 `audit_fragmento.lean` | **2026-09-22**: **las cifras del TABLERO, por `rfl`** — longitudes de las seis listas de axiomas y pertenencia a cada signatura. Si `doc/TABLERO-FRAGMENTO.md` miente, esto se pone rojo |
 | ⭐ `sqrt2_probe.lean` | **2026-09-22**: 🏁 **`numeralI_sqrt`** — `√` está DETERMINADO. Los tres auxiliares de `≤` y las dos ramas de la tricotomía. ⚠️ Lean no trae `Nat.sqrt` |
+| ⭐ `listas_probe.lean` | **2026-09-22**: ⛔⛔ **los cinco de lista NO piden inducción** — `cons h t ≥ 2`, luego `1, 3, 6, …` no son NI `[]` NI `h::t`: la codificación **no es sobreyectiva** (ADR-046) |
 | ⭐ `sqrt_probe.lean` | **2026-09-22**: las TRES piezas de `√` —discreción y monotonía del cuadrado—, y ⛔ que **la puerta NO era la forma ∀ de `zeroI_or_succ`** que yo había anunciado. Conserva el PASO 0: el `Grounded` que sobraba en `addI_assoc`/`mulI_distrib` |
 | ⭐ `cons_probe.lean` | **2026-09-22**: que `::` cae por COMPOSICIÓN al estar `/₂` determinado (ADR-044) |
 | ⭐ `sqrt_div2_probe.lean` | **2026-09-22**: ⛔ ¿están `√` y `/₂` determinados sobre numerales? Mide que Q⁺⁺ **DERIVA** «todo término es 0 o sucesor» —que en Q es un AXIOMA y en `coreAxioms` no está—, y con eso el ⛔ de ADR-037 para `/₂` («pide cancelación») queda **REFUTADO**: `numeralI_div2` lo demuestra determinado |

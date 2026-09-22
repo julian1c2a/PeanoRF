@@ -15,6 +15,52 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (g) · ⛔⛔ Los cinco de lista NO piden inducción — la codificación no es SOBREYECTIVA
+
+El proyecto llevaba escrito —en ADR-037, en `SlashAxioms.lean`, en NEXT-STEPS y en el
+tablero— que `##`, `Π_p`, `ax_L2` y `ax_L3` quedan fuera porque «piden saber si un numeral
+es `nil` o `cons`, y eso es **inducción sobre listas**, que `coreAxioms` no tiene».
+
+⛔ **Era un argumento, y sale mal.** Medido en `sondeos/listas_probe.lean`:
+
+```lean
+two_le_consNat : ∀ h t, 2 ≤ consNat h t
+one_ne_consNat : ∀ h t, consNat h t ≠ 1
+```
+
+En Q⁺⁺, `nil` **es** `zero` y `cons h t = pair h (σt) = π(h, t+1)`. Con
+`consNat h t = T(h+t+1) + (t+1)` y `T` triangular, los valores de `cons` son
+
+```
+s=1 → 2 · s=2 → 4,5 · s=3 → 7,8,9 · s=4 → 11..14 · …
+```
+
+o sea **todos menos `{0, 1, 3, 6, 10, …}`**. Y `0` es `nil`.
+
+🔑 ⇒ **`1`, `3`, `6`, … no son NI `[]` NI `h::t`.** «Todo término es `[]` o un `::`» es
+**FALSO en el modelo estándar**: no es que falte inducción para demostrarlo — **no hay nada
+que demostrar**, y un esquema de inducción no lo arreglaría, porque el problema no está en
+las listas sino en los **códigos que no son listas**.
+
+**Y cambia de clase el problema.** Mientras el diagnóstico era «falta inducción», la
+conclusión natural era esperar a un sistema más fuerte. Con el correcto, lo que toca es
+**medir el negativo**, que es tarea acotada y que este proyecto ya sabe hacer (`sub_neither`):
+`##` y `Π_p` pasan de la casilla «determinado» a la de `−`.
+
+⏳ **Lo que NO está medido, y queda dicho**: que de la no-sobreyectividad se siga que `∈`,
+`##` y `Π_p` están libres ahí. Pide dos modelos que difieran, y para eso hacen falta la
+**inyectividad del emparejamiento de Cantor** y una relación `MemN` inductiva con su
+variante. ⚠️ Más mirar `ax_C3_concat_assoc`, que **sí** dice algo sobre la basura, a
+diferencia de `ax_C1`/`ax_C2`.
+
+🔑 Y van **cinco**: «no lo sabemos hacer» y «no está determinado» se escriben igual en una
+tabla y no son lo mismo. La regla que sale de aquí: antes de cerrar una casilla, preguntar
+**si el modelo estándar la decide**; si la decide, es demostrable o abierta, nunca imposible.
+
+ADR-046.
+
+---
+
 ### 2026-09-22 (f) · 🏁🏁 `√` ENTRA — **26 de 34**, y el TABLERO
 
 ```lean

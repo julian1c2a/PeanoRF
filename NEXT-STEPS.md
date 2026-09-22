@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -109,10 +109,12 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
 - ⛔ **`[C]` mira la FILA, no la SECCIÓN.** `Fragment` y `Model` llevaban fila en la tabla §1
   de `REFERENCE.md` y **ninguna sección §3**, y el control daba verde. Proyectados el
-  2026-09-21; **endurecer `[C]` sigue pendiente** y es decisión aparte.
-- ⛔ **`REFERENCE.md` pasa de las mil líneas**, que es justo lo que AI-GUIDE §0.5 prohíbe.
-  Cortar en `REFERENCE-Calculus.md`, `REFERENCE-HA.md` y `REFERENCE-Meta.md` **antes** de
-  seguir añadiendo filas.
+  2026-09-21; **endurecer `[C]` sigue pendiente** y es decisión aparte. ⚠️ Arbolizar no lo
+  arregla: ahora el control acepta el nombre en el raíz **o** en cualquier nodo.
+- ✅ ~~`REFERENCE.md` pasa de las mil líneas~~ **arbolizado el 2026-09-22** (ADR-040): índice
+  raíz de 286 líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`. 🔑 Y el criterio para el corte
+  siguiente: **no es el número de líneas sino el de módulos que hay que atravesar**; si `HA/`
+  pasa de la docena, se corta por capas **antes** de añadir la fila trece.
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
 - ✅ ~~`SYMBOL_PREFIXES` vacío ⇒ control [B] apagado~~ activado el 2026-09-21, con 15+ familias.

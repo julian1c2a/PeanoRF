@@ -94,7 +94,7 @@ PeanoRF/
 └── _template.lean         # Plantilla de módulo (no se importa)
 PeanoRF.lean                  # Módulo raíz (generado por gen-root.bash)
 sondeos/                      # Mediciones fuera del build (footprint de axiomas)
-doc/                          # Nodos REFERENCE-{tema}.md (ADR-007), vacío por ahora
+doc/                          # Nodos REFERENCE-{Meta,Calculus,HA}.md (ADR-007/040) + encargos
 ```
 
 ## Requisitos
@@ -129,7 +129,10 @@ lake env lean sondeos/axiom_probe.lean   # re-medir el footprint de las dependen
 | [AI-GUIDE.md](AI-GUIDE.md) | ⭐ **Leer primero**: estándares de documentación, formato, comandos formales |
 | [DECISIONS.md](DECISIONS.md) | 🚨 **MANDATORIES + ADRs — obligatorio antes de tocar cualquier `.lean`** |
 | [WORKFLOW.md](WORKFLOW.md) | Flujo de desarrollo (modo IA + modo humano legacy) |
-| [REFERENCE.md](REFERENCE.md) | Referencia técnica: definiciones, teoremas, notaciones |
+| [REFERENCE.md](REFERENCE.md) | **Índice raíz** del sistema de referencia: catálogo, grafo y teoremas de cabecera |
+| [doc/REFERENCE-Meta.md](doc/REFERENCE-Meta.md) | Nodo: contacto, gate de pureza y capa ω |
+| [doc/REFERENCE-Calculus.md](doc/REFERENCE-Calculus.md) | Nodo: el cálculo `⊢ᵢ`, solidez y la barra de Kleene |
+| [doc/REFERENCE-HA.md](doc/REFERENCE-HA.md) | Nodo: axiomas de HA, el fragmento y el modelo sobre `ℕ` |
 | [NAMING-CONVENTIONS.md](NAMING-CONVENTIONS.md) | Diccionario Mathlib-style y 12 reglas de formación de nombres |
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Grafo de dependencias (externas e internas) |
 | [CURRENT-STATUS-PROJECT.md](CURRENT-STATUS-PROJECT.md) | Estado y métricas actuales |

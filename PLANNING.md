@@ -1,6 +1,6 @@
 # Project Planning — PeanoRF
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
 > Extensión de [NEXT-STEPS.md](NEXT-STEPS.md). Allí van las fases accionables a corto
@@ -179,9 +179,12 @@ optimizar el transporte antes de saber qué se transporta.
 ## 8. Backlog
 
 - [x] ~~Remoto en GitHub.~~ → `github.com/julian1c2a/PeanoRF`, con CI verde.
-- [ ] Activar el control `[B]` de `check-doc-sync.bash` (`SYMBOL_PREFIXES`) cuando existan
-      familias de símbolos propias.
-- [ ] Abrir el árbol `doc/REFERENCE-{tema}.md` (ADR-007) cuando `REFERENCE.md` deje de
-      bastar (~40 módulos).
+- [x] ✅ Activar el control `[B]` de `check-doc-sync.bash` (`SYMBOL_PREFIXES`) — hecho el
+      2026-09-21, con 15+ familias. Llevaba vacío desde el 2026-09-06 «hasta que existan
+      familias propias», y para entonces ya había quince.
+- [x] ✅ Abrir el árbol `doc/REFERENCE-{tema}.md` (ADR-007) — hecho el 2026-09-22 (ADR-040).
+      ⚠️ **El umbral que estaba escrito aquí, «~40 módulos», era erróneo**: con 18 el índice
+      ya pasaba de las mil líneas. El criterio bueno no es el número de módulos del proyecto
+      sino **el de módulos que un lector tiene que atravesar para encontrar el suyo**.
 - [ ] Cerrar la política de axiomas propios para `axiom` de naturaleza distinta a M-8.
 - [ ] Convención de nombres que distinga **nivel objeto** de **nivel meta** a simple vista.

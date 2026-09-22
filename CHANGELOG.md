@@ -1,6 +1,6 @@
 # Changelog
 
-**Last updated:** 2026-09-21
+**Last updated:** 2026-09-22
 **Author**: Julián Calderón Almendros
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +14,54 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ---
 
 ## [Unreleased]
+
+### 2026-09-22 (a) · 🌳 `REFERENCE.md` ARBOLIZADO — índice raíz + tres nodos
+
+La deuda declarada ayer, pagada con el corte que ese mismo párrafo proponía.
+
+```
+REFERENCE.md                    1024 →  286 líneas   (índice raíz)
+doc/REFERENCE-Meta.md                    150         Prelim, AxiomCheck, Omega
+doc/REFERENCE-Calculus.md                369         los 8 de Calculus/
+doc/REFERENCE-HA.md                      434         los 7 de HA/
+```
+
+El raíz se queda con lo que un índice debe tener: §0 convenciones, §1 catálogo —una fila por
+`.lean`, **con enlace a su nodo**—, §2 grafo, §3 **mapa de navegación**, §4 los teoremas de
+cabecera, §5 punteros a notaciones y exports, §6 estado de proyección.
+
+**Tres decisiones que no son obvias** (ADR-040):
+
+* **`Prelim.lean` va a `Meta`.** No es teoría: es la superficie de importación, y eso es
+  asunto del gate — M-5 y el eje META se leen juntos o no se leen.
+* **§4 se queda en el raíz.** Cruza los tres nodos y es lo que uno busca al abrir el índice.
+* ⚠️ **Los enlaces del catálogo van al FICHERO, sin ancla.** Un ancla de Markdown depende de
+  cómo el renderizador normalice backticks, puntos y símbolos como `⊢ᵢ` o `ℕ`, y no es
+  comprobable sin renderizar. **Un ancla rota es una cita a algo que no existe.**
+
+**Navegación fuerte**, que es lo que hace que el árbol no se deshoje: cada nodo abre con
+enlace ⬆️ al raíz y ↔️ a los dos hermanos, cada sección enlaza su `.lean`, y cada nodo cierra
+con un «lo que este nodo NO cubre» que apunta a dónde sí está. Los **29 enlaces relativos**
+verificados uno a uno contra el disco.
+
+✅ **No hubo que tocar `check-doc-sync.bash`**: `DOCS` ya incluía `doc/REFERENCE-*.md`, y
+`[B]`, `[C]` y `[D]` los recorren. Estaba escrito para esto desde el principio.
+
+⛔ **Verificado que no se perdió contenido**: las 65 líneas del documento viejo que no están
+en el árbol son todas reescrituras deliberadas —filas que ganaron columna, los ítems de
+cumplimiento, el párrafo de la deuda ahora retirada y un ancla interna arreglada—. Ninguna
+es detalle de módulo.
+
+⚠️ **Lo que arbolizar NO arregla**: `[C]` sigue mirando la **fila** y no la **sección**.
+Comprueba que el módulo aparezca en el raíz **o** en cualquier nodo. Sigue en deudas vivas.
+
+🔑 **Cuándo cortar el siguiente**: el criterio no es el número de líneas sino el de módulos
+que hay que atravesar para encontrar lo suyo. Si `HA/` pasa de la docena, el corte va por
+capas y **antes** de añadir la fila trece.
+
+ADR-040. **51 jobs · 18 módulos · 0 sorry · 340 declaraciones.** Siete controles en verde.
+
+---
 
 ### 2026-09-21 (i) · 📐 PROYECCIÓN — y una laguna que ningún control cazaba
 

@@ -1,6 +1,6 @@
 # Decisiones de Diseño — PeanoRF
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
 Registro de decisiones arquitectónicas (ADR) de este proyecto. Cada entrada documenta
@@ -1665,6 +1665,68 @@ hNum_false_on_sub                    : ¬(∀ t, Grounded LQpp t → ∃ n, subA
   aritmética. La regla de [[feedback-omega-classical]] sigue en pie: **medir, no suponer**.
 - ⚠️ En `Model.lean` la notación `∧` es `Formula.and` (la de FOL), así que la conjunción de
   Lean va escrita `And` a mano. Costó el primer error de compilación del módulo.
+
+---
+
+## ADR-040: `REFERENCE.md` ARBOLIZADO — índice raíz + tres nodos temáticos
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. Cumple por fin **ADR-007** y **AI-GUIDE §0.5**.
+
+**Contexto**: AI-GUIDE §0.5 dice, con esas palabras, que `REFERENCE.md` **nunca** debe
+crecer como fichero único: el índice raíz lleva el catálogo y los nodos temáticos van en
+`doc/REFERENCE-{tema}.md`. El documento llevaba **1024 líneas** y documentaba el detalle de
+los 18 módulos él solo — el síntoma exacto que la regla nombra. La deuda se declaró el
+2026-09-21 dentro del propio documento; aquí se paga.
+
+**Decisión**: el corte por **subsistema**, que es el que el proyecto ya usa para todo lo
+demás (el gate, los namespaces, el grafo de imports):
+
+| nodo | qué cubre | módulos |
+|---|---|---|
+| `doc/REFERENCE-Meta.md` | contacto, **gate de pureza**, capa ω | `Prelim`, `Meta/AxiomCheck`, `Omega/Basic` |
+| `doc/REFERENCE-Calculus.md` | `⊢ᵢ`, solidez, consistencia, sustitución, colapso, **la barra** | los 8 de `Calculus/` |
+| `doc/REFERENCE-HA.md` | axiomas, numerales, dominio, los 34 barrados, **fragmento y modelo** | los 7 de `HA/` |
+
+El índice raíz baja de **1024 a 286 líneas** y se queda con lo que un índice debe tener:
+§0 convenciones, §1 catálogo (una fila por `.lean`, **con enlace a su nodo**), §2 grafo de
+dependencias, §3 **mapa de navegación**, §4 los teoremas de cabecera, §5 punteros a
+notaciones y exports, §6 estado de proyección.
+
+**Justificación de tres detalles que no son obvios**:
+
+1. **`Prelim.lean` va a `Meta`, no a un nodo propio.** No es teoría: es la superficie de
+   importación, y la superficie de importación es asunto del gate — M-5 (qué se puede
+   importar) y el eje META (qué arrastra lo importado) se leen juntos o no se leen.
+2. **§4, los teoremas de cabecera, se queda en el RAÍZ.** Cruza los tres nodos, y es
+   justamente lo que alguien busca al abrir el índice. Un mapa de navegación que no dice qué
+   se demuestra obliga a abrir los tres.
+3. ⚠️ **Los enlaces del catálogo van al FICHERO, sin ancla.** Un ancla de Markdown depende
+   de cómo el renderizador normalice backticks, puntos y símbolos como `⊢ᵢ` o `ℕ`, y no es
+   comprobable sin renderizar. **Un ancla rota es una cita a algo que no existe** — la misma
+   familia que `[B]` vigila. El número de sección va en el texto del enlace y lo confirma la
+   tabla §1 del propio nodo.
+
+**Navegación fuerte**, que es lo que §0.5 exige y lo que hace que el árbol no se deshoje:
+cada nodo abre con enlace **⬆️ al raíz** y **↔️ a los dos hermanos**, lista sus módulos con
+enlace al `.lean`, cada sección repite el enlace al fichero que documenta, y cierra con un
+«**lo que este nodo NO cubre**» que apunta a dónde sí está. Los **29 enlaces relativos** se
+verificaron uno a uno contra el disco antes de commitear.
+
+**Consecuencias**:
+- ✅ `check-doc-sync.bash` ya estaba preparado: `DOCS` incluye `doc/REFERENCE-*.md` y los
+  controles `[B]`, `[C]` y `[D]` los recorren. **No hubo que tocar el script.**
+- ⚠️ **`[C]` sigue mirando la FILA y no la SECCIÓN**, y arbolizar no lo arregla: comprueba
+  que el nombre del módulo aparezca en el raíz **o** en cualquier nodo. Endurecerlo sigue
+  siendo decisión aparte, y está escrito en `NEXT-STEPS.md` y en el §6.1 del raíz.
+- 🔑 **Cuándo cortar el siguiente nodo, para no repetir la deuda**: el criterio no es el
+  número de líneas sino **el de módulos que hay que atravesar para encontrar lo suyo**. Si
+  `HA/` pasa de la docena, el corte va por capas —axiomas y numerales por un lado, barra y
+  fragmento por otro— y **antes** de añadir la fila trece, no después.
+- ⛔ Se verificó que **no se perdió contenido**: las 65 líneas del documento viejo que no
+  aparecen en el árbol son todas reescrituras deliberadas —filas de tabla que ganaron
+  columna, los ítems de cumplimiento, el párrafo de la deuda ahora retirada y un ancla
+  interna que se arregló—. Ninguna es detalle de módulo.
 
 ---
 

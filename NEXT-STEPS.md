@@ -137,7 +137,17 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   siguiente: **no es el número de líneas sino el de módulos que hay que atravesar**; si `HA/`
   pasa de la docena, se corta por capas **antes** de añadir la fila trece.
 - `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
-  ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`.
+  ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`. ⏳ **Sin contestar al 2026-09-22**: FOL no
+  menciona PeanoRF en ningún documento, y de lo pedido sólo existe `formulaComplexity`
+  (en `Canonical0.lean`, que M-5 **prohíbe importar**).
+- ⛔ **La CI de PeanoRF no deja constancia de CONTRA QUÉ compiló.** El workflow clona FOL,
+  RPP y Peano en `ref: master` —flotante—, así que un verde pasado no dice contra qué SHA
+  lo fue, y un rojo nuevo no se puede atribuir. Aguas arriba ya lo resolvieron: FOL
+  **certifica el par (FOL@sha, RPP@sha)** en el step summary. Son ~6 líneas.
+- ⚠️ **Divergencia de polimorfismo con FOL, VIVA**: siete ficheros de FOL son ya genéricos
+  en `Sym` —`FOL`, `DecEq`, `Derives0`, `Eigenvariable`, `Rename`, `Semantics`,
+  `SymClasses`— y PeanoRF importa **cinco**. Hoy no cuesta nada porque cada paso lleva su
+  `abbrev` (`Term`, `Formula`, `Model`); el riesgo es el paso que no lo lleve.
 - ✅ ~~`SYMBOL_PREFIXES` vacío ⇒ control [B] apagado~~ activado el 2026-09-21, con 15+ familias.
 - ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.
 

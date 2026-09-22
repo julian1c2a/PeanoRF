@@ -110,9 +110,12 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   · `notI_lt_zero` — nada es menor que cero (`ax5` + `ax2`);
   · ⭐⭐ **`zeroI_or_succ`** — «todo término anclado es `0` o sucesor», **que Robinson Q
     POSTULA** (su axioma 3) y `coreAxioms` **no tiene**: se deriva de la tricotomía.
-  ⏳ Falta la cadena de monotonía (`a<b → a+c<b+c`, transitividad, `x ≤ x+m`) y con ella
-  `numeralI_div2` y `numeralI_sqrt`. **El veredicto de las dos casillas sigue abierto**;
-  lo que ya no se sostiene es el argumento por el que se cerraron.
+  🏁 **`/₂` RESUELTO el 2026-09-22, y en contra de ADR-037: SÍ está determinado.**
+  `numeralI_div2 : ⊢ᵢ /₂ n̄ = (n/2)‾`, en `[propext, Quot.sound]`. La cadena que lo cierra:
+  `addI_assoc` · `ltI_of_add` · ⭐ `ltI_add_right` (monotonía de `+`) · `mulI_two`
+  (`t·2̄ = t+t`) · ⭐⭐ `ltI_mul_two` — que **evita la transitividad**: de `y + σj = k̄` se
+  calcula `k̄·2̄ = y·2̄ + σ(σj + j)`, que es ya la forma que `ax13` pide.
+  ⏳ Queda `√`: mismo esquema, pero pide `a<b → a·a<b·b` y tratar el `≤` de `ax14`.
 - ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
 - ✅ ~~`[C]` mira la FILA, no la SECCIÓN~~ **endurecido el 2026-09-22** (ADR-041): pide fila

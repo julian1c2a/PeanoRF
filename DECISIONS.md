@@ -2016,6 +2016,61 @@ qDisjunctionProperty_arithTDC_final : la DP de 24 axiomas, SIN HIPÓTESIS
 
 ---
 
+## ADR-045: `√` entra — 26 de 34, y el primer DURO que el fragmento mete
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. Cierra la última casilla de ADR-037 que se podía cerrar demostrando.
+
+**Contexto**: `numeralI_sqrt` ya medía que `√` está **determinado**. Meterlo en el fragmento
+no era trámite, por tres razones que se midieron antes de empezar:
+
+1. **El núcleo de Lean no trae `Nat.sqrt`** —vive en Mathlib, que aquí no hay—, y
+   `numOf_of_LQ…` necesita **calcular** el numeral, no sólo razonar con uno dado.
+2. ⛔ **`ax14_sqrt_le` NO es de Harrop**: `le a b` es la disyunción `a < b ∨ a = b`. Es el
+   **primer axioma duro** que el fragmento incorpora sin tenerlo ya barrado de antes —
+   `ax13`, `ax19` y `ax21` entraron con sus escalones, pero ya estaban resueltos—.
+3. El **modelo** tiene que interpretar `√` y verificar las dos desigualdades.
+
+**Decisión**, en tres piezas:
+
+| | |
+|---|---|
+| `isqrt` + `isqrt_le` + `lt_isqrt_succ` | la raíz entera del META, **escrita aquí**: búsqueda lineal descendente con combustible, y con `fuel = n` basta porque `n < (n+1)²` |
+| `slash_ax14` **generalizado** | estaba clavado a `ctx insts` y `LQpp`; pasa a `{Γ} (L) (hΓ)`, como ya se hizo con `ax13`, `ax19` y `ax21` |
+| `LQtdcs` · `arithTDCSAxioms` (26) · `ctxS` · el modelo con `√` | el escalón, y `hcon_fragmentS` que lo deja **incondicional** |
+
+**Justificación de la forma del enunciado**: `numeralI_sqrt` toma `k` **con sus dos cotas
+como hipótesis** en vez de llamar a `isqrt`. Es más general —vale para cualquier testigo— y
+**separa la aritmética del META de la derivación del OBJETO**, que es justo lo que este
+proyecto quiere poder auditar por separado. `isqrt` sólo aparece donde hace falta calcular.
+
+⭐ En el modelo, los dos axiomas de `√` son **exactamente las dos cotas de `isqrt`**: `ax15`
+es `lt_isqrt_succ` y `ax14` es `isqrt_le` partido en las dos ramas de la disyunción con
+`Nat.eq_or_lt_of_le`. No hay nada que inventar.
+
+**Resultado**, todo en `[propext, Quot.sound]`:
+
+```lean
+qDisjunctionProperty_arithTDCS_final : la DP de 26 axiomas, SIN HIPÓTESIS
+```
+
+**Consecuencias**:
+- 🏁 **26 de los 34 axiomas**, **diez símbolos**, cero hipótesis.
+- 🏁🏁 **Las CINCO casillas ⛔ de ADR-037 que se podían cerrar están cerradas**: `−` en
+  negativo y medido (ADR-039), `/₂` (042), `::` (044) y `√` (045) demostrados.
+- ⛔ **Lo que queda fuera son los cinco axiomas de lista (`##`, `Π_p`, `ax_L2`, `ax_L3`) y
+  `ax29`**, y las dos razones son distintas: `−` está **medido como imposible**; los de
+  lista piden **inducción sobre listas**, que `coreAxioms` no tiene.
+- 📋 **Tablero**: `doc/TABLERO-FRAGMENTO.md` pone los 34 axiomas y los 14 símbolos con su
+  estado y su razón, y sus cifras las verifica el kernel en `sondeos/audit_fragmento.lean`.
+  Es el documento a mirar antes de decidir el paso siguiente.
+- 🔑 De método: **generalizar `slash_ax14` fue la tercera vez** que un lema clavado a
+  `ctx`/`LQpp` hubo que abrirlo a `{Γ}`/`L`. Los que quedan clavados —`slash_axL2`,
+  `slash_axL3`— lo pedirán también el día que se intenten. Escribirlos parametrizados desde
+  el principio habría salido más barato.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

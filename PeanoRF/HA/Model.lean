@@ -75,8 +75,8 @@ set_option linter.unusedSimpArgs false
 
 /-! ## 1 · El modelo, con `−` como parámetro -/
 
-/-- Los 24 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
-def subAxioms : List Formula := arithTDCAxioms ++ [ax29_sub_witness]
+/-- Los 26 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
+def subAxioms : List Formula := arithTDCSAxioms ++ [ax29_sub_witness]
 
 /-- **El modelo estándar, con un parámetro.** Los siete símbolos que `LQtm` admite —`0`,
     `σ`, `+`, `*`, `^`, `τ`, `%₂`— van a las operaciones de `ℕ`, y `<` al orden.
@@ -98,6 +98,7 @@ def natModelK (k : Nat) : Model Nat where
     else if s = pred_sym then ds.headD 0 - 1
     else if s = mod2_sym then ds.headD 0 % 2
     else if s = div2_sym then ds.headD 0 / 2
+    else if s = sqrt_sym then isqrt (ds.headD 0)
     else if s = cons_sym then
       ((ds.headD 0 + (ds.tail.headD 0 + 1)) * ((ds.headD 0 + (ds.tail.headD 0 + 1)) + 1)
         + 2 * (ds.tail.headD 0 + 1)) / 2
@@ -115,11 +116,11 @@ local macro "evalNat" : tactic =>
       ax11_mul_assoc, ax12_mul_distrib, ax13_lt_def, ax18_lt_irrefl, ax19_lt_trichotomy,
       ax_L1_in_nil, ax_pow_zero, ax_pow_succ, ax25_pred_zero, ax26_pred_succ,
       ax16_mod2_succ, ax21_mod2_range, ax24_mod2_of_even, ax17_div_mod_eq,
-      ax_L0_cons_def,
+      ax_L0_cons_def, ax14_sqrt_le, ax15_lt_succ_sqrt,
       ax29_sub_witness,
       forall_, forall_2, forall_3, neg, iff, ex, evalFormula, evalTerm,
       evalTerms, natModelK, shiftEnv, zero, succ, add, mul, pow, pred, mod2, div2, sub,
-      cons, pair, cantor_func, cantor_poly, lt, le,
+      cons, pair, cantor_func, cantor_poly, sqrt, sq, lt, le,
       In, nil, one, two, zero_sym, succ_sym, add_sym, mul_sym, pow_sym, pred_sym, mod2_sym,
       sub_sym, lt_sym, in_sym, List.headD, List.tail, reduceIte])
 
@@ -134,8 +135,8 @@ local macro "evalNat" : tactic =>
 theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
     ∀ g, List.Mem g subAxioms → evalFormula (natModelK k) v g := by
   intro g hg
-  simp only [subAxioms, arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms,
-    arithAxioms] at hg
+  simp only [subAxioms, arithTDCSAxioms, arithTDCAxioms, arithTDAxioms, arithTMAxioms,
+    arithTAxioms, arithAxioms] at hg
   rcases hg with _ | ⟨_, hg⟩
   · evalNat; intro d h; exact Nat.succ_ne_zero d h
   rcases hg with _ | ⟨_, hg⟩
@@ -202,6 +203,16 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
     -- `pair` desarrolla.
     evalNat; intro d e; trivial
   rcases hg with _ | ⟨_, hg⟩
+  · -- `ax14_sqrt_le`: `(⌊√d⌋)² ≤ d`, y el `≤` del objeto es una DISYUNCIÓN.
+    evalNat
+    intro d
+    rcases Nat.eq_or_lt_of_le (isqrt_le d) with he | hl
+    · exact Or.inr he
+    · exact Or.inl (And.intro trivial hl)
+  rcases hg with _ | ⟨_, hg⟩
+  · -- `ax15_lt_succ_sqrt`: `d < (⌊√d⌋+1)²`.
+    evalNat; intro d; exact And.intro trivial (lt_isqrt_succ d)
+  rcases hg with _ | ⟨_, hg⟩
   · -- `ax29_sub_witness`: el parámetro `k` vive en la rama `¬(e ≤ d)`, que la hipótesis
     -- del axioma excluye. Por eso el axioma vale **para todo `k`**.
     evalNat
@@ -217,17 +228,23 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
 /-- Los 22 del fragmento, en el modelo con `k = 0`. -/
 theorem natModel_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTMAxioms → evalFormula (natModelK 0) v g :=
-  fun g hg => natModelK_sat 0 v g
-    (List.mem_append_left _ (List.mem_append_left _ (List.mem_append_left _ hg)))
+  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _
+    (List.mem_append_left _ (List.mem_append_left _ hg))))
 
 /-- Los 23 del fragmento con `/₂`, en el modelo con `k = 0`. -/
 theorem natModelD_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTDAxioms → evalFormula (natModelK 0) v g :=
-  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _ hg))
+  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _
+    (List.mem_append_left _ hg)))
 
 /-- Los 24 del fragmento con `::`, en el modelo con `k = 0`. -/
 theorem natModelC_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTDCAxioms → evalFormula (natModelK 0) v g :=
+  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _ hg))
+
+/-- Los 26 del fragmento con `√`, en el modelo con `k = 0`. -/
+theorem natModelS_sat (v : Nat → Nat) :
+    ∀ g, List.Mem g arithTDCSAxioms → evalFormula (natModelK 0) v g :=
   fun g hg => natModelK_sat 0 v g (List.mem_append_left _ hg)
 
 /-! ## 3 · 🏁 `hcon` descargada, y la DP sin hipótesis -/
@@ -388,5 +405,29 @@ theorem qDisjunctionProperty_arithTDC_final {A B : Formula}
     (h : ctxC [] ⊢ᵢ Formula.or A B) :
     Or (ctxC [] ⊢ᵢ A) (ctxC [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTDC hcon_fragmentC hAB h
+
+
+/-! ## 7 · 🏁 El fragmento con `√` — 26 de 34, también incondicional -/
+
+/-- 🏁 **La consistencia del fragmento con `√`.** El modelo interpreta `√` con la `isqrt`
+    del meta, y sus dos axiomas son justo las dos cotas de `isqrt`. -/
+theorem hcon_fragmentS : Not (ctxS [] ⊢ᵢ Formula.bottom) := by
+  intro h
+  have hv := derivesI_soundness h
+  refine hv Nat (natModelK 0) (fun _ => 0) (fun f hf => ?_)
+  have hf2 : f ∈ arithTDCSAxioms := by simpa [ctxS] using hf
+  exact natModelS_sat _ f hf2
+
+/-- 🏁🏁🏁 **LA DP DEL FRAGMENTO CON `√`, INCONDICIONAL** — **26 de los 34** axiomas de
+    `coreAxioms`, diez símbolos, **cero hipótesis**.
+
+    ⛔ Y es el primero que mete en el fragmento un axioma **DURO**: `ax14_sqrt_le` no es de
+    Harrop —`le a b` es `a < b ∨ a = b`— y hay que barrarlo con `slash_ax14`, que para esto
+    hubo que generalizar de `ctx`/`LQpp` a `{Γ}`/`L`. -/
+theorem qDisjunctionProperty_arithTDCS_final {A B : Formula}
+    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxS [] ⊢ᵢ Formula.or A B) :
+    Or (ctxS [] ⊢ᵢ A) (ctxS [] ⊢ᵢ B) :=
+  qDisjunctionProperty_arithTDCS hcon_fragmentS hAB h
 
 end PeanoRF.HA

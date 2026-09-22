@@ -119,7 +119,7 @@ cita a algo que no existe. Se prefiere un enlace que no pueda pudrirse.
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo | [HA §2.1](doc/REFERENCE-HA.md) |
 | `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | ✅ 6 de 6 | [HA §2.2](doc/REFERENCE-HA.md) |
 | `HA/Order.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | 🏁 el orden sobre anclados | [HA §2.3](doc/REFERENCE-HA.md) |
-| `HA/Fragment.lean` | `PeanoRF.HA` | `HA.Order` | ✅ 24 de 34 | [HA §2.4](doc/REFERENCE-HA.md) |
+| `HA/Fragment.lean` | `PeanoRF.HA` | `HA.Order` | ✅ 26 de 34 | [HA §2.4](doc/REFERENCE-HA.md) |
 | `HA/Model.lean` | `PeanoRF.HA` | `HA.Fragment`, `Calculus.Soundness` | 🏁 `hcon` descargada, `−` medido | [HA §2.5](doc/REFERENCE-HA.md) |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo | [HA §2.6](doc/REFERENCE-HA.md) |
 | `HA/Numerals.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | ✅ Completo | [HA §2.7](doc/REFERENCE-HA.md) |

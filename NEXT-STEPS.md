@@ -10,16 +10,19 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-> 🏁🏁🏁 **LA DP DEL FRAGMENTO ES INCONDICIONAL — 24 de los 34 axiomas**, nueve símbolos,
-> **ninguna hipótesis** (`qDisjunctionProperty_arithTDC_final`). 22 el 2026-09-21 con
-> ADR-039 —cuando `hcon` cayó con un modelo estándar sobre `ℕ`—, 23 con ADR-042 (`/₂`) y
-> 24 con ADR-044 (`::`). Y el mismo modelo, parametrizado por el valor de `−` fuera del
-> rango de `ax29`, **mide** que `5̄ − 7̄` es indeterminado.
+> 🏁🏁🏁 **LA DP DEL FRAGMENTO ES INCONDICIONAL — 26 de los 34 axiomas**, diez símbolos,
+> **ninguna hipótesis** (`qDisjunctionProperty_arithTDCS_final`). 22 el 2026-09-21 con
+> ADR-039 —cuando `hcon` cayó con un modelo estándar sobre `ℕ`—, luego 23 (`/₂`, ADR-042),
+> 24 (`::`, ADR-044) y 26 (`√`, ADR-045). Y el mismo modelo, parametrizado por el valor de
+> `−` fuera del rango de `ax29`, **mide** que `5̄ − 7̄` es indeterminado.
 >
-> ▶ **Punto de reanudación**: **`numeralI_sqrt`** — las tres piezas de `√` ya están puestas
-> (`Order.lean` §8–§9); falta montar las dos ramas de la tricotomía. Después, el modelo de
-> `coreAxioms` entero (subiría la medición de `−` de 25 axiomas a 34) y las dos deudas no
-> matemáticas.
+> 📋 **Cuadro de mando: [doc/TABLERO-FRAGMENTO.md](doc/TABLERO-FRAGMENTO.md)** — los 34
+> axiomas y los 14 símbolos con su estado y su razón.
+>
+> ▶ **Punto de reanudación**: el **modelo de `coreAxioms` entero** —subiría la medición de
+> `−` de 27 axiomas a 34 y haría MEDIBLE la no-derivabilidad de las ramas de `junk_probe`—
+> y las dos deudas no matemáticas. ⛔ Lo que NO tiene camino por aquí son los cinco de
+> lista: piden inducción sobre listas, que `coreAxioms` no tiene.
 
 **H3ter — y lo primero es mirar si FOL ha contestado.**
 
@@ -102,6 +105,9 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 
 ### ⚠️ Deudas vivas
 
+- 📋 **`doc/TABLERO-FRAGMENTO.md`** es el cuadro de mando: los 34 axiomas y los 14 símbolos
+  con su estado y su razón, y las cifras verificadas por el kernel en
+  `sondeos/audit_fragmento.lean`. **Mirarlo antes de decidir el siguiente paso.**
 - **Formalizar la no-derivabilidad de las ramas** del contraejemplo. Hoy es argumento por
   solidez; en esta familia un argumento no es una medición. ⭐ Y desde ADR-039 se sabe **con
   qué herramienta**: un modelo. `sub_neither` es la plantilla.
@@ -138,9 +144,13 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   `ltI_trans` + `ltI_mul_self` + `ltI_irrefl`, y dan uso portante a lo que estaba 🏗️.
   ⚠️ **El núcleo de Lean no trae `Nat.sqrt`** (vive en Mathlib), así que el enunciado toma
   `k` con sus dos cotas. Más general, y separa la aritmética del meta de la derivación.
-  ⏳ **Falta meterlo en el FRAGMENTO** (26 axiomas): pide `isqrt` propia con sus dos cotas
-  para evaluar, y ⚠️ `ax14` **NO es de Harrop** — es de los seis duros, así que la cadena
-  necesita `slash_ax14`, que ya existe. Más el modelo, que tiene que interpretar `√`.
+  🏁🏁 **METIDO EN EL FRAGMENTO el 2026-09-22** (ADR-045): **26 de los 34, sin hipótesis**.
+  Las tres piezas que costaba: `isqrt` propia con sus dos cotas (Lean no trae `Nat.sqrt`),
+  `slash_ax14` **generalizado** de `ctx`/`LQpp` a `{Γ}`/`L` —la tercera vez—, y el modelo
+  interpretando `√` con `isqrt`, donde los dos axiomas resultan ser **exactamente las dos
+  cotas**.
+  ⇒ **Las CINCO casillas ⛔ de ADR-037 que se podían cerrar están cerradas.**
+  📋 Estado completo en **`doc/TABLERO-FRAGMENTO.md`**.
 
   (anterior) ⏳ Queda `√`, y ya con dos de sus tres piezas puestas: ⭐ `notI_add_succ_self` —ningún
   término anclado cumple `x + σy = x`, que para NUMERALES costó inducción meta

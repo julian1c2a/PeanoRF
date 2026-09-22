@@ -825,4 +825,47 @@ theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 
 
 
+
+/-! ## 12 · La raíz entera del META — porque el núcleo de Lean no la trae
+
+  ⚠️ **`Nat.sqrt` no existe en el núcleo de Lean**: vive en Mathlib, y este proyecto no usa
+  Mathlib. `numeralI_sqrt` se enunció con `k` y sus dos cotas como hipótesis —que además es
+  más general—, pero para **evaluar** un término hace falta una función que devuelva el
+  numeral, y ésa hay que escribirla.
+
+  Búsqueda lineal descendente con combustible: `isqrtAux fuel n` es el mayor `m ≤ fuel` con
+  `m·m ≤ n`. Con `fuel = n` basta, porque `n < (n+1)²`. -/
+
+def isqrtAux : Nat → Nat → Nat
+  | 0, _ => 0
+  | fuel + 1, n => if (fuel + 1) * (fuel + 1) ≤ n then fuel + 1 else isqrtAux fuel n
+
+def isqrt (n : Nat) : Nat := isqrtAux n n
+
+theorem isqrtAux_le : ∀ (fuel n : Nat), isqrtAux fuel n * isqrtAux fuel n ≤ n
+  | 0, n => by simp only [isqrtAux]; omega
+  | fuel + 1, n => by
+      simp only [isqrtAux]
+      by_cases hc : (fuel + 1) * (fuel + 1) ≤ n
+      · simp only [if_pos hc]; exact hc
+      · simp only [if_neg hc]; exact isqrtAux_le fuel n
+
+theorem isqrtAux_lt : ∀ (fuel n : Nat), n < (fuel + 1) * (fuel + 1) →
+    n < (isqrtAux fuel n + 1) * (isqrtAux fuel n + 1)
+  | 0, n, h => by simp only [isqrtAux]; exact h
+  | fuel + 1, n, h => by
+      simp only [isqrtAux]
+      by_cases hc : (fuel + 1) * (fuel + 1) ≤ n
+      · simp only [if_pos hc]; exact h
+      · simp only [if_neg hc]; exact isqrtAux_lt fuel n (Nat.not_le.mp hc)
+
+/-- `⌊√n⌋² ≤ n`. -/
+theorem isqrt_le (n : Nat) : isqrt n * isqrt n ≤ n := isqrtAux_le n n
+
+/-- `n < (⌊√n⌋+1)²`. -/
+theorem lt_isqrt_succ (n : Nat) : n < (isqrt n + 1) * (isqrt n + 1) := by
+  refine isqrtAux_lt n n ?_
+  have hm : (n + 1) * (n + 1) = (n + 1) * n + (n + 1) := Nat.mul_succ (n + 1) n
+  omega
+
 end PeanoRF.HA

@@ -15,6 +15,47 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (f) · 🏁🏁 `√` ENTRA — **26 de 34**, y el TABLERO
+
+```lean
+qDisjunctionProperty_arithTDCS_final : la DP de 26 axiomas, SIN NINGUNA HIPÓTESIS
+```
+
+**Diez símbolos, cero hipótesis**, `[propext, Quot.sound]`. Y con esto **las cinco casillas
+⛔ de ADR-037 que se podían cerrar están cerradas**: `−` en negativo y medido (ADR-039),
+`/₂` (042), `::` (044) y `√` (045) demostrados.
+
+Meter `√` no era trámite, y las tres razones se midieron antes de empezar:
+
+* ⚠️ **El núcleo de Lean no trae `Nat.sqrt`** —vive en Mathlib—, y `numOf_of_LQ…` necesita
+  **calcular** el numeral. Se escribió `isqrt` con sus dos cotas: búsqueda lineal
+  descendente con combustible, y con `fuel = n` basta porque `n < (n+1)²`.
+* ⛔ **`ax14_sqrt_le` NO es de Harrop** (`le a b` es `a < b ∨ a = b`): es **el primer axioma
+  duro que el fragmento incorpora sin tenerlo ya barrado de antes**. Hubo que **generalizar
+  `slash_ax14`** de `ctx`/`LQpp` a `{Γ}`/`L` — la tercera vez que hace falta abrir un lema
+  clavado, después de `ax13`, `ax19` y `ax21`.
+* El **modelo** interpreta `√` con `isqrt`, y sus dos axiomas resultan ser **exactamente las
+  dos cotas**: `ax15` es `lt_isqrt_succ`, y `ax14` es `isqrt_le` partido en las dos ramas de
+  la disyunción. No hay nada que inventar.
+
+⭐ **`numeralI_sqrt` toma `k` con sus dos cotas como hipótesis**, en vez de llamar a `isqrt`.
+Es más general y **separa la aritmética del META de la derivación del OBJETO**, que es justo
+lo que este proyecto quiere poder auditar por separado.
+
+📋 **Y queda un TABLERO**: `doc/TABLERO-FRAGMENTO.md` pone los **34 axiomas** y los **14
+símbolos** con su estado y su razón —incluida la distinción que ADR-037 no hizo, entre lo
+**libre** (`−`, que los modelos deciden) y lo **determinado en todo modelo** (donde los
+modelos no pueden dar un negativo nunca)—. Sus cifras las verifica el **kernel** en
+`sondeos/audit_fragmento.lean`: si el tablero miente, ese sondeo se pone rojo.
+
+⛔ Lo que queda fuera son los **cinco de lista** (`##`, `Π_p`, `ax_L2`, `ax_L3`) y `ax29`, y
+por razones distintas: `−` está **medido como imposible**; los de lista piden **inducción
+sobre listas**, que `coreAxioms` no tiene.
+
+ADR-045. **52 jobs · 19 módulos · 0 sorry · 442 declaraciones.**
+
+---
+
 ### 2026-09-22 (e) · 🏁 `::` ENTRA POR COMPOSICIÓN — **24 de 34**, y sin teoría nueva
 
 ```lean

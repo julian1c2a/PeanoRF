@@ -497,27 +497,29 @@ theorem slash_ax13 {Γ : List Formula} (L : String → Nat → Bool)
     simple vista parezca atómico. Con las tres piezas numéricas ya en la mano
     —`numeralI_lt`, `numeralI_not_lt` y `numeralI_ne`— la tricotomía del meta decide, y el
     caso imposible lo cierra la consistencia contra las DOS ramas del axioma. -/
-theorem slash_ax14 {insts : List Formula}
-    (hlift : (ctx insts).map (liftFormula 0) = ctx insts)
-    (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
-      ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (ctx insts) (Grounded LQpp) ax14_sqrt_le := by
-  have hax : ctx insts ⊢ᵢ ax14_sqrt_le := ax' (by simp [coreAxioms])
+theorem slash_ax14 {Γ : List Formula} (L : String → Nat → Bool)
+    (hsu : L succ_sym 1 = true) (hsq : L sqrt_sym 1 = true) (hm : L mul_sym 2 = true)
+    (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hax0 : Γ ⊢ᵢ ax14_sqrt_le)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
+    (hNum : ∀ t : Term, Grounded L t →
+      ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
+    Slash Γ (Grounded L) ax14_sqrt_le := by
+  have hax : Γ ⊢ᵢ ax14_sqrt_le := hax0
   simp only [ax14_sqrt_le, forall_, le, sq, lt] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
     ite_true, ite_false, mul, sqrt] at h1 ⊢
-  have hDs : Grounded LQpp (mul (sqrt t) (sqrt t)) :=
-    grounded_func2 LQpp (by decide)
-      (grounded_func1 LQpp (by decide) hDt) (grounded_func1 LQpp (by decide) hDt)
+  have hDs : Grounded L (mul (sqrt t) (sqrt t)) :=
+    grounded_func2 L hm (grounded_func1 L hsq hDt) (grounded_func1 L hsq hDt)
   obtain ⟨p, hp⟩ := hNum (mul (sqrt t) (sqrt t)) hDs
   obtain ⟨q, hq⟩ := hNum t hDt
   rcases Nat.lt_trichotomy p q with hlt | heq | hgt
   · refine (slash_or _ _ _ _).mpr (Or.inl ((slash_atom _ _ _ _).mpr ?_))
     exact eqI_rw_atom2_r lt_sym _ (eqI_symm hq)
-      (eqI_rw_atom2_l lt_sym (numeralM q) (eqI_symm hp) (numeralI_lt arith_ctx hlt))
+      (eqI_rw_atom2_l lt_sym (numeralM q) (eqI_symm hp) (numeralI_lt hΓ hlt))
   · subst heq
     exact (slash_or _ _ _ _).mpr
       (Or.inr ((slash_eq _ _ _ _).mpr (eqI_trans hp (eqI_symm hq))))
@@ -525,7 +527,7 @@ theorem slash_ax14 {insts : List Formula}
     refine Derivesᵢ.elim_or _ (Formula.atom lt_sym [mul (sqrt t) (sqrt t), t])
       (Formula.eq (mul (sqrt t) (sqrt t)) t) Formula.bottom h1 ?_ ?_
     · refine Derivesᵢ.elim_impl _ _ _
-        (Derivesᵢ.weakening _ _ _ (numeralI_not_lt arith_ctx hlift (Nat.le_of_lt hgt))
+        (Derivesᵢ.weakening _ _ _ (numeralI_not_lt hΓ hlift (Nat.le_of_lt hgt))
           (fun _ hz => List.Mem.tail _ hz)) ?_
       exact eqI_rw_atom2_r lt_sym (numeralM p)
         (Derivesᵢ.weakening _ _ _ hq (fun _ hz => List.Mem.tail _ hz))
@@ -533,7 +535,7 @@ theorem slash_ax14 {insts : List Formula}
           (Derivesᵢ.weakening _ _ _ hp (fun _ hz => List.Mem.tail _ hz))
           (Derivesᵢ.hyp _ _ (List.Mem.head _)))
     · refine Derivesᵢ.elim_impl _ _ _
-        (Derivesᵢ.weakening _ _ _ (numeralI_ne arith_ctx (a := p) (b := q) (by omega))
+        (Derivesᵢ.weakening _ _ _ (numeralI_ne hΓ (a := p) (b := q) (by omega))
           (fun _ hz => List.Mem.tail _ hz)) ?_
       exact eqI_trans
         (eqI_symm (Derivesᵢ.weakening _ _ _ hp (fun _ hz => List.Mem.tail _ hz)))
@@ -646,7 +648,8 @@ theorem slash_coreAxioms {insts : List Formula}
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_ax13 LQpp (by decide) arith_ctx hlift hcon hNum
   rcases hg with _ | ⟨_, hg⟩
-  · exact slash_ax14 hlift hcon hNum
+  · exact slash_ax14 LQpp (by decide) (by decide) (by decide) arith_ctx
+      (ax' (by simp [coreAxioms])) hlift hcon hNum
   rcases hg with _ | ⟨_, hg⟩
   · exact slash_of_isHarrop _ _ hcon ax15_lt_succ_sqrt rfl (ax' (by simp [coreAxioms]))
   rcases hg with _ | ⟨_, hg⟩

@@ -23,7 +23,7 @@ modelo estándar sobre `ℕ` que descarga la consistencia.
 | [`PeanoRF/HA/Domain.lean`](../PeanoRF/HA/Domain.lean) | el dominio `Grounded`, definido **por sus clausuras** | 2.1 |
 | [`PeanoRF/HA/SlashAxioms.lean`](../PeanoRF/HA/SlashAxioms.lean) | 🏁🏁 los **34** axiomas de `coreAxioms` barrados | 2.2 |
 | [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean) | 🏁 **el orden sobre términos anclados** — la herramienta que refutó ADR-037 | 2.3 |
-| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → 23 → **24** | 2.4 |
+| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → 23 → 24 → **26** | 2.4 |
 | [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean) | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido | 2.5 |
 | [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean) | el conjunto de axiomas, `gen_closed`, `Closed` | 2.6 |
 | [`PeanoRF/HA/Numerals.lean`](../PeanoRF/HA/Numerals.lean) | los numerales y el puente sintaxis ↔ `ℕ` | 2.7 |
@@ -205,7 +205,8 @@ dominio.
 **Namespace**: `PeanoRF.HA`
 **Dependencies**: `PeanoRF.HA.SlashAxioms`
 **Last updated**: 2026-09-21
-**Status**: ✅ cinco fragmentos encajados, 17 → 19 → 22 → 23 → 24
+**Status**: ✅ seis fragmentos encajados, 17 → 19 → 22 → 23 → 24 → 26.
+**Tablero**: [`doc/TABLERO-FRAGMENTO.md`](TABLERO-FRAGMENTO.md)
 
 ⛔ **La medición que manda el módulo**: `hNum` sobre los **trece** símbolos de Q⁺⁺ es
 inalcanzable, y para `−` es **falsa** — ese símbolo aparece en **un solo axioma**
@@ -218,6 +219,7 @@ inalcanzable, y para `−` es **falsa** — ese símbolo aparece en **un solo ax
 | **TM** | `LQtm` = T `+ %₂` | `arithTMAxioms` (22) | `qDisjunctionProperty_arithTM` |
 | **TD** | `LQtd` = TM `+ /₂` | `arithTDAxioms` (23) | `qDisjunctionProperty_arithTD` |
 | **TDC** | `LQtdc` = TD `+ ::` | `arithTDCAxioms` (24) | `qDisjunctionProperty_arithTDC` |
+| **TDCS** | `LQtdcs` = TDC `+ √` | `arithTDCSAxioms` (**26**) | `qDisjunctionProperty_arithTDCS` |
 
 **Evidencia, toda por `rfl`** — el kernel verifica las cifras y las dos propiedades que el
 fragmento necesita:
@@ -246,7 +248,8 @@ fragmento necesita:
 | `qDisjunctionPropertyA` / `…T` / `…TM` | la DP con instancias de inducción | `propext, Quot.sound` |
 | 🏁 `numeralI_div2` | `⊢ᵢ /₂ n̄ = (n/2)‾` — por el ORDEN, **sin cancelación** (ADR-042) | `propext, Quot.sound` |
 | 🏁 `numeralI_cons` | `⊢ᵢ m̄ :: n̄ = (cantor(m,n+1))‾` — por **COMPOSICIÓN** (ADR-044) | `propext, Quot.sound` |
-| 🏁🏁🏁 **`qDisjunctionProperty_arithTDC`** | **24 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
+| 🏁 `numeralI_sqrt` | `⊢ᵢ √n̄ = k̄` para el único `k` con `k² ≤ n < (k+1)²` (ADR-045) | `propext, Quot.sound` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTDCS`** | **26 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
 
 ⛔ **Y el criterio de ADR-037 quedó refutado dos veces.** `/₂` entra sin estar definido por
 recursión (ADR-042) y `::` entra **por depender de `/₂`** (ADR-044). Lo que decide no es la

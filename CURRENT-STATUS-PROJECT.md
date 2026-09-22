@@ -3,7 +3,14 @@
 **Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
-> 🏁🏁🏁 **2026-09-22 · `/₂` y `::` ENTRAN — 24 DE 34, SIN HIPÓTESIS** (ADR-042, ADR-044).
+> 🏁🏁🏁 **2026-09-22 · 26 DE LOS 34 AXIOMAS, SIN HIPÓTESIS** —diez símbolos—
+> (`qDisjunctionProperty_arithTDCS_final`, ADR-045). Entraron `/₂`, `::` y `√`, y con ello
+> **las cinco casillas ⛔ de ADR-037 que se podían cerrar están cerradas**: `−` en negativo
+> y medido, las otras cuatro demostradas.
+> 📋 **Tablero**: `doc/TABLERO-FRAGMENTO.md`, con los 34 axiomas y los 14 símbolos y su
+> razón, y las cifras verificadas por el kernel.
+>
+> 🏁 **2026-09-22 · `/₂` y `::` ENTRAN — 24 DE 34, SIN HIPÓTESIS** (ADR-042, ADR-044).
 > Y `::` entró **por COMPOSICIÓN**: ADR-037 lo bloqueaba con «`pair` usa `/₂`», que no era
 > una propiedad suya sino una **dependencia** — al caer `/₂`, cayó con él, sin teoría nueva.
 > 🔑 De ahí la lección: ADR-037 metió en la misma columna ⛔ lo **libre** (`−`, que los
@@ -245,8 +252,8 @@
 |--------|-------|
 | Módulos propios | 19 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Order,Fragment,Model}`) |
 | Módulos con 0 `sorry` | 19 / 19 |
-| Teoremas propios | 268 |
-| Definiciones propias | 16 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, `LQtd`, `LQtdc`, `consNat`) |
+| Teoremas propios | 295 |
+| Definiciones propias | 21 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, las cinco signaturas `LQ*`, `consNat`, `isqrt`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
 | Build | ✅ 52 jobs (ver la reserva del banner) |

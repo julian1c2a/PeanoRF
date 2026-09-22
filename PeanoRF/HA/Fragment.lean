@@ -1400,4 +1400,238 @@ theorem qDisjunctionProperty_arithTDC
   intro g hg
   cases hg
 
+
+/-! ## 12 · 🏁 `√` ENTRA — 26 de 34, y el primer DURO que se mete en el fragmento
+
+  ⛔ Hasta aquí los cinco símbolos añadidos (`τ`, `%₂`, `/₂`, `::`) traían sólo axiomas **de
+  Harrop**. `√` no: **`ax14_sqrt_le` es uno de los SEIS duros**, porque `le a b` es la
+  disyunción `a < b ∨ a = b`. Por eso este paso cuesta más que los anteriores:
+
+  | | |
+  |---|---|
+  | `ax15_lt_succ_sqrt` | ✅ de Harrop — un `∀` sobre un átomo |
+  | `ax14_sqrt_le` | ⛔ **NO** — hay que barrarlo con `slash_ax14` |
+
+  ⭐ Y `slash_ax14` estaba **clavado a `ctx insts` y `LQpp`**: hubo que generalizarlo a
+  `{Γ} (L) (hΓ)` como ya se hizo con `ax13`, `ax19` y `ax21`. Es el mismo trabajo, y la
+  tercera vez que hace falta. -/
+
+def LQtdcs (s : String) (n : Nat) : Bool := LQtdc s n || (s == sqrt_sym && n == 1)
+
+def arithTDCSAxioms : List Formula :=
+  arithTDCAxioms ++ [ax14_sqrt_le, ax15_lt_succ_sqrt]
+
+/-- ⛔ **EVIDENCIA**: los 26 son sentencias del lenguaje extendido. -/
+theorem arithTDCSAxioms_sentences :
+    arithTDCSAxioms.map (fun g => collapseF LQtdcs (substF zeroS g)) = arithTDCSAxioms := by
+  rfl
+
+/-- ⛔ **EVIDENCIA**: `√` añade **un duro**, `ax14`, y es el primero que el fragmento mete
+    sin tenerlo ya barrado de antes. -/
+theorem arithTDCSAxioms_hard :
+    arithTDCSAxioms.filter (fun g => !isHarrop g)
+      = [ax13_lt_def, ax19_lt_trichotomy, ax21_mod2_range, ax14_sqrt_le] := by rfl
+
+theorem arithTDCS_of_arithTDC {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g) :
+    ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g :=
+  fun g hg => hΓ g (List.mem_append_left _ hg)
+
+theorem arithTDCS_of_arith {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g) :
+    ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g :=
+  fun g hg => arithTDC_of_arith (arithTDCS_of_arithTDC hΓ) g hg
+
+theorem axS14 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g) :
+    Γ ⊢ᵢ ax14_sqrt_le :=
+  hΓ ax14_sqrt_le (by repeat (first | exact List.Mem.head _ | apply List.Mem.tail))
+
+theorem axS15 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g) :
+    Γ ⊢ᵢ ax15_lt_succ_sqrt :=
+  hΓ ax15_lt_succ_sqrt (by repeat (first | exact List.Mem.head _ | apply List.Mem.tail))
+
+theorem numOf_of_LQtdcs {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ (sy : String) (args : List Term), LQtdcs sy args.length = true →
+    (∀ u, List.Mem u args → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n))) →
+    ∃ n : Nat, Γ ⊢ᵢ (Formula.eq (Term.func sy args) (numeralM n)) := by
+  intro sy args hL hargs
+  by_cases hC : LQtdc sy args.length = true
+  · exact numOf_of_LQtdc (arithTDCS_of_arithTDC hΓ) hlift sy args hC hargs
+  · have hs : And (sy = sqrt_sym) (args.length = 1) := by
+      simp only [LQtdcs, Bool.or_eq_true, Bool.and_eq_true, beq_iff_eq] at hL
+      rcases hL with h | h
+      · exact absurd h hC
+      · exact h
+    obtain ⟨hsy, hlen⟩ := hs
+    match args, hlen with
+    | [a], _ =>
+        obtain ⟨m, hm⟩ := hargs a (List.Mem.head _)
+        subst hsy
+        refine ⟨isqrt m, eqI_trans (eqI_congr_fun1 sqrt_sym hm) ?_⟩
+        exact numeralI_sqrt (arithTDCS_of_arith hΓ) (axS14 hΓ) (axS15 hΓ) hlift
+          (L := LQtdcs) (by decide) (by decide) (by decide)
+          m (isqrt m) (isqrt_le m) (lt_isqrt_succ m)
+
+mutual
+/-- ⭐ `hNum` para la signatura con `√`. -/
+theorem numOfS_grounded {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ {t : Term}, Grounded LQtdcs t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+  intro t h
+  cases t with
+  | var n =>
+      exfalso
+      have hc : (zero : Term) = Term.var n := h.2 (fun _ => zero)
+      rw [zero] at hc
+      exact Term.noConfusion hc
+  | func sy ts =>
+      by_cases hL : LQtdcs sy ts.length = true
+      · have hall := h.1
+        rw [collapseT, if_pos hL] at hall
+        injection hall with _ hts
+        refine numOf_of_LQtdcs hΓ hlift sy ts hL ?_
+        exact numOfS_grounded_list hΓ hlift ts hts (fun ρ => by
+          have hx := h.2 ρ; simp only [substT] at hx; injection hx)
+      · exfalso
+        have hall := h.1
+        rw [collapseT, if_neg hL, zero] at hall
+        injection hall with h1 h2
+        exact hL (by rw [← h1, ← h2]; decide)
+
+theorem numOfS_grounded_list {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ (ts : List Term), collapseTs LQtdcs ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
+  intro ts hc hs
+  cases ts with
+  | nil => intro u hu; cases hu
+  | cons t ts0 =>
+      rw [collapseTs] at hc
+      injection hc with hc1 hc2
+      intro u hu
+      cases hu with
+      | head =>
+          exact numOfS_grounded hΓ hlift ⟨hc1, fun ρ => by
+            have hx := hs ρ; simp only [substTs] at hx; injection hx⟩
+      | tail _ hu0 =>
+          exact numOfS_grounded_list hΓ hlift ts0 hc2
+            (fun ρ => by have hx := hs ρ; simp only [substTs] at hx; injection hx) u hu0
+end
+
+
+/-! ### La DP del fragmento con `√` — 26 de 34 -/
+
+def ctxS (insts : List Formula) : List Formula :=
+  arithTDCSAxioms ++ insts.map inductionFormula
+
+theorem axS' {insts : List Formula} {g : Formula} (h : List.Mem g arithTDCSAxioms) :
+    ctxS insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
+
+theorem arithTDCSAxioms_sentence (g : Formula) (hg : List.Mem g arithTDCSAxioms) :
+    collapseF LQtdcs (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF LQtdcs (substF zeroS g)) arithTDCSAxioms
+    arithTDCSAxioms_sentences g hg
+
+theorem hNumS_fragment {insts : List Formula}
+    (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts) : ∀ t : Term, Grounded LQtdcs t →
+    ∃ n : Nat, ctxS insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
+  fun _ ht => numOfS_grounded (fun _ hg => axS' hg) hlift ht
+
+/-- ⭐⭐ **Los 26 axiomas, barrados** — y el vigesimoquinto, `ax14`, es DURO. -/
+theorem slash_arithTDCSAxioms {insts : List Formula}
+    (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts)
+    (hcon : Not (ctxS insts ⊢ᵢ Formula.bottom)) :
+    ∀ g, List.Mem g arithTDCSAxioms → Slash (ctxS insts) (Grounded LQtdcs) g := by
+  have hA : ∀ g, List.Mem g arithTDCSAxioms → ctxS insts ⊢ᵢ g := fun _ hg => axS' hg
+  intro g hg
+  simp only [arithTDCSAxioms, arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms, List.append] at hg
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax2_peano_succ_neq_zero rfl (axS' (List.Mem.head _))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax3_peano_succ_inj rfl (axS' (List.Mem.tail _ (List.Mem.head _)))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax4_add_zero rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax5_add_succ rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax6_add_comm rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax7_add_assoc rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax8_mul_zero rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax9_mul_succ rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax10_mul_comm rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax11_mul_assoc rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax12_mul_distrib rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax13 LQtdcs (by decide) (arithTDCS_of_arith hA) hlift hcon (hNumS_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax18_lt_irrefl rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax19 LQtdcs (arithTDCS_of_arith hA) (hNumS_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_L1_in_nil rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_pow_zero rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_pow_succ rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax25_pred_zero rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax26_pred_succ rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax16_mod2_succ rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax21 LQtdcs (by decide) (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))) (arithTDCS_of_arith hA) hcon (hNumS_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax24_mod2_of_even rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax17_div_mod_eq rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_L0_cons_def rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax14 LQtdcs (by decide) (by decide) (by decide) (arithTDCS_of_arith hA)
+      (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))))) hlift hcon (hNumS_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax15_lt_succ_sqrt rfl (axS' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))))))
+  cases hg
+
+
+/-- 🏁 La DP del fragmento con `√`, con instancias de inducción. -/
+theorem qDisjunctionPropertyS (insts : List Formula)
+    (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts)
+    (hcon : Not (ctxS insts ⊢ᵢ Formula.bottom))
+    (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
+      Slash (ctxS insts) (Grounded LQtdcs) (collapseF LQtdcs (substF zeroS g)))
+    {A B : Formula}
+    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxS insts ⊢ᵢ Formula.or A B) :
+    Or (ctxS insts ⊢ᵢ A) (ctxS insts ⊢ᵢ B) := by
+  refine disjunction_property_of_slashed (ctxS insts) (Grounded LQtdcs) LQtdcs
+    (fun _ hu => grounded_fix LQtdcs hu) (grounded_collapse_subst LQtdcs)
+    zeroS (fun _ => grounded_zero LQtdcs) (fun g hg => ?_) hAB h
+  rcases List.mem_append.mp hg with hcore | hind
+  · rw [arithTDCSAxioms_sentence g hcore]
+    exact slash_arithTDCSAxioms hlift hcon g hcore
+  · exact hInd g hind
+
+/-- 🏁🏁🏁 **26 de los 34** — sin instancias de inducción: la consistencia y nada más. -/
+theorem qDisjunctionProperty_arithTDCS
+    (hcon : Not (ctxS [] ⊢ᵢ Formula.bottom))
+    {A B : Formula}
+    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxS [] ⊢ᵢ Formula.or A B) :
+    Or (ctxS [] ⊢ᵢ A) (ctxS [] ⊢ᵢ B) := by
+  refine qDisjunctionPropertyS [] (by rfl) hcon ?_ hAB h
+  intro g hg
+  cases hg
+
 end PeanoRF.HA

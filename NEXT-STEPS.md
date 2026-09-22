@@ -10,13 +10,16 @@
 
 ## 🎯 SIGUIENTE SESIÓN
 
-> 🏁🏁🏁 **2026-09-21 · LA DP DEL FRAGMENTO ES INCONDICIONAL.** `hcon` cayó con un modelo
-> estándar sobre `ℕ` (ADR-039): `qDisjunctionProperty_arithTM_final` no tiene **ninguna**
-> hipótesis. 22 de los 34 axiomas, siete símbolos. Y el mismo modelo, parametrizado por el
-> valor de `−` fuera del rango de `ax29`, **mide** que `5̄ − 7̄` es indeterminado.
+> 🏁🏁🏁 **LA DP DEL FRAGMENTO ES INCONDICIONAL — 24 de los 34 axiomas**, nueve símbolos,
+> **ninguna hipótesis** (`qDisjunctionProperty_arithTDC_final`). 22 el 2026-09-21 con
+> ADR-039 —cuando `hcon` cayó con un modelo estándar sobre `ℕ`—, 23 con ADR-042 (`/₂`) y
+> 24 con ADR-044 (`::`). Y el mismo modelo, parametrizado por el valor de `−` fuera del
+> rango de `ax29`, **mide** que `5̄ − 7̄` es indeterminado.
 >
-> ▶ **Punto de reanudación**: `√` y `/₂`, las dos casillas de ADR-037 que siguen siendo
-> argumento; y el modelo de `coreAxioms` entero, que subiría la medición de `−` de 23 a 34.
+> ▶ **Punto de reanudación**: **`numeralI_sqrt`** — las tres piezas de `√` ya están puestas
+> (`Order.lean` §8–§9); falta montar las dos ramas de la tricotomía. Después, el modelo de
+> `coreAxioms` entero (subiría la medición de `−` de 25 axiomas a 34) y las dos deudas no
+> matemáticas.
 
 **H3ter — y lo primero es mirar si FOL ha contestado.**
 
@@ -119,7 +122,19 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   `addI_assoc` · `ltI_of_add` · ⭐ `ltI_add_right` (monotonía de `+`) · `mulI_two`
   (`t·2̄ = t+t`) · ⭐⭐ `ltI_mul_two` — que **evita la transitividad**: de `y + σj = k̄` se
   calcula `k̄·2̄ = y·2̄ + σ(σj + j)`, que es ya la forma que `ax13` pide.
-  ⏳ Queda `√`, y ya con dos de sus tres piezas puestas: ⭐ `notI_add_succ_self` —ningún
+  🏁 **`√`: LAS TRES PIEZAS PUESTAS** el 2026-09-22 (`Order.lean` §8–§9), todas en
+  `[propext, Quot.sound]`: `notI_lt_succ_of_lt` · ⭐ `ltI_succ_le` (**discreción**: entre `a`
+  y `σa` no hay nada) · ⭐ `ltI_mul_self` (**monotonía del cuadrado**).
+  ⛔ Y **la puerta NO era la que anuncié**: dije que hacía falta la forma ∀ de
+  `zeroI_or_succ` para instanciarla en el testigo de un `elim_ex`; no hace falta ninguna
+  forma ∀ — la discreción sale de la tricotomía sobre `σa` vs `b`, **anclados los dos**.
+  ⭐ Lo que sí destrabó todo fue quitar un `Grounded` que sobraba en `addI_assoc` y
+  `mulI_distrib`: el doble levantamiento de `forall_3` lo deshace `FOL.substTerm_liftLift`,
+  que estaba en el mismo fichero que el lema que sí usábamos.
+  ⏳ Falta `numeralI_sqrt`: montar las dos ramas de la tricotomía con los hechos numéricos
+  `k² ≤ n < (k+1)²` y tratar el `≤` de `ax14`, que es una disyunción.
+
+  (anterior) ⏳ Queda `√`, y ya con dos de sus tres piezas puestas: ⭐ `notI_add_succ_self` —ningún
   término anclado cumple `x + σy = x`, que para NUMERALES costó inducción meta
   (`addI_succ_ne`) y para términos anclados sale **gratis**: es `x < x` por `ax13`, y `ax18`
   lo prohíbe— y `ltI_trans`. Falta `a<b → a·a<b·b` y tratar el `≤` de `ax14`, que es una

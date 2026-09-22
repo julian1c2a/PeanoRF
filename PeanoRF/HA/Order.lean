@@ -190,15 +190,19 @@ theorem zeroI_or_succ (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     `a + σj = b`, entonces `(a+c) + σj = (a+σj) + c = b + c`. **Ni cancelación ni
     inducción.** -/
 
-/-- Asociatividad de `+` para términos ANCLADOS (`ax7`). El anclaje hace falta por los
-    `liftTerm` anidados que deja `forall_3`, que `substTerm_liftTerm` sola no deshace. -/
-theorem addI_assoc (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) (u v : Term) :
+/-- Asociatividad de `+` (`ax7`), para términos CUALESQUIERA.
+
+    ⚠️ Esto pidió `Grounded` en el primer argumento hasta el 2026-09-22, y **no hacía
+    falta**: el estorbo era el doble levantamiento que deja `forall_3`
+    —`substTerm 1 (liftTerm 0 u) (liftTerm 0 (liftTerm 0 t))`—, y aguas arriba existe el
+    lema que lo deshace, `FOL.substTerm_liftLift`. Una hipótesis de más durante un día por
+    no haber buscado el lema que ya estaba. -/
+theorem addI_assoc (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u v : Term) :
     Γ ⊢ᵢ Formula.eq (add (add t u) v) (add t (add u v)) := by
   have h := specI (specI (specI (hΓ ax7_add_assoc (by memA)) t) u) v
   simpa (config := { decide := true }) only [ax7_add_assoc, forall_3, substFormula,
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, add,
-    substTerm_liftTerm, grounded_liftTerm L ht, grounded_substTerm L ht] using h
+    substTerm_liftTerm, substTerm_liftLift] using h
 
 /-- La dirección ⇐ de `ax13`, ya como teorema. -/
 theorem ltI_of_add (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
@@ -244,9 +248,9 @@ theorem ltI_add_right (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   have hstep : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
       Formula.eq (add (add a c) (succ (Term.var 0)))
                  (add (add a (succ (Term.var 0))) c) :=
-    eqI_trans (addI_assoc hΓ1 L ha c (succ (Term.var 0)))
+    eqI_trans (addI_assoc hΓ1 a c (succ (Term.var 0)))
       (eqI_trans (eqI_congr_fun2_r add_sym a (addI_comm hΓ1 c (succ (Term.var 0))))
-        (eqI_symm (addI_assoc hΓ1 L ha (succ (Term.var 0)) c)))
+        (eqI_symm (addI_assoc hΓ1 a (succ (Term.var 0)) c)))
   exact ltI_of_add hΓ1 L (grounded_add hs ha hc) (grounded_add hs hb hc) (Term.var 0)
     (eqI_trans hstep (eqI_congr_fun2_l add_sym c hA))
 
@@ -273,14 +277,14 @@ theorem mulI_comm (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u : T
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, mul,
     substTerm_liftTerm] using h
 
-/-- Distributividad por la IZQUIERDA (`ax12`), con el primer argumento anclado. -/
-theorem mulI_distrib (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) (u v : Term) :
+/-- Distributividad por la IZQUIERDA (`ax12`), para términos cualesquiera. Misma historia
+    que `addI_assoc`: el `Grounded` que pedía sobraba. -/
+theorem mulI_distrib (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u v : Term) :
     Γ ⊢ᵢ Formula.eq (mul t (add u v)) (add (mul t u) (mul t v)) := by
   have h := specI (specI (specI (hΓ ax12_mul_distrib (by memA)) t) u) v
   simpa (config := { decide := true }) only [ax12_mul_distrib, forall_3, substFormula,
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, mul, add,
-    substTerm_liftTerm, grounded_liftTerm L ht, grounded_substTerm L ht] using h
+    substTerm_liftTerm, substTerm_liftLift] using h
 
 /-- ⭐ `t · 2̄ = t + t`. Sale de `ax9`, `ax8` y `0 + x = x`, sin inducción. -/
 theorem mulI_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t : Term) :
@@ -331,7 +335,7 @@ theorem ltI_mul_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   have e3 : (Formula.eq (add y (succ (Term.var 0))) k :: lt y k :: Γ) ⊢ᵢ
       Formula.eq (mul (numeralM 2) (add y (succ (Term.var 0))))
                  (add (mul (numeralM 2) y) (mul (numeralM 2) (succ (Term.var 0)))) :=
-    mulI_distrib hΓ1 L h2g y (succ (Term.var 0))
+    mulI_distrib hΓ1 (numeralM 2) y (succ (Term.var 0))
   have e4 : (Formula.eq (add y (succ (Term.var 0))) k :: lt y k :: Γ) ⊢ᵢ
       Formula.eq (add (mul (numeralM 2) y) (mul (numeralM 2) (succ (Term.var 0))))
                  (add (mul y (numeralM 2)) (mul (succ (Term.var 0)) (numeralM 2))) :=
@@ -369,7 +373,8 @@ theorem ltI_irrefl (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     numerales, con inducción META. Para términos anclados sale GRATIS: `x + σy = x` es
     justo `x < x` por `ax13`, y `ax18` lo prohíbe.
 
-    🏗️ **ANDAMIO de `√`**: sin uso portante hasta que `ax14`/`ax15` entren. -/
+    ✅ Y desde el 2026-09-22 tiene uso portante: es lo que refuta la tercera rama de
+    `notI_lt_succ_of_lt`, o sea lo que hace DISCRETO el orden. -/
 theorem notI_add_succ_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (L : String → Nat → Bool) {x : Term} (hx : Grounded L x) (y : Term) :
     Γ ⊢ᵢ Formula.impl (Formula.eq (add x (succ y)) x) Formula.bottom := by
@@ -426,7 +431,190 @@ theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   exact eqI_trans
     (eqI_congr_fun2_r add_sym a
       (eqI_symm (addI_succ hΓ2 (succ (Term.var 1)) (Term.var 0))))
-    (eqI_symm (addI_assoc hΓ2 L ha (succ (Term.var 1)) (succ (Term.var 0))))
+    (eqI_symm (addI_assoc hΓ2 a (succ (Term.var 1)) (succ (Term.var 0))))
+
+
+/-! ## 8 · ⭐ DISCRECIÓN del orden — y sin la forma ∀ de `zeroI_or_succ`
+
+    `a < b → σa ≤ b`. La vía es la tricotomía sobre `σa` vs `b`, **los dos anclados**, y
+    refutar la tercera rama: de `a < b` y `b < σa` sale `σ(a+W) = σa`, `ax3` da `a + W = a`,
+    y eso es lo que `notI_add_succ_self` prohíbe. -/
+
+theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hs : L succ_sym 1 = true) {a b : Term}
+    (ha : Grounded L a) (hb : Grounded L b) :
+    Γ ⊢ᵢ Formula.impl (lt a b) (Formula.impl (lt b (succ a)) Formula.bottom) := by
+  have hsa : Grounded L (succ a) := grounded_func1 L hs ha
+  refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
+  refine Derivesᵢ.intro_impl _ (lt b (succ a)) _ ?_
+  have hex1 := Derivesᵢ.elim_impl _ _ _
+    (Derivesᵢ.weakening Γ (lt b (succ a) :: lt a b :: Γ) _ (exI_of_ltI hΓ L ha hb)
+      (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz)))
+    (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+  refine Derivesᵢ.elim_ex _ _ _ hex1 ?_
+  simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, succ,
+    grounded_liftTerm L ha, grounded_liftTerm L hb]
+  have hex2 := Derivesᵢ.elim_impl _ _ _
+    (Derivesᵢ.weakening Γ
+      (Formula.eq (add a (succ (Term.var 0))) b :: lt b (succ a) :: lt a b :: Γ) _
+      (exI_of_ltI hΓ L hb hsa)
+      (fun _ hz => List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ hz))))
+    (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+  refine Derivesᵢ.elim_ex _ _ _ hex2 ?_
+  simp (config := { decide := true }) only [List.map_cons, hlift, liftFormula, liftTerms,
+    liftTerm, lt, add, succ, Nat.reduceAdd, ite_true, ite_false,
+    grounded_liftTerm L ha, grounded_liftTerm L hb]
+  have hΓ2 : ∀ g, List.Mem g arithAxioms →
+      (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ g :=
+    hyps_cons (hyps_cons (hyps_cons (hyps_cons hΓ _) _) _) _
+  have hC : (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (add b (succ (Term.var 0))) (succ a) :=
+    Derivesᵢ.hyp _ _ (List.Mem.head _)
+  have hB : (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (add a (succ (Term.var 1))) b :=
+    Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _))
+  -- `σa = b + σ#0 = (a + σ#1) + σ#0 = a + (σ#1 + σ#0) = a + σ(σ#1 + #0) = σ(a + (σ#1 + #0))`
+  have e1 := eqI_symm hC
+  have e2 := eqI_congr_fun2_l add_sym (succ (Term.var 0)) (eqI_symm hB)
+  have e3 := addI_assoc hΓ2 a (succ (Term.var 1)) (succ (Term.var 0))
+  have e4 := eqI_congr_fun2_r add_sym a
+    (addI_succ hΓ2 (succ (Term.var 1)) (Term.var 0))
+  have e5 := addI_succ hΓ2 a (add (succ (Term.var 1)) (Term.var 0))
+  have hchain : (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (succ a) (succ (add a (add (succ (Term.var 1)) (Term.var 0)))) :=
+    eqI_trans e1 (eqI_trans e2 (eqI_trans e3 (eqI_trans e4 e5)))
+  -- `ax3` ⇒ `a = a + (σ#1 + #0)`; y `σ#1 + #0 = σ(#0 + #1)`
+  have hinj : (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq a (add a (add (succ (Term.var 1)) (Term.var 0))) :=
+    Derivesᵢ.elim_impl _ _ _
+      (succI_inj hΓ2 a (add a (add (succ (Term.var 1)) (Term.var 0)))) hchain
+  have hW : (Formula.eq (add b (succ (Term.var 0))) (succ a)
+        :: Formula.eq (add a (succ (Term.var 1))) b
+        :: lt b (succ a) :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (add (succ (Term.var 1)) (Term.var 0))
+                 (succ (add (Term.var 0) (Term.var 1))) :=
+    eqI_trans (addI_comm hΓ2 (succ (Term.var 1)) (Term.var 0))
+      (addI_succ hΓ2 (Term.var 0) (Term.var 1))
+  exact Derivesᵢ.elim_impl _ _ _
+    (notI_add_succ_self hΓ2 L ha (add (Term.var 0) (Term.var 1)))
+    (eqI_symm (eqI_trans hinj (eqI_congr_fun2_r add_sym a hW)))
+
+
+/-- ⭐ **DISCRECIÓN**: entre `a` y `σa` no hay nada.
+
+    🏗️ **ANDAMIO de `√`**: sin uso portante hasta que `ax14`/`ax15` entren. -/
+theorem ltI_succ_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hs : L succ_sym 1 = true) {a b : Term}
+    (ha : Grounded L a) (hb : Grounded L b) :
+    Γ ⊢ᵢ Formula.impl (lt a b)
+      (Formula.or (lt (succ a) b) (Formula.eq (succ a) b)) := by
+  have hsa : Grounded L (succ a) := grounded_func1 L hs ha
+  refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
+  have hΓ1 : ∀ g, List.Mem g arithAxioms → (lt a b :: Γ) ⊢ᵢ g := hyps_cons hΓ (lt a b)
+  have htri := specI (specI (ax19I hΓ1) (succ a)) b
+  have htri' : (lt a b :: Γ) ⊢ᵢ Formula.or (lt (succ a) b)
+      (Formula.or (Formula.eq (succ a) b) (lt b (succ a))) := by
+    simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt,
+      grounded_liftTerm L hsa, grounded_liftTerm L hb,
+      grounded_substTerm L hsa, grounded_substTerm L hb] using htri
+  refine Derivesᵢ.elim_or _ _ _ _ htri' ?_ ?_
+  · exact Derivesᵢ.intro_or_l _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _))
+  refine Derivesᵢ.elim_or _ _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _)) ?_ ?_
+  · exact Derivesᵢ.intro_or_r _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _))
+  · refine Derivesᵢ.bot_elim _ _ ?_
+    refine Derivesᵢ.elim_impl _ _ _
+      (Derivesᵢ.elim_impl _ _ _
+        (Derivesᵢ.weakening Γ
+          (lt b (succ a) :: Formula.or (Formula.eq (succ a) b) (lt b (succ a))
+            :: lt a b :: Γ) _
+          (notI_lt_succ_of_lt hΓ hlift hs ha hb)
+          (fun _ hz => List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ hz))))
+        (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))
+      (Derivesᵢ.hyp _ _ (List.Mem.head _))
+
+
+/-! ## 9 · ⭐ Monotonía del CUADRADO
+
+    De `a + σj = b` se calcula `b·b = a·a + σ(W)`: el `σ` sale de `b·σj = b·j + b` y de
+    `b = a + σj`, reasociando hasta dejar el `σj` al final y aplicando `ax5`. Mismo truco
+    que `ltI_mul_two`, y por la misma razón: la forma que `ax13` pide se **construye**.
+
+    ⚠️ El marcador va en el docstring del TEOREMA y no aquí: `[H]` mira el docstring de
+    declaración inmediato, y una cabecera de SECCIÓN no exime a nada — para eso se ajustó
+    el 2026-09-21. (Y los delimitadores no se pueden citar literalmente: los comentarios de
+    Lean **anidan**, así que escribirlos aquí dejaría el comentario sin cerrar.) -/
+
+/-- ⭐ **Monotonía estricta del cuadrado**: `a < b ⟹ a·a < b·b`.
+
+    🏗️ **ANDAMIO de `√`**, como `ltI_succ_le` y `ltI_trans`: sin uso portante todavía. -/
+theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hm : L mul_sym 2 = true) {a b : Term}
+    (ha : Grounded L a) (hb : Grounded L b) :
+    Γ ⊢ᵢ Formula.impl (lt a b) (lt (mul a a) (mul b b)) := by
+  refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
+  have hex := Derivesᵢ.elim_impl _ _ _
+    (Derivesᵢ.weakening _ _ _ (exI_of_ltI hΓ L ha hb)
+      (fun _ hz => List.Mem.tail _ hz))
+    (Derivesᵢ.hyp _ _ (List.Mem.head _))
+  refine Derivesᵢ.elim_ex _ _ _ hex ?_
+  simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, mul,
+    grounded_liftTerm L ha, grounded_liftTerm L hb]
+  have hΓ1 : ∀ g, List.Mem g arithAxioms →
+      (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ g :=
+    hyps_cons (hyps_cons hΓ (lt a b)) (Formula.eq (add a (succ (Term.var 0))) b)
+  have hB : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (add a (succ (Term.var 0))) b := Derivesᵢ.hyp _ _ (List.Mem.head _)
+  -- `b·a = a·a + a·σ#0`
+  have hba : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (mul b a) (add (mul a a) (mul a (succ (Term.var 0)))) :=
+    eqI_trans (mulI_comm hΓ1 b a)
+      (eqI_trans (eqI_congr_fun2_r mul_sym a (eqI_symm hB))
+        (mulI_distrib hΓ1 a a (succ (Term.var 0))))
+  -- `b·σ#0 = (b·#0 + a) + σ#0`
+  have hbs : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (mul b (succ (Term.var 0)))
+                 (add (add (mul b (Term.var 0)) a) (succ (Term.var 0))) :=
+    eqI_trans (mulI_succ hΓ1 b (Term.var 0))
+      (eqI_trans (eqI_congr_fun2_r add_sym (mul b (Term.var 0)) (eqI_symm hB))
+        (eqI_symm (addI_assoc hΓ1 (mul b (Term.var 0)) a (succ (Term.var 0)))))
+  -- el corchete `a·σ#0 + b·σ#0 = σ(X + #0)`
+  have hbr : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (add (mul a (succ (Term.var 0))) (mul b (succ (Term.var 0))))
+        (succ (add (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a))
+                   (Term.var 0))) :=
+    eqI_trans (eqI_congr_fun2_r add_sym (mul a (succ (Term.var 0))) hbs)
+      (eqI_trans (eqI_symm (addI_assoc hΓ1 (mul a (succ (Term.var 0)))
+                             (add (mul b (Term.var 0)) a) (succ (Term.var 0))))
+        (addI_succ hΓ1 (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a))
+          (Term.var 0)))
+  -- `b·b = a·a + σ(X + #0)`
+  have hfin : (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ
+      Formula.eq (mul b b)
+        (add (mul a a)
+          (succ (add (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a))
+                     (Term.var 0)))) :=
+    eqI_trans (eqI_congr_fun2_r mul_sym b (eqI_symm hB))
+      (eqI_trans (mulI_distrib hΓ1 b a (succ (Term.var 0)))
+        (eqI_trans (eqI_congr_fun2_l add_sym (mul b (succ (Term.var 0))) hba)
+          (eqI_trans (addI_assoc hΓ1 (mul a a) (mul a (succ (Term.var 0)))
+                       (mul b (succ (Term.var 0))))
+            (eqI_congr_fun2_r add_sym (mul a a) hbr))))
+  exact ltI_of_add hΓ1 L (grounded_func2 L hm ha ha) (grounded_func2 L hm hb hb)
+    (add (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a)) (Term.var 0))
+    (eqI_symm hfin)
 
 
 end PeanoRF.HA

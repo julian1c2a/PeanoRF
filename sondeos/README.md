@@ -24,6 +24,8 @@ bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 | `h2c_probe.lean` | **2026-09-16**: footprint de `succ_add` (caso con parámetro) sobre `⊢ᵢ` |
 | `param_probe.lean` | **2026-09-16**: 🔑 qué hipótesis exige el parámetro para que el contexto sea cerrado |
 | `audit_2026-09-22.lean` | **2026-09-22**: re-medición contra FOL@`2d5b7c8` (ModelG) y RPP@`132f584` — los siete footprints **intactos** |
+| ⭐ `sqrt_probe.lean` | **2026-09-22**: las TRES piezas de `√` —discreción y monotonía del cuadrado—, y ⛔ que **la puerta NO era la forma ∀ de `zeroI_or_succ`** que yo había anunciado. Conserva el PASO 0: el `Grounded` que sobraba en `addI_assoc`/`mulI_distrib` |
+| ⭐ `cons_probe.lean` | **2026-09-22**: que `::` cae por COMPOSICIÓN al estar `/₂` determinado (ADR-044) |
 | ⭐ `sqrt_div2_probe.lean` | **2026-09-22**: ⛔ ¿están `√` y `/₂` determinados sobre numerales? Mide que Q⁺⁺ **DERIVA** «todo término es 0 o sucesor» —que en Q es un AXIOMA y en `coreAxioms` no está—, y con eso el ⛔ de ADR-037 para `/₂` («pide cancelación») queda **REFUTADO**: `numeralI_div2` lo demuestra determinado |
 | ⭐ `check_C_smoke.bash` | **2026-09-22**: que el control `[C]` de `check-doc-sync.bash` **NO ES VACUO** — ocho casos, dos positivos y seis negativos, incluida la regresión del agujero de la subcadena |
 

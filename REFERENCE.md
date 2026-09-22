@@ -118,11 +118,12 @@ cita a algo que no existe. Se prefiere un enlace que no pueda pudrirse.
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo | [Calculus §2.8](doc/REFERENCE-Calculus.md) |
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo | [HA §2.1](doc/REFERENCE-HA.md) |
 | `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | ✅ 6 de 6 | [HA §2.2](doc/REFERENCE-HA.md) |
-| `HA/Fragment.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | ✅ la medición, en código | [HA §2.3](doc/REFERENCE-HA.md) |
-| `HA/Model.lean` | `PeanoRF.HA` | `HA.Fragment`, `Calculus.Soundness` | 🏁 `hcon` descargada, `−` medido | [HA §2.4](doc/REFERENCE-HA.md) |
-| `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo | [HA §2.5](doc/REFERENCE-HA.md) |
-| `HA/Numerals.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | ✅ Completo | [HA §2.6](doc/REFERENCE-HA.md) |
-| `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress | [HA §2.7](doc/REFERENCE-HA.md) |
+| `HA/Order.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | 🏁 el orden sobre anclados | [HA §2.3](doc/REFERENCE-HA.md) |
+| `HA/Fragment.lean` | `PeanoRF.HA` | `HA.Order` | ✅ 23 de 34 | [HA §2.4](doc/REFERENCE-HA.md) |
+| `HA/Model.lean` | `PeanoRF.HA` | `HA.Fragment`, `Calculus.Soundness` | 🏁 `hcon` descargada, `−` medido | [HA §2.5](doc/REFERENCE-HA.md) |
+| `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo | [HA §2.6](doc/REFERENCE-HA.md) |
+| `HA/Numerals.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | ✅ Completo | [HA §2.7](doc/REFERENCE-HA.md) |
+| `HA/Arith.lean` | `PeanoRF.HA` | `PeanoRF.HA.Axioms` | 🔄 In progress | [HA §2.8](doc/REFERENCE-HA.md) |
 
 *Status codes*: ✅ Complete · 🧊 Frozen · 🔶 Partial · 🔄 In progress · ❌ Pending
 
@@ -158,7 +159,8 @@ graph TD
     CC --> HD
     SL --> HD
     HD --> HS[HA.SlashAxioms]
-    HS --> HF[HA.Fragment]
+    HS --> HO[HA.Order]
+    HO --> HF[HA.Fragment]
     HF --> HM[HA.Model]
     SO --> HM
     P --> AC[PeanoRF.Meta.AxiomCheck]
@@ -191,7 +193,7 @@ enlaza de vuelta a este índice y de forma cruzada a los otros dos:
 |---|---|---|
 | ⚙️ **[doc/REFERENCE-Meta.md](doc/REFERENCE-Meta.md)** | contacto con las dependencias, **gate de pureza** de tres ejes, capa ω | `Prelim`, `Meta/AxiomCheck`, `Omega/Basic` |
 | 🔧 **[doc/REFERENCE-Calculus.md](doc/REFERENCE-Calculus.md)** | el cálculo **`⊢ᵢ`**, solidez, consistencia sintáctica, sustitución, colapso y **la barra de Kleene** | los 8 de `Calculus/` |
-| 🎯 **[doc/REFERENCE-HA.md](doc/REFERENCE-HA.md)** | axiomas de HA, numerales, **dominio**, los 34 barrados, el **fragmento** y el **modelo** sobre `ℕ` | los 7 de `HA/` |
+| 🎯 **[doc/REFERENCE-HA.md](doc/REFERENCE-HA.md)** | axiomas de HA, numerales, **dominio**, los 34 barrados, el **orden**, el **fragmento** y el **modelo** sobre `ℕ` | los 8 de `HA/` |
 
 **Por dónde entrar según lo que se busque:**
 
@@ -248,7 +250,7 @@ y el colapso (`collapseF L`) están **en el enunciado** y no en la letra pequeñ
 
 ### 6.1 Fully Projected Files
 
-Los **18** módulos del árbol, con su nodo y la fecha de su última proyección:
+Los **19** módulos del árbol, con su nodo y la fecha de su última proyección:
 
 | módulo | nodo | § | proyectado |
 |---|---|---|---|
@@ -265,11 +267,12 @@ Los **18** módulos del árbol, con su nodo y la fecha de su última proyección
 | `Calculus/Collapse.lean` | Calculus | 2.8 | 2026-09-18 |
 | `HA/Domain.lean` | HA | 2.1 | 2026-09-18 |
 | `HA/SlashAxioms.lean` | HA | 2.2 | 2026-09-18 |
-| `HA/Fragment.lean` | HA | 2.3 | 2026-09-21 |
-| `HA/Model.lean` | HA | 2.4 | 2026-09-21 |
-| `HA/Axioms.lean` | HA | 2.5 | 2026-09-16 |
-| `HA/Numerals.lean` | HA | 2.6 | 2026-09-18 |
-| `HA/Arith.lean` | HA | 2.7 | 2026-09-16 |
+| **`HA/Order.lean`** | HA | 2.3 | **2026-09-22** |
+| `HA/Fragment.lean` | HA | 2.4 | 2026-09-22 |
+| `HA/Model.lean` | HA | 2.5 | 2026-09-22 |
+| `HA/Axioms.lean` | HA | 2.6 | 2026-09-16 |
+| `HA/Numerals.lean` | HA | 2.7 | 2026-09-18 |
+| `HA/Arith.lean` | HA | 2.8 | 2026-09-16 |
 
 ⛔ **`[C]` mira la FILA, no la SECCIÓN, y eso sigue igual después de arbolizar.** El control
 comprueba que el nombre del módulo **aparezca** en `REFERENCE.md` o en `doc/REFERENCE-*.md`;

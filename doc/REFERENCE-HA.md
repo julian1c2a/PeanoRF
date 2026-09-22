@@ -22,11 +22,12 @@ modelo estándar sobre `ℕ` que descarga la consistencia.
 |---|---|---|
 | [`PeanoRF/HA/Domain.lean`](../PeanoRF/HA/Domain.lean) | el dominio `Grounded`, definido **por sus clausuras** | 2.1 |
 | [`PeanoRF/HA/SlashAxioms.lean`](../PeanoRF/HA/SlashAxioms.lean) | 🏁🏁 los **34** axiomas de `coreAxioms` barrados | 2.2 |
-| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → **22** | 2.3 |
-| [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean) | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido | 2.4 |
-| [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean) | el conjunto de axiomas, `gen_closed`, `Closed` | 2.5 |
-| [`PeanoRF/HA/Numerals.lean`](../PeanoRF/HA/Numerals.lean) | los numerales y el puente sintaxis ↔ `ℕ` | 2.6 |
-| [`PeanoRF/HA/Arith.lean`](../PeanoRF/HA/Arith.lean) | `zero_add` y `succ_add`, el primer teorema finitario | 2.7 |
+| [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean) | 🏁 **el orden sobre términos anclados** — la herramienta que refutó ADR-037 | 2.3 |
+| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → **23** | 2.4 |
+| [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean) | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido | 2.5 |
+| [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean) | el conjunto de axiomas, `gen_closed`, `Closed` | 2.6 |
+| [`PeanoRF/HA/Numerals.lean`](../PeanoRF/HA/Numerals.lean) | los numerales y el puente sintaxis ↔ `ℕ` | 2.7 |
+| [`PeanoRF/HA/Arith.lean`](../PeanoRF/HA/Arith.lean) | `zero_add` y `succ_add`, el primer teorema finitario | 2.8 |
 
 ⛔ **Lo primero que hay que saber de este nodo**: el enunciado ingenuo de H3ter —«HA tiene
 la propiedad de disyunción»— es **falso** sobre la sintaxis genérica de FOL, y está medido.
@@ -141,7 +142,63 @@ ramas son `∈` y no hay nada que refutar bajando a numerales.
 
 ---
 
-## 2.3 `HA/Fragment.lean` — el FRAGMENTO donde la DP sí sale
+## 2.3 `HA/Order.lean` — el ORDEN sobre términos anclados
+
+**Fichero**: [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean)
+
+**Namespace**: `PeanoRF.HA`
+**Dependencies**: `PeanoRF.HA.SlashAxioms`
+**Last updated**: 2026-09-22
+**Status**: 🏁 la herramienta que refutó ADR-037
+
+⛔ **Por qué existe.** Hasta el 2026-09-22 el orden de Q⁺⁺ sólo se manejaba **sobre
+numerales** (`numeralI_lt`, `numeralI_ne`, `numeralI_not_lt`, `addI_succ_ne`). Para un
+término cualquiera —un `√n̄`, un `/₂n̄`— no había nada, y ADR-037 dedujo de ahí que los
+símbolos «caracterizados por propiedades» no se despejan sin inducción. **Era falso.**
+
+| nombre | enunciado | footprint |
+|---|---|---|
+| `ax13I` / `ax18I` / `ax19I` | los tres axiomas del orden, instanciables | — |
+| `exI_of_ltI` | la dirección ⇒ de `ax13` para términos anclados | `propext, Quot.sound` |
+| `ltI_of_add` | la dirección ⇐ | `propext, Quot.sound` |
+| `ltI_irrefl` | `ax18` instanciado | `propext` |
+| ⭐ `notI_lt_zero` | **nada es menor que cero** — `t + σk = 0` choca con `ax5` + `ax2` | `propext, Quot.sound` |
+| `zeroI_add` | `0 + t = t` **sin** instancia de inducción: el término está fijo | `propext, Quot.sound` |
+| ⭐⭐ **`zeroI_or_succ`** | **todo término anclado es `0` o un sucesor** | `propext, Quot.sound` |
+| `addI_assoc` | asociatividad, con el primer argumento anclado | `propext, Quot.sound` |
+| `grounded_add` | el anclaje sobrevive a la suma | `propext, Quot.sound` |
+| ⭐ **`ltI_add_right`** | **monotonía estricta de `+`** | `propext, Quot.sound` |
+| `mulI_zero` · `mulI_succ` · `mulI_comm` · `mulI_distrib` | el producto, instanciado | `propext, Quot.sound` |
+| `mulI_two` | `t·2̄ = t + t` | `propext, Quot.sound` |
+| ⭐⭐ **`ltI_mul_two`** | **monotonía por `2̄`, SIN transitividad** | `propext, Quot.sound` |
+| ⭐ `notI_add_succ_self` | ningún término anclado cumple `x + σy = x` | **`propext`** |
+| `ltI_trans` | transitividad de `<` | `propext, Quot.sound` |
+
+⭐⭐ **`zeroI_or_succ` es lo que Robinson Q POSTULA** (su axioma 3) y `coreAxioms` no tiene.
+Se deriva de la tricotomía: la rama `t < 0` la refuta `notI_lt_zero`, y la rama `0 < t` da
+el testigo por la dirección ⇒ de `ax13` más `0 + x = x`.
+
+⚠️ `0 + x = x` **no es `zero_add`**. Aquél cuantifica sobre `x` y por eso pide una instancia
+de inducción; aquí el término está **fijo**, y basta `ax6` + `ax4`. La diferencia es
+exactamente la que separa «esquema» de «instancia», y es la que hacía parecer cara esta
+pieza.
+
+🔑 **El truco que evita la transitividad** (`ltI_mul_two`): para `a < b ⇒ a·2̄ < b·2̄` lo
+natural sería encadenar `a+a < b+a < b+b`. No hace falta — de `y + σj = k̄` se **calcula**
+`k̄·2̄ = y·2̄ + σ(σj + j)`, que es ya la forma que `ax13` pide. Menos piezas y menos
+hipótesis.
+
+⭐ **Y `notI_add_succ_self` mide lo que costaba lo mismo con numerales**: `addI_succ_ne`
+necesita **inducción META**; aquí sale gratis, porque `x + σy = x` es justo `x < x`.
+
+⚠️ **Todo pide `Grounded`**, y varios lemas además `hlift`: al cruzar el binder de `∃` de
+`ax13` los términos se levantan y el contexto también. Para numerales eso lo deshacen
+`liftTerm_numeralM`/`substTerm_numeralM`; para un término cualquiera, las dos clausuras del
+dominio.
+
+---
+
+## 2.4 `HA/Fragment.lean` — el FRAGMENTO donde la DP sí sale
 
 **Fichero**: [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean)
 
@@ -199,7 +256,7 @@ signatura del fragmento A**. El andamio era el camino.
 
 ---
 
-## 2.4 `HA/Model.lean` — el modelo estándar sobre `ℕ`
+## 2.5 `HA/Model.lean` — el modelo estándar sobre `ℕ`
 
 **Fichero**: [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean)
 
@@ -262,7 +319,7 @@ valor de `t`**, no exhibiendo dos modelos sueltos. Un parámetro es más fuerte 
 
 ---
 
-## 2.5 `HA/Axioms.lean` — el conjunto de axiomas de HA
+## 2.6 `HA/Axioms.lean` — el conjunto de axiomas de HA
 
 **Fichero**: [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean)
 
@@ -314,7 +371,7 @@ variable libre. Su footprint es `[propext]`.
 
 ---
 
-## 2.6 `HA/Numerals.lean` — numerales, y el puente sintaxis ↔ `ℕ`
+## 2.7 `HA/Numerals.lean` — numerales, y el puente sintaxis ↔ `ℕ`
 
 **Fichero**: [`PeanoRF/HA/Numerals.lean`](../PeanoRF/HA/Numerals.lean)
 
@@ -358,7 +415,7 @@ las dos.
 
 ---
 
-## 2.7 `HA/Arith.lean` — primer teorema finitario
+## 2.8 `HA/Arith.lean` — primer teorema finitario
 
 **Fichero**: [`PeanoRF/HA/Arith.lean`](../PeanoRF/HA/Arith.lean)
 

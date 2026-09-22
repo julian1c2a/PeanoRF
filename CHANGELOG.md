@@ -15,6 +15,57 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (c) · 🏁🏁🏁 `/₂` ENTRA — **23 de 34**, y ADR-037 REFUTADO
+
+Todo lo que estaba en el sondeo pasa a producción, y con ello el fragmento crece.
+
+```lean
+qDisjunctionProperty_arithTD_final : la DP de 23 axiomas, SIN NINGUNA HIPÓTESIS
+numeralI_div2                      : ⊢ᵢ /₂ n̄ = (n/2)‾
+```
+
+**Módulo nuevo: `PeanoRF/HA/Order.lean`** — el orden de Q⁺⁺ sobre términos **anclados**.
+Hasta hoy el orden sólo se manejaba sobre NUMERALES (`numeralI_lt`, `numeralI_ne`,
+`numeralI_not_lt`, `addI_succ_ne`); para un `√n̄` o un `/₂n̄` no había nada, y de esa
+ausencia salió el ⛔ de ADR-037.
+
+⛔ **La razón que daba ADR-037 —«`/₂` pide cancelación de `+` y `·`»— es falsa.** No hace
+falta cancelar nada: la cancelación es la herramienta de quien mira `ax17` como una ecuación
+a despejar. Mirada como lo que es —una caracterización dentro de un orden **total y
+discreto**— se resuelve por **tricotomía contra el candidato**.
+
+**Los dos hallazgos que importan:**
+
+⭐⭐ **`zeroI_or_succ` es el axioma 3 de Robinson Q, y aquí se DERIVA.** `coreAxioms` no lo
+tiene. Sale de la tricotomía: `t < 0` la refuta `notI_lt_zero`, y `0 < t` da el testigo por
+la ⇒ de `ax13` más `0 + x = x`. ⚠️ Y `0 + x = x` **no es `zero_add`**: aquél cuantifica
+sobre `x` y pide una instancia de inducción; aquí el término está **fijo**. La diferencia
+entre **esquema** e **instancia** es lo que hacía parecer cara esta pieza.
+
+🔑 **El truco que evita la transitividad**: para `a<b ⇒ a·2̄ < b·2̄` lo natural es encadenar
+`a+a < b+a < b+b`. De `y + σj = k̄` se **calcula** `k̄·2̄ = y·2̄ + σ(σj + j)`, que es ya la
+forma que `ax13` pide. Por eso `/₂` cerró **sin** `ltI_trans`.
+
+⭐ Y una medida de lo que costaba antes: `addI_succ_ne` —«ningún numeral es `x + σy`»—
+necesitaba **inducción META**, y el proyecto la llamó «la pieza que costó». Sobre términos
+anclados el mismo enunciado sale **gratis** (`notI_add_succ_self`, `[propext]`): es `x < x`.
+
+**El modelo también creció**: `natModelK` interpreta `/₂` y verifica `ax17` con una meta de
+`omega`, así que `hcon_fragmentD` descarga la consistencia de los 23 igual que antes la de
+los 22. `subAxioms` pasa a 24.
+
+⛔ **El criterio de ADR-037 queda como SUFICIENTE y NO NECESARIO.** «Definido por recursión
+sobre el constructor» sigue garantizando la entrada; `/₂` entra sin cumplirlo. Lo que decide
+no es la forma del axioma sino si el término queda **encajonado** en un orden total.
+
+⏳ `√` sigue abierto, con dos de sus tres piezas puestas (`notI_add_succ_self`, `ltI_trans`,
+ambas marcadas 🏗️ ANDAMIO porque **todavía no tienen uso portante** — y `[H]` las cazó en
+cuanto entraron, que para eso está).
+
+ADR-042. **52 jobs · 19 módulos · 0 sorry · 382 declaraciones.** Siete controles en verde.
+
+---
+
 ### 2026-09-22 (b) · 🔒 `[C]` ENDURECIDO — de «¿se menciona?» a «¿está proyectado?»
 
 La deuda de ayer, cerrada. Y al escribir el reemplazo salió **un segundo agujero que no

@@ -102,7 +102,11 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 - **Formalizar la no-derivabilidad de las ramas** del contraejemplo. Hoy es argumento por
   solidez; en esta familia un argumento no es una medición. ⭐ Y desde ADR-039 se sabe **con
   qué herramienta**: un modelo. `sub_neither` es la plantilla.
-- 🔶 **`√` y `/₂`** — EN CURSO (2026-09-22, `sondeos/sqrt_div2_probe.lean`). ⛔ Y lo primero
+- 🔶 **`√`** — EN CURSO. ✅ **`/₂` CERRADO el 2026-09-22 y EN PRODUCCIÓN** (ADR-042):
+  `PeanoRF/HA/Order.lean` + `numeralI_div2` + `qDisjunctionProperty_arithTD_final`, **23 de
+  los 34 axiomas sin ninguna hipótesis**. Lo que queda de esta deuda es `√`, con dos de sus
+  tres piezas puestas y marcadas 🏗️ ANDAMIO.
+  (Historia de cómo se llegó, `sondeos/sqrt_div2_probe.lean`.) ⛔ Y lo primero
   que salió es que **la razón que daba ADR-037 no se sostiene**: decía que `/₂` «pide
   cancelación de `+` y `·`», y la cancelación no hace falta — la caracterización se despeja
   **por el ORDEN**. Medido ya, todo en `[propext, Quot.sound]`:

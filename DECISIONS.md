@@ -1550,6 +1550,9 @@ caracterización no se despeja sin inducción en el objeto.
   Queda escrito como deuda, igual que la no-derivabilidad del contraejemplo de `junk_probe`.
   ✅ **La de `−` está PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
   con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
+- ⛔⛔ **REFUTADO para `/₂` el 2026-09-22 (ADR-042)**: la razón que da esta tabla —«pide
+  cancelación de `+` y `·`»— es falsa, y `/₂` está **en el fragmento** desde entonces
+  (`numeralI_div2`). El criterio de este ADR resulta **suficiente pero no necesario**.
 - 🚨 **Y sobre esas dos, el 2026-09-22 apareció contraevidencia MEDIDA** —ver
   `sondeos/sqrt_div2_probe.lean`—. El ⛔ de `/₂` decía «pide cancelación de `+` y `·`»; la
   cancelación **no hace falta**, porque la caracterización se despeja **por el ORDEN**: la
@@ -1813,6 +1816,79 @@ proyecto aprendió a fuerza de controles vacíos:
   que el documento declare a propósito**. `[C]` solo se pudo endurecer porque se inventó una
   línea —`**Fichero**`— que existe *para ser comprobada*. Un control sobre prosa libre es un
   control sobre la forma.
+
+---
+
+## ADR-042: el ORDEN en producción — `/₂` entra, y ADR-037 queda REFUTADO
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. ⛔ **Corrige el veredicto de ADR-037 para `/₂`** y su criterio.
+
+**Contexto**: ADR-037 clasificó los símbolos de Q⁺⁺ en dos clases —los **definidos por
+recursión sobre el constructor** (`τ`, `%₂`), que entran en el fragmento, y los
+**caracterizados por propiedades** (`/₂`, `√`, `−`), que no— y cerró `/₂` con esta razón:
+
+> «`/₂` pide cancelación de `+` y `·`».
+
+⛔ **Es falso.** No hace falta cancelar nada. La cancelación es la herramienta de quien
+mira `ax17` como una ecuación a despejar; mirada como lo que es —una caracterización dentro
+de un **orden total y discreto**— se resuelve por **tricotomía contra el candidato**.
+
+**Decisión**: `PeanoRF/HA/Order.lean`, el orden de Q⁺⁺ sobre términos **anclados** (hasta
+hoy sólo existía sobre numerales), y con él `/₂` dentro del fragmento.
+
+| pieza | qué es |
+|---|---|
+| `exI_of_ltI` / `ltI_of_add` | las dos direcciones de `ax13` para términos anclados |
+| ⭐ `notI_lt_zero` | nada es menor que cero — `t + σk = 0` choca con `ax5` + `ax2` |
+| ⭐⭐ `zeroI_or_succ` | **todo término anclado es `0` o sucesor** |
+| ⭐ `ltI_add_right` | monotonía estricta de `+`: `(a+c)+σj = (a+σj)+c = b+c` |
+| `mulI_two` | `t·2̄ = t+t` |
+| ⭐⭐ `ltI_mul_two` | monotonía por `2̄`, **sin transitividad** |
+| ⭐ `notI_add_succ_self` · `ltI_trans` | 🏗️ andamio de `√` |
+
+**Resultado**, todo en `[propext, Quot.sound]`:
+
+```lean
+numeralI_div2                      : ⊢ᵢ /₂ n̄ = (n/2)‾
+qDisjunctionProperty_arithTD_final : la DP de 23 axiomas, SIN HIPÓTESIS
+```
+
+**Justificación de los dos hallazgos que importan**:
+
+1. ⭐⭐ **`zeroI_or_succ` es el axioma 3 de Robinson Q, y aquí se DERIVA.** `coreAxioms` no
+   lo tiene, y de esa ausencia venía la impresión de que sin él no se despeja. Sale de la
+   tricotomía: la rama `t < 0` la refuta `notI_lt_zero`, y la rama `0 < t` da el testigo
+   por la dirección ⇒ de `ax13` más `0 + x = x`.
+   ⚠️ Y `0 + x = x` **no es `zero_add`**: aquél cuantifica sobre `x` y por eso pide una
+   instancia de inducción; aquí el término está **fijo** y basta `ax6` + `ax4`. La
+   diferencia entre **esquema** e **instancia** es lo que hacía parecer cara esta pieza.
+2. 🔑 **El truco que evita la transitividad.** Para `a < b ⇒ a·2̄ < b·2̄` lo natural es
+   encadenar `a+a < b+a < b+b`. No hace falta: de `y + σj = k̄` se **calcula**
+   `k̄·2̄ = y·2̄ + σ(σj + j)`, que es **ya** la forma que `ax13` pide. Menos piezas y menos
+   hipótesis, y por eso `/₂` cerró sin `ltI_trans`.
+
+⭐ **Y una medida de lo que costaba antes**: `addI_succ_ne` —«ningún numeral es `x + σy`»—
+necesitaba **inducción META** y el proyecto la llamó «la pieza que costó». Sobre términos
+anclados el mismo enunciado es `notI_add_succ_self` y sale **gratis**, porque `x + σy = x`
+es justo `x < x`. El orden hace barato lo que la recursión hacía caro.
+
+**Consecuencias**:
+- 🏁 **23 de los 34 axiomas**, ocho símbolos, **cero hipótesis** — el modelo de ADR-039 se
+  extendió con `/₂` y `ax17` (una meta de `omega`) y descarga también este `hcon`.
+- ⛔ **El criterio de ADR-037 es SUFICIENTE pero NO NECESARIO.** «Definido por recursión
+  sobre el constructor» sigue garantizando la entrada; `/₂` entra sin cumplirlo, porque su
+  caracterización lo **acota por los dos lados**. Lo que decide no es la forma del axioma
+  sino si deja al término encajonado en un orden total y discreto.
+- ⏳ **`√` queda abierto y ahora con herramientas**: sus dos desigualdades piden
+  `a<b → a·a<b·b` —mismo truco, poniendo el factor anclado delante para distribuir— y
+  tratar el `≤` de `ax14`, que es una disyunción. Dos de sus tres piezas ya están puestas.
+- ⚠️ La deuda que esto deja escrita: **ADR-037 sigue en el árbol con su tabla original**, y
+  la tabla es la que se cita. Queda anotada ahí la corrección, con puntero a este ADR.
+- 🔑 De método, y es lo caro de aprender: **una razón dada para cerrar una casilla no es una
+  medición**. ADR-037 midió bien lo que midió (qué axiomas son de Harrop, qué símbolos
+  aparecen dónde) y **argumentó** el resto. Los tres argumentos han caído ya dos veces —`−`
+  con ADR-039, `/₂` con éste—.
 
 ---
 

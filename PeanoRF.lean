@@ -23,6 +23,7 @@ import PeanoRF.HA.Domain
 import PeanoRF.HA.Fragment
 import PeanoRF.HA.Model
 import PeanoRF.HA.Numerals
+import PeanoRF.HA.Order
 import PeanoRF.HA.SlashAxioms
 import PeanoRF.Meta.AxiomCheck
 import PeanoRF.Omega.Basic

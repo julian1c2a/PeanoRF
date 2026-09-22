@@ -3,6 +3,14 @@
 **Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
+> 🏁🏁🏁 **2026-09-22 · `/₂` ENTRA — 23 DE 34, SIN HIPÓTESIS** (ADR-042).
+> `qDisjunctionProperty_arithTD_final`. Módulo nuevo `PeanoRF/HA/Order.lean`: **el orden de
+> Q⁺⁺ sobre términos anclados**, que hasta hoy sólo existía sobre numerales.
+> ⛔ Y con él, la razón que ADR-037 dio para cerrar `/₂` —«pide cancelación de `+` y `·`»—
+> queda **refutada**: no hace falta cancelar, basta la **tricotomía contra el candidato**.
+> ⭐⭐ Por debajo, `zeroI_or_succ`: **el axioma 3 de Robinson Q, que `coreAxioms` no tiene,
+> se DERIVA**. ⏳ `√` sigue abierto, con dos de sus tres piezas puestas.
+>
 > 🌳 **2026-09-22 · DOCUMENTACIÓN**: `REFERENCE.md` **arbolizado** —índice raíz de 286
 > líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`, con navegación en los dos sentidos
 > (ADR-040)— y **`[C]` endurecido** (ADR-041): pide **proyección**, no mención. De paso
@@ -48,7 +56,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **51 jobs · 18 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **52 jobs · 19 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -168,6 +176,10 @@
 > ⚠️ **Y el fragmento de 17 NO es maximal.** `τ` entra casi gratis — `ax25` y `ax26` son de
 > Harrop y **determinan `τ` sobre todo numeral SIN inducción ninguna**. Hecho:
 > `qDisjunctionProperty_arithT`, **19 axiomas, 6 símbolos y la misma única hipótesis**.
+> ✅ **`/₂` también HECHO** (2026-09-22, ADR-042): `qDisjunctionProperty_arithTD_final`,
+> **23 de los 34**, ocho símbolos, **sin ninguna hipótesis**. ⛔ Y contra lo que decía
+> ADR-037: no hacía falta cancelación, sólo el ORDEN.
+>
 > ✅ **`%₂` también HECHO**: `qDisjunctionProperty_arithTM`, **22 de los 34**, siete
 > símbolos, la misma única hipótesis. ⭐ Y evaluarlo **NO necesitó consistencia**: la
 > refutación va dentro de una rama de `elim_or`, bajo hipótesis. ⛔ `/₂` bloquea a
@@ -224,13 +236,13 @@
 
 | Métrica | Valor |
 |--------|-------|
-| Módulos propios | 18 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Fragment,Model}`) |
-| Módulos con 0 `sorry` | 18 / 18 |
-| Teoremas propios | 215 |
-| Definiciones propias | 11 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`) |
+| Módulos propios | 19 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Order,Fragment,Model}`) |
+| Módulos con 0 `sorry` | 19 / 19 |
+| Teoremas propios | 245 |
+| Definiciones propias | 13 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, `LQtd`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 51 jobs (ver la reserva del banner) |
+| Build | ✅ 52 jobs (ver la reserva del banner) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |
@@ -249,7 +261,8 @@
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🏁 **H3**: solidez **CONSTRUCTIVA** (`propext, Quot.sound`) |
-| `PeanoRF/HA/Model.lean` | 13 | 2 | 0 | 🏁 **ADR-039**: modelo estándar sobre `ℕ` ⇒ `hcon` descargada, y `−` medido |
+| `PeanoRF/HA/Model.lean` | 15 | 2 | 0 | 🏁 **ADR-039**: modelo estándar sobre `ℕ` ⇒ `hcon` descargada, y `−` medido |
+| `PeanoRF/HA/Order.lean` | 17 | 0 | 0 | 🏁 **ADR-042**: el orden sobre términos anclados — refuta el ⛔ de ADR-037 |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente
 

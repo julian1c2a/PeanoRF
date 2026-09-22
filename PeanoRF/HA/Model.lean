@@ -75,8 +75,8 @@ set_option linter.unusedSimpArgs false
 
 /-! ## 1 · El modelo, con `−` como parámetro -/
 
-/-- Los 22 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
-def subAxioms : List Formula := arithTMAxioms ++ [ax29_sub_witness]
+/-- Los 23 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
+def subAxioms : List Formula := arithTDAxioms ++ [ax29_sub_witness]
 
 /-- **El modelo estándar, con un parámetro.** Los siete símbolos que `LQtm` admite —`0`,
     `σ`, `+`, `*`, `^`, `τ`, `%₂`— van a las operaciones de `ℕ`, y `<` al orden.
@@ -97,6 +97,7 @@ def natModelK (k : Nat) : Model Nat where
     else if s = pow_sym then ds.headD 0 ^ ds.tail.headD 0
     else if s = pred_sym then ds.headD 0 - 1
     else if s = mod2_sym then ds.headD 0 % 2
+    else if s = div2_sym then ds.headD 0 / 2
     else if s = sub_sym then
       (if ds.tail.headD 0 ≤ ds.headD 0 then ds.headD 0 - ds.tail.headD 0 else k)
     else 0
@@ -110,9 +111,11 @@ local macro "evalNat" : tactic =>
       ax5_add_succ, ax6_add_comm, ax7_add_assoc, ax8_mul_zero, ax9_mul_succ, ax10_mul_comm,
       ax11_mul_assoc, ax12_mul_distrib, ax13_lt_def, ax18_lt_irrefl, ax19_lt_trichotomy,
       ax_L1_in_nil, ax_pow_zero, ax_pow_succ, ax25_pred_zero, ax26_pred_succ,
-      ax16_mod2_succ, ax21_mod2_range, ax24_mod2_of_even, ax29_sub_witness,
+      ax16_mod2_succ, ax21_mod2_range, ax24_mod2_of_even, ax17_div_mod_eq,
+      ax29_sub_witness,
       forall_, forall_2, forall_3, neg, iff, ex, evalFormula, evalTerm,
-      evalTerms, natModelK, shiftEnv, zero, succ, add, mul, pow, pred, mod2, sub, lt, le,
+      evalTerms, natModelK, shiftEnv, zero, succ, add, mul, pow, pred, mod2, div2, sub,
+      lt, le,
       In, nil, one, two, zero_sym, succ_sym, add_sym, mul_sym, pow_sym, pred_sym, mod2_sym,
       sub_sym, lt_sym, in_sym, List.headD, List.tail, reduceIte])
 
@@ -127,7 +130,7 @@ local macro "evalNat" : tactic =>
 theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
     ∀ g, List.Mem g subAxioms → evalFormula (natModelK k) v g := by
   intro g hg
-  simp only [subAxioms, arithTMAxioms, arithTAxioms, arithAxioms] at hg
+  simp only [subAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms] at hg
   rcases hg with _ | ⟨_, hg⟩
   · evalNat; intro d h; exact Nat.succ_ne_zero d h
   rcases hg with _ | ⟨_, hg⟩
@@ -186,6 +189,9 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
   rcases hg with _ | ⟨_, hg⟩
   · evalNat; intro d e h; omega
   rcases hg with _ | ⟨_, hg⟩
+  · -- `ax17_div_mod_eq`: `(d/2)·2 + d%2 = d`, que es aritmética de `ℕ`.
+    evalNat; intro d; omega
+  rcases hg with _ | ⟨_, hg⟩
   · -- `ax29_sub_witness`: el parámetro `k` vive en la rama `¬(e ≤ d)`, que la hipótesis
     -- del axioma excluye. Por eso el axioma vale **para todo `k`**.
     evalNat
@@ -201,6 +207,11 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
 /-- Los 22 del fragmento, en el modelo con `k = 0`. -/
 theorem natModel_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTMAxioms → evalFormula (natModelK 0) v g :=
+  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _ hg))
+
+/-- Los 23 del fragmento con `/₂`, en el modelo con `k = 0`. -/
+theorem natModelD_sat (v : Nat → Nat) :
+    ∀ g, List.Mem g arithTDAxioms → evalFormula (natModelK 0) v g :=
   fun g hg => natModelK_sat 0 v g (List.mem_append_left _ hg)
 
 /-! ## 3 · 🏁 `hcon` descargada, y la DP sin hipótesis -/
@@ -314,5 +325,27 @@ theorem hNum_false_on_sub :
   obtain ⟨n, hn⟩ := hNum (sub (numeralM 5) (numeralM 7)) grounded_sub_5_7
   exact (sub_neither n).1 hn
 
-end PeanoRF.HA
 
+
+/-! ## 5 · 🏁 El fragmento con `/₂` — 23 de 34, también incondicional -/
+
+/-- 🏁 **La consistencia del fragmento con `/₂`.** Mismo modelo, mismo argumento. -/
+theorem hcon_fragmentD : Not (ctxD [] ⊢ᵢ Formula.bottom) := by
+  intro h
+  have hv := derivesI_soundness h
+  refine hv Nat (natModelK 0) (fun _ => 0) (fun f hf => ?_)
+  have hf2 : f ∈ arithTDAxioms := by simpa [ctxD] using hf
+  exact natModelD_sat _ f hf2
+
+/-- 🏁🏁🏁 **LA DP DEL FRAGMENTO CON `/₂`, INCONDICIONAL** — **23 de los 34** axiomas de
+    `coreAxioms`, ocho símbolos, **cero hipótesis**.
+
+    ⛔ Y `/₂` entra **contra lo que ADR-037 dio por cerrado**: no hizo falta cancelación
+    ninguna, sólo el orden (`PeanoRF/HA/Order.lean`). -/
+theorem qDisjunctionProperty_arithTD_final {A B : Formula}
+    (hAB : collapseF LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxD [] ⊢ᵢ Formula.or A B) :
+    Or (ctxD [] ⊢ᵢ A) (ctxD [] ⊢ᵢ B) :=
+  qDisjunctionProperty_arithTD hcon_fragmentD hAB h
+
+end PeanoRF.HA

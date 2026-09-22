@@ -22,7 +22,7 @@ modelo estándar sobre `ℕ` que descarga la consistencia.
 |---|---|---|
 | [`PeanoRF/HA/Domain.lean`](../PeanoRF/HA/Domain.lean) | el dominio `Grounded`, definido **por sus clausuras** | 2.1 |
 | [`PeanoRF/HA/SlashAxioms.lean`](../PeanoRF/HA/SlashAxioms.lean) | 🏁🏁 los **34** axiomas de `coreAxioms` barrados | 2.2 |
-| [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean) | 🏁 **el orden sobre términos anclados** — la herramienta que refutó ADR-037 | 2.3 |
+| [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean) | 🏁 **el orden sobre términos anclados** — la herramienta que refutó ADR-037 tres veces, más `numeralI_sqrt` e `isqrt` | 2.3 |
 | [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → 23 → 24 → **26** | 2.4 |
 | [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean) | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido | 2.5 |
 | [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean) | el conjunto de axiomas, `gen_closed`, `Closed` | 2.6 |
@@ -149,7 +149,7 @@ ramas son `∈` y no hay nada que refutar bajando a numerales.
 **Namespace**: `PeanoRF.HA`
 **Dependencies**: `PeanoRF.HA.SlashAxioms`
 **Last updated**: 2026-09-22
-**Status**: 🏁 la herramienta que refutó ADR-037
+**Status**: 🏁 la herramienta que refutó ADR-037 — `/₂`, `√` y (por composición) `::`
 
 ⛔ **Por qué existe.** Hasta el 2026-09-22 el orden de Q⁺⁺ sólo se manejaba **sobre
 numerales** (`numeralI_lt`, `numeralI_ne`, `numeralI_not_lt`, `addI_succ_ne`). Para un
@@ -165,7 +165,7 @@ símbolos «caracterizados por propiedades» no se despejan sin inducción. **Er
 | ⭐ `notI_lt_zero` | **nada es menor que cero** — `t + σk = 0` choca con `ax5` + `ax2` | `propext, Quot.sound` |
 | `zeroI_add` | `0 + t = t` **sin** instancia de inducción: el término está fijo | `propext, Quot.sound` |
 | ⭐⭐ **`zeroI_or_succ`** | **todo término anclado es `0` o un sucesor** | `propext, Quot.sound` |
-| `addI_assoc` | asociatividad, con el primer argumento anclado | `propext, Quot.sound` |
+| `addI_assoc` | asociatividad, para términos **cualesquiera** | `propext, Quot.sound` |
 | `grounded_add` | el anclaje sobrevive a la suma | `propext, Quot.sound` |
 | ⭐ **`ltI_add_right`** | **monotonía estricta de `+`** | `propext, Quot.sound` |
 | `mulI_zero` · `mulI_succ` · `mulI_comm` · `mulI_distrib` | el producto, instanciado | `propext, Quot.sound` |
@@ -173,6 +173,13 @@ símbolos «caracterizados por propiedades» no se despejan sin inducción. **Er
 | ⭐⭐ **`ltI_mul_two`** | **monotonía por `2̄`, SIN transitividad** | `propext, Quot.sound` |
 | ⭐ `notI_add_succ_self` | ningún término anclado cumple `x + σy = x` | **`propext`** |
 | `ltI_trans` | transitividad de `<` | `propext, Quot.sound` |
+| ⭐ `notI_lt_succ_of_lt` | de `a < b` y `b < σa` sale `⊥` | `propext, Quot.sound` |
+| ⭐ **`ltI_succ_le`** | **DISCRECIÓN**: entre `a` y `σa` no hay nada | `propext, Quot.sound` |
+| ⭐ **`ltI_mul_self`** | **monotonía estricta del cuadrado** | `propext, Quot.sound` |
+| `notI_lt_of_le` · `leI_mul_self` · `leI_trans` | los tres auxiliares de `≤` —que aquí es la DISYUNCIÓN `lt p q ∨ p = q`— | `propext, Quot.sound` |
+| `ax14I` / `ax15I` | los dos axiomas de `√`, instanciados | `propext, Quot.sound` |
+| 🏁🏁 **`numeralI_sqrt`** | **`⊢ᵢ √n̄ = k̄`** para el único `k` con `k² ≤ n < (k+1)²` | `propext, Quot.sound` |
+| `isqrt` · `isqrt_le` · `lt_isqrt_succ` | la raíz entera del **META**, escrita aquí: ⚠️ **el núcleo de Lean no trae `Nat.sqrt`** | `propext, Quot.sound` |
 
 ⭐⭐ **`zeroI_or_succ` es lo que Robinson Q POSTULA** (su axioma 3) y `coreAxioms` no tiene.
 Se deriva de la tricotomía: la rama `t < 0` la refuta `notI_lt_zero`, y la rama `0 < t` da
@@ -190,6 +197,17 @@ hipótesis.
 
 ⭐ **Y `notI_add_succ_self` mide lo que costaba lo mismo con numerales**: `addI_succ_ne`
 necesita **inducción META**; aquí sale gratis, porque `x + σy = x` es justo `x < x`.
+
+🔑 **El truco que se repite, y es lo reutilizable**: la forma que `ax13` pide —`p + σk = q`—
+se **CONSTRUYE** en vez de buscarse. `ltI_mul_two` calcula `k̄·2̄ = y·2̄ + σ(σj + j)` y
+`ltI_mul_self` calcula `b·b = a·a + σ(W)`, reasociando hasta dejar el `σ` al final. Por eso
+`/₂` cerró **sin** transitividad.
+
+⚠️ **Y una hipótesis que sobró un día**: `addI_assoc` y `mulI_distrib` pedían el primer
+argumento anclado. El estorbo era el doble levantamiento de `forall_3`, y aguas arriba
+existe el lema que lo deshace —`FOL.substTerm_liftLift`, en el MISMO fichero que
+`substTerm_liftTerm`, que sí se usaba—. Sin quitarla, `ltI_mul_self` **no se puede
+escribir**: sus asociaciones caen sobre términos con variables.
 
 ⚠️ **Todo pide `Grounded`**, y varios lemas además `hlift`: al cruzar el binder de `∃` de
 `ax13` los términos se levantan y el contexto también. Para numerales eso lo deshacen
@@ -250,6 +268,11 @@ fragmento necesita:
 | 🏁 `numeralI_cons` | `⊢ᵢ m̄ :: n̄ = (cantor(m,n+1))‾` — por **COMPOSICIÓN** (ADR-044) | `propext, Quot.sound` |
 | 🏁 `numeralI_sqrt` | `⊢ᵢ √n̄ = k̄` para el único `k` con `k² ≤ n < (k+1)²` (ADR-045) | `propext, Quot.sound` |
 | 🏁🏁🏁 **`qDisjunctionProperty_arithTDCS`** | **26 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
+
+⛔ **Y aquí para el método, con razón medida** (ADR-046): los cinco axiomas de lista que
+faltan NO piden inducción. `nil` es `0` y `cons h t = π(h, t+1)`, así que los valores de
+`cons` son todos menos los triangulares ⇒ **`1`, `3`, `6`, … no son ni `[]` ni `h::t`** y
+«todo término es `[]` o un `::`» es **falso**. No hay nada que demostrar.
 
 ⛔ **Y el criterio de ADR-037 quedó refutado dos veces.** `/₂` entra sin estar definido por
 recursión (ADR-042) y `::` entra **por depender de `/₂`** (ADR-044). Lo que decide no es la

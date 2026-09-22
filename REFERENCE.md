@@ -118,7 +118,7 @@ cita a algo que no existe. Se prefiere un enlace que no pueda pudrirse.
 | `Calculus/Collapse.lean` | `PeanoRF.Calculus` | `Calculus.DerivesI` | ✅ Completo | [Calculus §2.8](doc/REFERENCE-Calculus.md) |
 | `HA/Domain.lean` | `PeanoRF.HA` | `Calculus.{Collapse,Subst}`, `HA.Numerals` | ✅ Completo | [HA §2.1](doc/REFERENCE-HA.md) |
 | `HA/SlashAxioms.lean` | `PeanoRF.HA` | `HA.Domain` | ✅ 6 de 6 | [HA §2.2](doc/REFERENCE-HA.md) |
-| `HA/Order.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | 🏁 el orden sobre anclados | [HA §2.3](doc/REFERENCE-HA.md) |
+| `HA/Order.lean` | `PeanoRF.HA` | `HA.SlashAxioms` | 🏁 el orden sobre anclados + `numeralI_sqrt` | [HA §2.3](doc/REFERENCE-HA.md) |
 | `HA/Fragment.lean` | `PeanoRF.HA` | `HA.Order` | ✅ 26 de 34 | [HA §2.4](doc/REFERENCE-HA.md) |
 | `HA/Model.lean` | `PeanoRF.HA` | `HA.Fragment`, `Calculus.Soundness` | 🏁 `hcon` descargada, `−` medido | [HA §2.5](doc/REFERENCE-HA.md) |
 | `HA/Axioms.lean` | `PeanoRF.HA` | `PeanoRF.Prelim`, `ROBINSON_PlusPlus.Full.Induction` | ✅ Completo | [HA §2.6](doc/REFERENCE-HA.md) |
@@ -221,9 +221,10 @@ Todos en **`[propext, Quot.sound]`** salvo donde se diga.
 | `disjunction_property_of_slashed` | el teorema general: si todo axioma de `T` está barrado, `T` tiene la DP | `Calculus/Slash.lean` |
 | 🏁🏁 `haDisjunctionProperty_core` | la DP de HA **con `coreAxioms` ya descargado** (28 por Harrop + 6 duros) | `HA/SlashAxioms.lean` |
 | `haDisjunctionProperty_harrop` | …y `hInd` + `hlift` descargadas para instancias de Harrop | `HA/SlashAxioms.lean` |
-| 🏁 `qDisjunctionProperty_arith` / `…T` / `…TM` / `…TD` / `…TDC` | la DP del fragmento: 17 / 19 / 22 / 23 / **24** axiomas, con la consistencia como única hipótesis | `HA/Fragment.lean` |
-| 🏁 `hcon_fragment` / `hcon_fragmentD` / `hcon_fragmentC` | **la consistencia del fragmento, DEMOSTRADA** (modelo estándar sobre `ℕ`) | `HA/Model.lean` |
-| 🏁🏁🏁 **`qDisjunctionProperty_arithTDC_final`** | **la DP de 24 de los 34 axiomas, SIN NINGUNA HIPÓTESIS** | `HA/Model.lean` |
+| 🏁 `qDisjunctionProperty_arith` / `…T` / `…TM` / `…TD` / `…TDC` / `…TDCS` | la DP del fragmento: 17 / 19 / 22 / 23 / 24 / **26** axiomas, con la consistencia como única hipótesis | `HA/Fragment.lean` |
+| 🏁 `hcon_fragment` / `…D` / `…C` / `…S` | **la consistencia del fragmento, DEMOSTRADA** (modelo estándar sobre `ℕ`) | `HA/Model.lean` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTDCS_final`** | **la DP de 26 de los 34 axiomas, SIN NINGUNA HIPÓTESIS** | `HA/Model.lean` |
+| 🏁🏁 `numeralI_sqrt` · `numeralI_div2` · `numeralI_cons` | los tres símbolos que ADR-037 daba por cerrados, **determinados** | `HA/{Order,Fragment}.lean` |
 | ⛔ `sub_neither` | `5̄ − 7̄` es **indeterminado**: ni la igualdad ni su negación son derivables, para ningún numeral | `HA/Model.lean` |
 | ⛔⛔ `hNum_false_on_sub` | **`hNum` sobre la signatura completa es FALSA**, con testigo | `HA/Model.lean` |
 

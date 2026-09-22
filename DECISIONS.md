@@ -1730,6 +1730,84 @@ verificaron uno a uno contra el disco antes de commitear.
 
 ---
 
+## ADR-041: `[C]` endurecido — de «¿se menciona?» a «¿está proyectado?»
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. Cierra la deuda abierta en ADR-040.
+
+**Contexto**: `[C]` se llamaba «proyección» y hacía esto:
+
+```bash
+m=$(basename "$f" .lean)
+grep -q "$m" REFERENCE.md doc/REFERENCE-*.md || FAIL
+```
+
+Eso no comprueba la proyección: comprueba que **el nombre aparezca en algún sitio**.
+Proyectar un `.lean` es, por AI-GUIDE §12, **trasladar todo lo público a su nodo**. Dos
+agujeros, y los dos se midieron, no se supusieron:
+
+1. **`HA/Fragment.lean` (47 declaraciones) y `HA/Model.lean` (15) pasaron TRES DÍAS en
+   verde** con una fila en la tabla §1 y **ninguna sección**. Lo cazó una pasada de lectura,
+   no el script.
+2. ⭐ **El `grep` era por SUBCADENA**: `Subst` casa dentro de `SubstDerives`, así que
+   `Calculus/Subst.lean` aprobaba **gracias a la mención de otro módulo**. Un módulo podía
+   faltar entero de la documentación y dar verde por el nombre de su vecino. Este segundo
+   agujero no lo había visto nadie; salió al escribir el reemplazo.
+
+**Decisión**: `[C]` pide ahora **tres** cosas, las tres objetivas:
+
+| | qué exige |
+|---|---|
+| **[C1]** CATÁLOGO | fila propia en la **tabla §1.1** del índice raíz —la sección se acota con `awk`, no vale una fila de otra tabla— con la **ruta completa entre backticks** |
+| **[C2]** SECCIÓN | un **encabezado** que lo nombre, en el raíz o en un nodo, **más** la línea `**Fichero**: [...](../<LIB>/<ruta>)` |
+| **[C3]** NAVEGACIÓN | cada nodo enlaza ⬆️ al raíz, el raíz enlaza a cada nodo, y **todo enlace relativo del árbol resuelve a un fichero que existe** |
+
+⭐ **La pieza que hace el control posible es la línea `**Fichero**`** (AI-GUIDE §0.5, añadida
+aquí como convención). El encabezado dice «aquí está»; el enlace dice «y es **este**
+fichero», y el control **lo resuelve contra el disco**. Sin ella no hay forma de saber si una
+sección documenta el módulo o solo lo nombra de pasada: un encabezado suelto es una promesa.
+
+**Justificación de dos detalles**:
+
+* ⚠️ **Todo se compara con `grep -F`, y no es cosmético.** La primera versión escapaba la
+  ruta para meterla en una ERE, y **el escapado salió mal en este entorno**:
+  `sed 's/…/\&/g'` devolvió `HA/Model&lean` en vez de `HA/Model\.lean`. El patrón no casaba
+  nada y los 18 módulos dieron ✗. Se vio porque el fallo fue ruidoso — **el falso POSITIVO
+  de la misma clase habría sido mudo**. Cadena literal y nada de escapar.
+* **[C3] entra en `[C]` y no en un control nuevo** porque es la misma pregunta: la
+  proyección tiene que apuntar a cosas que existen. Un enlace roto es una cita a algo que no
+  existe, que es lo que vigila `[B]` para los símbolos.
+
+**Probado con casos POSITIVOS y NEGATIVOS en la misma pasada** —la regla que este proyecto
+aprendió a fuerza de controles vacíos— y **la prueba queda en el árbol**, no en el chat:
+`sondeos/check_C_smoke.bash` la vuelve a correr entera y falla si el control deja de
+comportarse como aquí se afirma.
+proyecto aprendió a fuerza de controles vacíos:
+
+| caso | qué se rompe | resultado |
+|---|---|---|
+| 0 | nada | ✓ verde |
+| 1 | se quita la fila de `HA/Model.lean` de §1.1 | ✗ [C1] |
+| 2 | se quita el encabezado de su sección | ✗ [C2] |
+| 3 | se quita su línea `**Fichero**` | ✗ [C2] |
+| 4 | se apunta un `**Fichero**` a un `.lean` inexistente | ✗ [C3] |
+| 5 | un nodo deja de enlazar al índice raíz | ✗ [C3] |
+| **6** | **regresión del agujero de la subcadena**: se borra todo lo de `Calculus/Subst.lean` dejando `SubstDerives` documentado | ✗ — **antes daba verde** |
+| 7 | se restaura todo | ✓ verde |
+
+**Consecuencias**:
+- ✅ La deuda «`[C]` mira la fila y no la sección», abierta en ADR-040 y anotada en
+  `NEXT-STEPS.md`, queda **cerrada**.
+- ⚠️ **Lo que `[C]` sigue sin mirar**: que el CONTENIDO de la sección esté al día. Una
+  sección puede existir, enlazar bien y describir el módulo de hace un mes. Eso no lo caza
+  un grep — lo caza la pasada de lectura, y por eso `/armoniza` no es opcional.
+- 🔑 De método, y vale para el próximo control: **la exigencia hay que poder anclarla a algo
+  que el documento declare a propósito**. `[C]` solo se pudo endurecer porque se inventó una
+  línea —`**Fichero**`— que existe *para ser comprobada*. Un control sobre prosa libre es un
+  control sobre la forma.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

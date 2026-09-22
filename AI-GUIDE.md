@@ -1,6 +1,6 @@
 # Guía Maestra de la IA — Estándares de Documentación y Desarrollo
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Autor:** Julián Calderón Almendros
 
 > Este documento define lo **universal**: aplica a cualquier proyecto Lean 4 que nazca
@@ -59,7 +59,17 @@ interconectados:
   - enlazar de forma cruzada a otros nodos temáticos relacionados (no dejar nodos
     aislados — si `REFERENCE-Rationals.md` depende de `REFERENCE-Arithmetic.md`, debe
     decirlo y enlazarlo explícitamente, y viceversa);
-  - enlazar a los ficheros `.lean` concretos que documenta.
+  - enlazar a los ficheros `.lean` concretos que documenta. ⭐ **Y en una línea fija, la
+    primera de cada sección de módulo**, para que sea comprobable por máquina:
+
+    ```markdown
+    ## 2.4 `HA/Model.lean` — el modelo estándar sobre ℕ
+
+    **Fichero**: [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean)
+    ```
+
+    El encabezado dice «aquí está»; la línea `**Fichero**` dice «y es ESTE fichero», y el
+    control `[C]` la **resuelve contra el disco**. Sin ella, una sección es una promesa.
 - La fila de cada módulo en la tabla §1 del índice raíz **debe enlazar** a su nodo
   temático correspondiente (no solo nombrarlo en texto plano).
 - Cuando un subsistema crece lo bastante para tener su propio nodo temático y aún no
@@ -371,7 +381,7 @@ make docsync                        # equivalente
 |---|---|---|
 | **[A]** | **cifras**: jobs de `lake build`, módulos activos, `sorry`, `axiom` — contra el estado REAL | ✅ sí |
 | **[B]** | **símbolos muertos** citados como vigentes en los docs autoritativos | ⚠️ aviso |
-| **[C]** | **proyección**: todo módulo aparece en su catálogo (§1/§14) | ✅ sí |
+| **[C]** | **proyección**: cada módulo tiene FILA en el catálogo §1.1, SECCIÓN propia con enlace vivo a su `.lean`, y el árbol REFERENCE navega en los dos sentidos (§0.5/§1/§12/§14) | ✅ sí |
 | **[D]** | **marcas de tiempo** (§22) presentes en los docs técnicos | ✅ sí |
 
 **[B] es un AVISO y no un error, deliberadamente.** Hay menciones legítimas de símbolos que no
@@ -379,6 +389,15 @@ existen: históricas, planificadas, descartadas. Marcarlas como error convertir�
 y un control que grita lobo se acaba ignorando — que es exactamente el fallo que viene a evitar.
 **[B] pide juicio**: por cada símbolo, decidir si el texto afirma que *ya está* (→ corregir) o lo
 menciona como historia/objetivo (→ añadir un marcador: «retirado», «falta», «propuesto», una fecha).
+
+**[C] endurecido el 2026-09-22.** Hasta ese día hacía `grep -q "<basename>"` sobre el árbol
+REFERENCE, y eso comprueba que el nombre **aparezca**, no que el módulo esté **proyectado**
+—que es, por §12, trasladar todo lo público a su nodo—. Dos agujeros, los dos medidos:
+`HA/Fragment.lean` y `HA/Model.lean` pasaron tres días en verde con una fila y ninguna
+sección; y el `grep` por subcadena dejaba que `Calculus/Subst.lean` aprobara gracias a la
+mención de `Calculus/SubstDerives.lean`. Ahora pide las tres cosas de la tabla, y cada
+sección declara su fichero con una línea
+`**Fichero**: [`<LIB>/<ruta>`](../<LIB>/<ruta>)` que el control resuelve **contra el disco**.
 
 Dos calibraciones que hacen el control *utilizable*, y que conviene no deshacer:
 

@@ -8,6 +8,10 @@ Ejecuta el control de sincronía documentación ↔ código y **deja el reposito
 
 1. Ejecuta `bash check-doc-sync.bash` (o `--quick` si no hace falta rebuild).
 2. **[A] cifras, [C] proyección, [D] marcas de tiempo** — son objetivos y rompen el check.
+   ⚠️ **[C] pide PROYECCIÓN, no mención** (desde 2026-09-22, ADR-041): fila en la tabla §1.1
+   del índice raíz, sección con encabezado, línea `**Fichero**: [...](../<LIB>/<ruta>)` que
+   resuelve contra el disco, y navegación del árbol en los dos sentidos. Si falla, **no
+   basta con añadir el nombre**: hay que proyectar el módulo a su nodo.
    **Corrígelos.** ⚠️ Al corregir una cifra, **no basta con el banner**: recorre también las
    tablas resumen, las secciones de «Próximos pasos» y las notas de auditoría antiguas. Ése es
    exactamente el fallo que este control existe para atrapar.

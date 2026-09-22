@@ -268,19 +268,100 @@ else
                       || echo "  ⚠️  revisar los de arriba: ¿es una afirmación de que YA ESTÁ, o una mención histórica/planificada?"
 fi
 
-# ─── 4. [C] PROYECCIÓN: ¿está cada módulo en el catálogo? ────────────────────
+# ─── 4. [C] PROYECCIÓN: ¿está cada módulo PROYECTADO, no sólo MENCIONADO? ────
+#
+# 🚨 REESCRITO el 2026-09-22. La versión anterior hacía `grep -q "$basename"` sobre
+# REFERENCE.md y los nodos, y eso NO es comprobar la proyección: es comprobar que el
+# nombre aparezca EN ALGÚN SITIO. Dos agujeros medidos, los dos reales:
+#
+#   1. `HA/Fragment.lean` (47 declaraciones) y `HA/Model.lean` (15) estuvieron TRES DÍAS
+#      con ✓ teniendo sólo una FILA en la tabla §1 y NINGUNA sección. Proyectar un `.lean`
+#      es, según AI-GUIDE §12, trasladar todo lo público a su nodo — no nombrarlo.
+#   2. El `grep` era por SUBCADENA: `Subst` casa dentro de `SubstDerives`, así que
+#      `Calculus/Subst.lean` pasaba gracias a la mención de OTRO módulo. Un módulo podía
+#      faltar entero en la documentación y dar verde por el nombre de su vecino.
+#
+# Ahora se piden TRES cosas, y las tres son objetivas:
+#
+#   [C1] CATÁLOGO   fila propia en la TABLA §1.1 del índice raíz (la sección se acota, no
+#                   vale una fila de cualquier otra tabla), con la ruta COMPLETA entre
+#                   backticks. Ruta completa y backticks matan el agujero de la subcadena.
+#   [C2] SECCIÓN    un encabezado que lo nombre —en el raíz o en un nodo— MÁS la línea
+#                   `**Fichero**: [...](../<LIB>/<ruta>)`. El encabezado dice «aquí está»;
+#                   el enlace dice «y es ESTE fichero», y se comprueba contra el disco.
+#                   Un encabezado sin enlace es una promesa, no una proyección.
+#   [C3] NAVEGACIÓN cada nodo enlaza ⬆️ al raíz, el raíz enlaza a cada nodo, y TODOS los
+#                   enlaces relativos de la referencia resuelven a un fichero que existe
+#                   (AI-GUIDE §0.5, «navegación fuerte obligatoria»). Un enlace roto es
+#                   una cita a algo que no existe — la misma familia que vigila [B].
+#
+# ⚠️ Todo se compara con `grep -F`, a propósito. La primera versión de este bloque escapaba
+# la ruta para meterla en una ERE, y el escapado SALIÓ MAL en este entorno: `sed 's/…/\&/g'`
+# devolvía `HA/Model&lean` en vez de `HA/Model\.lean`, con lo que el patrón no casaba NADA
+# y los 18 módulos daban ✗. Un falso negativo se ve; el falso POSITIVO de la misma clase no.
+# Cadena literal y nada de escapar: la herramienta hace lo que se ve.
 echo
-echo "════ [C] PROYECCIÓN (AI-GUIDE §1/§14) ════"
+echo "════ [C] PROYECCIÓN (AI-GUIDE §0.5/§1/§12/§14) ════"
 C_FAIL=0
+NODES=$(ls doc/REFERENCE-*.md 2>/dev/null || true)
+
+# La tabla §1.1 del índice raíz, acotada: de su encabezado a la siguiente sección `## `.
+CATALOG=$(awk '/^### 1\.1 /{f=1;next} /^## /{f=0} f' REFERENCE.md 2>/dev/null | LC_ALL=C grep '^|' || true)
+# Todos los encabezados del árbol REFERENCE, y todas sus líneas `**Fichero**:`.
+# shellcheck disable=SC2086
+HEADINGS=$(LC_ALL=C grep -hE '^#{2,6} ' REFERENCE.md $NODES 2>/dev/null || true)
+# shellcheck disable=SC2086
+FICHEROS=$(LC_ALL=C grep -hF '**Fichero**:' REFERENCE.md $NODES 2>/dev/null || true)
+
 while IFS= read -r f; do
   [ -e "$f" ] || continue
-  m=$(basename "$f" .lean)
-  if ! grep -q "$m" REFERENCE.md doc/REFERENCE-*.md 2>/dev/null; then
-    echo "  ✗ $m NO aparece en el catálogo REFERENCE.md §1"
+  rel=${f#"$LIB"/}                       # p.ej. HA/Model.lean
+
+  # [C1] fila propia en la tabla §1.1.
+  if ! printf '%s\n' "$CATALOG" | LC_ALL=C grep -qF "| \`$rel\` |"; then
+    echo "  ✗ [C1] $rel SIN FILA en la tabla §1.1 de REFERENCE.md"
+    echo "         (se espera una celda: | \`$rel\` | …)"
+    C_FAIL=1
+  fi
+
+  # [C2a] un encabezado que lo nombre.
+  if ! printf '%s\n' "$HEADINGS" | LC_ALL=C grep -qF "\`$rel\`"; then
+    echo "  ✗ [C2] $rel MENCIONADO pero NO PROYECTADO: ningún encabezado lo nombra."
+    echo "         Proyectar es trasladar lo público a su nodo (AI-GUIDE §12), no citarlo."
+    C_FAIL=1
+  fi
+
+  # [C2b] la línea `**Fichero**:` con enlace al fichero REAL.
+  if ! printf '%s\n' "$FICHEROS" | LC_ALL=C grep -qF "](../$LIB/$rel)" \
+     && ! printf '%s\n' "$FICHEROS" | LC_ALL=C grep -qF "]($LIB/$rel)"; then
+    echo "  ✗ [C2] $rel sin línea \`**Fichero**:\` que enlace a $LIB/$rel"
     C_FAIL=1
   fi
 done < <(find "$LIB" -name '*.lean' ! -name '_template.lean' 2>/dev/null | sort)
-[ "$C_FAIL" = "0" ] && echo "  ✓ todo módulo aparece en su catálogo" || FAIL=1
+
+# ── [C3] navegación fuerte y enlaces vivos ──
+for n in $NODES; do
+  LC_ALL=C grep -qF '](../REFERENCE.md)' "$n" \
+    || { echo "  ✗ [C3] $n no enlaza de vuelta al índice raíz (../REFERENCE.md)"; C_FAIL=1; }
+  LC_ALL=C grep -qF "]($n)" REFERENCE.md \
+    || { echo "  ✗ [C3] el índice raíz no enlaza a $n"; C_FAIL=1; }
+done
+for d in REFERENCE.md $NODES; do
+  base=$(dirname "$d")
+  while IFS= read -r l; do
+    case "$l" in http://*|https://*|mailto:*|'#'*|'') continue ;; esac
+    tgt=${l%%#*}
+    [ -z "$tgt" ] && continue
+    [ -e "$base/$tgt" ] || { echo "  ✗ [C3] $d: enlace ROTO → $tgt"; C_FAIL=1; }
+  done < <(LC_ALL=C grep -oE '\]\([^)]+\)' "$d" 2>/dev/null | sed 's/^](//;s/)$//')
+done
+
+if [ "$C_FAIL" = "0" ]; then
+  echo "  ✓ los $MODULES módulos tienen FILA en §1.1, SECCIÓN propia y enlace vivo a su fichero"
+  echo "  ✓ navegación del árbol REFERENCE completa en los dos sentidos, sin enlaces rotos"
+else
+  FAIL=1
+fi
 
 # ─── 5. [D] MARCAS DE TIEMPO (AI-GUIDE §22) ─────────────────────────────────
 echo

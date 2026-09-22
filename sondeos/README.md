@@ -1,6 +1,6 @@
 # `sondeos/` — mediciones fuera del build
 
-**Última actualización:** 2026-09-16b
+**Última actualización:** 2026-09-22
 
 Ficheros de medición y experimento. **No forman parte de la librería** (`lakefile.lean`
 no los incluye) y por tanto no rompen el build ni entran en el recuento de módulos.
@@ -8,6 +8,7 @@ Se ejecutan a mano:
 
 ```bash
 lake env lean sondeos/axiom_probe.lean
+bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 ```
 
 ## Ficheros
@@ -22,6 +23,7 @@ lake env lean sondeos/axiom_probe.lean
 | `h2b_probe.lean` | **2026-09-16**: qué meta-reglas siguen siendo `axiom` aguas arriba |
 | `h2c_probe.lean` | **2026-09-16**: footprint de `succ_add` (caso con parámetro) sobre `⊢ᵢ` |
 | `param_probe.lean` | **2026-09-16**: 🔑 qué hipótesis exige el parámetro para que el contexto sea cerrado |
+| ⭐ `check_C_smoke.bash` | **2026-09-22**: que el control `[C]` de `check-doc-sync.bash` **NO ES VACUO** — ocho casos, dos positivos y seis negativos, incluida la regresión del agujero de la subcadena |
 
 ⚠️ `peano_probe.lean` tuvo que anotar `Nat` a mano (`Nat.add`, `Nat.sub`): con `Peano`
 importado, el `+` global resuelve a `ℕ₀` y el término queda ambiguo. Es la trampa que ya

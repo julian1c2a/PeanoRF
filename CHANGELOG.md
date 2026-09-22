@@ -15,6 +15,66 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (b) · 🔒 `[C]` ENDURECIDO — de «¿se menciona?» a «¿está proyectado?»
+
+La deuda de ayer, cerrada. Y al escribir el reemplazo salió **un segundo agujero que no
+había visto nadie**.
+
+El control hacía esto:
+
+```bash
+m=$(basename "$f" .lean); grep -q "$m" REFERENCE.md doc/REFERENCE-*.md || FAIL
+```
+
+⛔ **Agujero 1, conocido**: comprueba que el nombre **aparezca**, no que el módulo esté
+**proyectado** (AI-GUIDE §12: trasladar todo lo público a su nodo). `HA/Fragment.lean` (47
+declaraciones) y `HA/Model.lean` (15) pasaron **tres días en verde** con una fila y ninguna
+sección.
+
+⛔⛔ **Agujero 2, NUEVO**: el `grep` era **por subcadena**. `Subst` casa dentro de
+`SubstDerives`, así que **`Calculus/Subst.lean` aprobaba gracias a la mención de otro
+módulo**. Un módulo podía faltar entero de la documentación y dar verde por el nombre de su
+vecino.
+
+**Ahora `[C]` pide tres cosas**:
+
+| | qué exige |
+|---|---|
+| **[C1]** | fila propia en la **tabla §1.1** —acotada con `awk`, no vale otra tabla— con la ruta completa entre backticks |
+| **[C2]** | un **encabezado** que lo nombre **más** la línea `**Fichero**: [...](../<LIB>/<ruta>)` |
+| **[C3]** | cada nodo enlaza ⬆️ al raíz, el raíz a cada nodo, y **todo enlace relativo resuelve a un fichero que existe** |
+
+⭐ **Lo que hace el control posible es la línea `**Fichero**`**, añadida a AI-GUIDE §0.5 como
+convención. El encabezado dice «aquí está»; el enlace dice «y es **este** fichero», y el
+control lo **resuelve contra el disco**. Un encabezado suelto es una promesa.
+
+⚠️ **Y una trampa del entorno, de la familia de siempre.** La primera versión escapaba la
+ruta para meterla en una ERE, y **el escapado salió mal**: `sed 's/…/\&/g'` devolvió
+`HA/Model&lean` en vez de `HA/Model\.lean`. El patrón no casaba nada y los 18 módulos dieron
+✗. Se vio porque el fallo fue **ruidoso** — el falso positivo de la misma clase habría sido
+mudo. Todo se compara ahora con `grep -F`: cadena literal y nada de escapar.
+
+✅ **Probado con casos positivos Y negativos en la misma pasada** (ocho), incluida la
+**regresión del agujero de la subcadena**: se borra todo lo de `Calculus/Subst.lean` dejando
+`SubstDerives` documentado, y el control cae. Antes daba verde.
+
+⭐ **Y la prueba queda en el árbol, no en el chat**: `sondeos/check_C_smoke.bash` la vuelve a
+correr entera —mutando el árbol REFERENCE y restaurándolo— y **falla si el control deja de
+comportarse como se afirma**. Un control probado una vez en una sesión es un control sin
+probar en la siguiente.
+
+⚠️ **Lo que `[C]` sigue sin mirar**: que el CONTENIDO de la sección esté al día. Una sección
+puede existir, enlazar bien y describir el módulo de hace un mes. Eso lo caza la pasada de
+lectura, no un grep.
+
+🔑 De método: **la exigencia hay que poder anclarla a algo que el documento declare a
+propósito**. `[C]` solo se pudo endurecer porque se inventó una línea que existe *para ser
+comprobada*. Un control sobre prosa libre es un control sobre la forma.
+
+ADR-041. **51 jobs · 18 módulos · 0 sorry · 340 declaraciones.** Siete controles en verde.
+
+---
+
 ### 2026-09-22 (a) · 🌳 `REFERENCE.md` ARBOLIZADO — índice raíz + tres nodos
 
 La deuda declarada ayer, pagada con el corte que ese mismo párrafo proponía.

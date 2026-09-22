@@ -1,8 +1,15 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-21
+**Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
+> 🌳 **2026-09-22 · DOCUMENTACIÓN**: `REFERENCE.md` **arbolizado** —índice raíz de 286
+> líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`, con navegación en los dos sentidos
+> (ADR-040)— y **`[C]` endurecido** (ADR-041): pide **proyección**, no mención. De paso
+> cerró un agujero que nadie había visto: el `grep` era por SUBCADENA y
+> `Calculus/Subst.lean` aprobaba por la mención de `SubstDerives`. Probado con ocho casos,
+> positivos **y** negativos.
+>
 > 🏁🏁🏁 **2026-09-21 · LA DP DEL FRAGMENTO ARITMÉTICO ES INCONDICIONAL** (ADR-039).
 > `hcon` cayó: `hcon_fragment` la descarga con un **modelo estándar sobre `ℕ`** y
 > `derivesI_soundness`. `qDisjunctionProperty_arithTM_final` no tiene ninguna hipótesis —

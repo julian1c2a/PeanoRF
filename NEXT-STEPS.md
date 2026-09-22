@@ -107,10 +107,12 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   que el modelo que las mueva hay que buscarlo.
 - ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
-- ⛔ **`[C]` mira la FILA, no la SECCIÓN.** `Fragment` y `Model` llevaban fila en la tabla §1
-  de `REFERENCE.md` y **ninguna sección §3**, y el control daba verde. Proyectados el
-  2026-09-21; **endurecer `[C]` sigue pendiente** y es decisión aparte. ⚠️ Arbolizar no lo
-  arregla: ahora el control acepta el nombre en el raíz **o** en cualquier nodo.
+- ✅ ~~`[C]` mira la FILA, no la SECCIÓN~~ **endurecido el 2026-09-22** (ADR-041): pide fila
+  en §1.1, sección con encabezado, línea `**Fichero**` resuelta contra el disco y navegación
+  en los dos sentidos. De paso cerró un segundo agujero que nadie había visto: el `grep` era
+  por SUBCADENA y `Calculus/Subst.lean` aprobaba por la mención de `SubstDerives`.
+  ⚠️ **Lo que sigue sin mirar**: que el CONTENIDO de la sección esté al día. Eso es la pasada
+  de lectura, no un grep.
 - ✅ ~~`REFERENCE.md` pasa de las mil líneas~~ **arbolizado el 2026-09-22** (ADR-040): índice
   raíz de 286 líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`. 🔑 Y el criterio para el corte
   siguiente: **no es el número de líneas sino el de módulos que hay que atravesar**; si `HA/`

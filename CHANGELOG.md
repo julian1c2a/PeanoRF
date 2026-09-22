@@ -15,6 +15,53 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (e) · 🏁 `::` ENTRA POR COMPOSICIÓN — **24 de 34**, y sin teoría nueva
+
+```lean
+numeralI_cons                       : ⊢ᵢ m̄ :: n̄ = (cantor(m, n+1))‾
+qDisjunctionProperty_arithTDC_final : la DP de 24 axiomas, SIN NINGUNA HIPÓTESIS
+```
+
+ADR-037 bloqueó `::` con «`pair` usa `/₂` (medido)», y **la razón era correcta**. Lo que no
+se vio es que eso no es una propiedad de `::` sino una **dependencia**:
+
+```
+pair x y        = cantor_func x y = div2 (cantor_poly x y)
+cantor_poly x y = (x+y)·σ(x+y) + 2·y          -- sólo +, ·, σ, 2
+ax_L0_cons_def  : ∀x∀y.  x :: y = pair x (σy)
+```
+
+⇒ el bloqueo estaba **condicionado** al de `/₂`, y cuando ADR-042 determinó `/₂`, éste cayó
+solo. `numeralI_cons` no tiene **ninguna idea nueva**: `ax_L0` instanciado,
+`numeralI_add`/`numeralI_mul` bajando el polinomio a numeral, `numeralI_div2` cerrando.
+Salió a la primera, que es lo que se espera de una composición.
+
+⭐ En el modelo, `ax_L0` sale por **`trivial`**: `::` se interpreta como el emparejamiento de
+Cantor, que es lo que `pair` desarrolla, así que los dos lados del axioma son **el mismo
+término**. No hay nada que demostrar porque no hay nada que elegir.
+
+🔑 **Y la lección, que es lo que más va a servir**: ADR-037 metió en la misma columna ⛔ dos
+cosas semánticamente distintas.
+
+* `−` está **libre** — `ax29` lo condiciona a `x ≤ y` y fuera de ahí ningún modelo lo fija.
+  Ahí los modelos **deciden**, y deciden que no (ADR-039).
+* `/₂`, `√` y `::` están **determinados en TODO modelo**. Para éstos **la técnica de modelos
+  no puede dar nunca un negativo**: o se demuestra, o se deja abierto.
+
+⇒ un ⛔ de «no encontramos la prueba» **no es** un ⛔ de «no está determinado». De los cinco
+de ADR-037, **sólo uno** era del segundo tipo, y ya van **tres** caídos.
+
+⚠️ Y una dependencia que conviene tener escrita: **`::` dependía de `/₂` y nadie lo anotó**.
+Antes de dar un símbolo por cerrado hay que mirar de qué otro depende, porque el día que se
+abra el otro éste se abre con él y **no salta ningún control**.
+
+⏳ Quedan `√` —que no es composición: pide la forma ∀ de `zeroI_or_succ`— y `##`/`Π_p`, que
+son recursiones sobre lista y piden saber si un numeral es `nil` o `cons`.
+
+ADR-044. **52 jobs · 19 módulos · 0 sorry · 405 declaraciones.**
+
+---
+
 ### 2026-09-22 (d) · ⚙️ La CI dice CONTRA QUÉ compiló, y separa el entorno del código
 
 Dos fallos de la misma familia, los dos medidos hoy, los dos cerrados.

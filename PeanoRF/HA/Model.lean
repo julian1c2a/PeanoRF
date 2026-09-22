@@ -75,8 +75,8 @@ set_option linter.unusedSimpArgs false
 
 /-! ## 1 · El modelo, con `−` como parámetro -/
 
-/-- Los 23 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
-def subAxioms : List Formula := arithTDAxioms ++ [ax29_sub_witness]
+/-- Los 24 del fragmento más el **único** axioma de `coreAxioms` que menciona `−`. -/
+def subAxioms : List Formula := arithTDCAxioms ++ [ax29_sub_witness]
 
 /-- **El modelo estándar, con un parámetro.** Los siete símbolos que `LQtm` admite —`0`,
     `σ`, `+`, `*`, `^`, `τ`, `%₂`— van a las operaciones de `ℕ`, y `<` al orden.
@@ -98,6 +98,9 @@ def natModelK (k : Nat) : Model Nat where
     else if s = pred_sym then ds.headD 0 - 1
     else if s = mod2_sym then ds.headD 0 % 2
     else if s = div2_sym then ds.headD 0 / 2
+    else if s = cons_sym then
+      ((ds.headD 0 + (ds.tail.headD 0 + 1)) * ((ds.headD 0 + (ds.tail.headD 0 + 1)) + 1)
+        + 2 * (ds.tail.headD 0 + 1)) / 2
     else if s = sub_sym then
       (if ds.tail.headD 0 ≤ ds.headD 0 then ds.headD 0 - ds.tail.headD 0 else k)
     else 0
@@ -112,10 +115,11 @@ local macro "evalNat" : tactic =>
       ax11_mul_assoc, ax12_mul_distrib, ax13_lt_def, ax18_lt_irrefl, ax19_lt_trichotomy,
       ax_L1_in_nil, ax_pow_zero, ax_pow_succ, ax25_pred_zero, ax26_pred_succ,
       ax16_mod2_succ, ax21_mod2_range, ax24_mod2_of_even, ax17_div_mod_eq,
+      ax_L0_cons_def,
       ax29_sub_witness,
       forall_, forall_2, forall_3, neg, iff, ex, evalFormula, evalTerm,
       evalTerms, natModelK, shiftEnv, zero, succ, add, mul, pow, pred, mod2, div2, sub,
-      lt, le,
+      cons, pair, cantor_func, cantor_poly, lt, le,
       In, nil, one, two, zero_sym, succ_sym, add_sym, mul_sym, pow_sym, pred_sym, mod2_sym,
       sub_sym, lt_sym, in_sym, List.headD, List.tail, reduceIte])
 
@@ -130,7 +134,8 @@ local macro "evalNat" : tactic =>
 theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
     ∀ g, List.Mem g subAxioms → evalFormula (natModelK k) v g := by
   intro g hg
-  simp only [subAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms] at hg
+  simp only [subAxioms, arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms,
+    arithAxioms] at hg
   rcases hg with _ | ⟨_, hg⟩
   · evalNat; intro d h; exact Nat.succ_ne_zero d h
   rcases hg with _ | ⟨_, hg⟩
@@ -192,6 +197,11 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
   · -- `ax17_div_mod_eq`: `(d/2)·2 + d%2 = d`, que es aritmética de `ℕ`.
     evalNat; intro d; omega
   rcases hg with _ | ⟨_, hg⟩
+  · -- `ax_L0_cons_def`: `d :: e = pair d (σe)`. En el modelo los dos lados son **el mismo
+    -- término**: `::` se interpreta como el emparejamiento de Cantor, que es lo que
+    -- `pair` desarrolla.
+    evalNat; intro d e; trivial
+  rcases hg with _ | ⟨_, hg⟩
   · -- `ax29_sub_witness`: el parámetro `k` vive en la rama `¬(e ≤ d)`, que la hipótesis
     -- del axioma excluye. Por eso el axioma vale **para todo `k`**.
     evalNat
@@ -207,11 +217,17 @@ theorem natModelK_sat (k : Nat) (v : Nat → Nat) :
 /-- Los 22 del fragmento, en el modelo con `k = 0`. -/
 theorem natModel_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTMAxioms → evalFormula (natModelK 0) v g :=
-  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _ hg))
+  fun g hg => natModelK_sat 0 v g
+    (List.mem_append_left _ (List.mem_append_left _ (List.mem_append_left _ hg)))
 
 /-- Los 23 del fragmento con `/₂`, en el modelo con `k = 0`. -/
 theorem natModelD_sat (v : Nat → Nat) :
     ∀ g, List.Mem g arithTDAxioms → evalFormula (natModelK 0) v g :=
+  fun g hg => natModelK_sat 0 v g (List.mem_append_left _ (List.mem_append_left _ hg))
+
+/-- Los 24 del fragmento con `::`, en el modelo con `k = 0`. -/
+theorem natModelC_sat (v : Nat → Nat) :
+    ∀ g, List.Mem g arithTDCAxioms → evalFormula (natModelK 0) v g :=
   fun g hg => natModelK_sat 0 v g (List.mem_append_left _ hg)
 
 /-! ## 3 · 🏁 `hcon` descargada, y la DP sin hipótesis -/
@@ -347,5 +363,30 @@ theorem qDisjunctionProperty_arithTD_final {A B : Formula}
     (h : ctxD [] ⊢ᵢ Formula.or A B) :
     Or (ctxD [] ⊢ᵢ A) (ctxD [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTD hcon_fragmentD hAB h
+
+
+/-! ## 6 · 🏁 El fragmento con `::` — 24 de 34, también incondicional -/
+
+/-- 🏁 **La consistencia del fragmento con `::`.** El modelo interpreta `::` como el
+    emparejamiento de Cantor, que es lo que `pair` desarrolla, así que `ax_L0` sale por
+    `trivial`: los dos lados son el mismo término. -/
+theorem hcon_fragmentC : Not (ctxC [] ⊢ᵢ Formula.bottom) := by
+  intro h
+  have hv := derivesI_soundness h
+  refine hv Nat (natModelK 0) (fun _ => 0) (fun f hf => ?_)
+  have hf2 : f ∈ arithTDCAxioms := by simpa [ctxC] using hf
+  exact natModelC_sat _ f hf2
+
+/-- 🏁🏁🏁 **LA DP DEL FRAGMENTO CON `::`, INCONDICIONAL** — **24 de los 34** axiomas de
+    `coreAxioms`, nueve símbolos, **cero hipótesis**.
+
+    ⛔ Y `::` entra **por COMPOSICIÓN**: ADR-037 lo bloqueaba porque «`pair` usa `/₂`», y ese
+    bloqueo cayó solo en cuanto `/₂` quedó determinado (ADR-042). Sin una línea de teoría
+    nueva. -/
+theorem qDisjunctionProperty_arithTDC_final {A B : Formula}
+    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxC [] ⊢ᵢ Formula.or A B) :
+    Or (ctxC [] ⊢ᵢ A) (ctxC [] ⊢ᵢ B) :=
+  qDisjunctionProperty_arithTDC hcon_fragmentC hAB h
 
 end PeanoRF.HA

@@ -1550,6 +1550,9 @@ caracterización no se despeja sin inducción en el objeto.
   Queda escrito como deuda, igual que la no-derivabilidad del contraejemplo de `junk_probe`.
   ✅ **La de `−` está PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
   con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
+- ⛔⛔ **REFUTADO también para `::` el 2026-09-22 (ADR-044)**, y **por corolario del
+  anterior**: el bloqueo de `::` era «`pair` usa `/₂`», o sea una DEPENDENCIA, no una
+  propiedad suya. Al caer `/₂` cayó con él.
 - ⛔⛔ **REFUTADO para `/₂` el 2026-09-22 (ADR-042)**: la razón que da esta tabla —«pide
   cancelación de `+` y `·`»— es falsa, y `/₂` está **en el fragmento** desde entonces
   (`numeralI_div2`). El criterio de este ADR resulta **suficiente pero no necesario**.
@@ -1949,6 +1952,67 @@ es justo `x < x`. El orden hace barato lo que la recursión hacía caro.
   FOL y RPP desde cero contra los HEAD nuevos». **Era falso** — el job murió en el primer
   paso y nunca clonó nada. Diagnosticar antes de leer el log es exactamente lo que este ADR
   viene a hacer innecesario.
+
+---
+
+## ADR-044: `::` entra POR COMPOSICIÓN — 24 de 34, y el segundo ⛔ de ADR-037 que cae solo
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. ⛔ **Refuta el veredicto de ADR-037 para `::`**, y lo hace **sin
+trabajo nuevo**.
+
+**Contexto**: ADR-037 bloqueó `::` con esta razón, y la razón era **correcta**:
+
+> «`::` ⛔ — **`pair` usa `/₂`** (medido)».
+
+Lo que no se vio es que eso no es una propiedad de `::`, sino una **dependencia**. En RPP:
+
+```lean
+pair x y        = cantor_func x y = div2 (cantor_poly x y)
+cantor_poly x y = (x+y)·σ(x+y) + 2·y          -- sólo `+`, `·`, `σ`, `2`
+ax_L0_cons_def  : ∀x∀y.  x :: y = pair x (σy)
+```
+
+⇒ el bloqueo de `::` estaba **condicionado** al de `/₂`. Cuando ADR-042 determinó `/₂`, el
+de `::` cayó por sí solo, y nadie lo notó hasta ir a mirarlo.
+
+**Decisión**: `LQtdc`, `arithTDCAxioms` (24 = los 23 más `ax_L0_cons_def`), `numeralI_cons`,
+y el modelo extendido con `::` ⇒ `qDisjunctionProperty_arithTDC_final`.
+
+**Justificación**: la demostración de `numeralI_cons` **no tiene ninguna idea nueva**. Es
+`ax_L0` instanciado, `numeralI_add`/`numeralI_mul` bajando `cantor_poly` a numeral, y
+`numeralI_div2` cerrando. Salió a la primera, que es lo que se espera de una composición.
+
+⭐ En el modelo, `ax_L0` sale por **`trivial`**: `::` se interpreta como el emparejamiento de
+Cantor —que es exactamente lo que `pair` desarrolla—, así que los dos lados del axioma son
+**el mismo término**. No hay nada que demostrar porque no hay nada que elegir.
+
+**Resultado**, todo en `[propext, Quot.sound]`:
+
+```lean
+numeralI_cons                       : ⊢ᵢ m̄ :: n̄ = (cantor(m, n+1))‾
+qDisjunctionProperty_arithTDC_final : la DP de 24 axiomas, SIN HIPÓTESIS
+```
+
+**Consecuencias**:
+- 🏁 **24 de los 34 axiomas**, **nueve símbolos**, cero hipótesis.
+- ⛔⛔ **Segundo veredicto de ADR-037 refutado, y el tercero de sus cinco ⛔ que cae.** Van
+  `−` (ADR-039, medido negativo), `/₂` (ADR-042, demostrado) y `::` (aquí, por corolario).
+- 🔑 **Y la lección de método es la que más va a servir**: ADR-037 puso en una sola columna
+  ⛔ dos cosas distintas, y la diferencia es **semántica**:
+  * `−` está **libre**: `ax29` lo condiciona a `x ≤ y` y fuera de ahí ningún modelo lo fija.
+    Ahí los modelos **deciden**, y deciden que no.
+  * `/₂`, `√` y `::` están **determinados en TODO modelo** — `ax17` fija `/₂n` una vez
+    fijado `%₂n`, y `ax14`+`ax15` encajonan `√n` entre dos cuadrados consecutivos. Para
+    éstos **la técnica de modelos no puede dar nunca un negativo**: o se demuestra, o se
+    deja abierto.
+  ⇒ un ⛔ de «no encontramos la prueba» **no es** un ⛔ de «no está determinado», y ADR-037
+  los escribió iguales. De sus cinco, **sólo uno** era del segundo tipo.
+- ⚠️ **Y una dependencia que conviene tener escrita**: `::` dependía de `/₂`, y nadie lo
+  anotó como tal. Antes de dar un símbolo por cerrado hay que mirar **de qué otro depende**,
+  porque el día que se abra el otro, éste se abre con él y no salta ningún control.
+- ⏳ Quedan `√` —que no es composición: pide la forma ∀ de `zeroI_or_succ`— y `##`/`Π_p`,
+  que son recursiones sobre lista y piden saber si un numeral es `nil` o `cons`.
 
 ---
 

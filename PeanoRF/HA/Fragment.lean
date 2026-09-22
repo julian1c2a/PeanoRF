@@ -1124,4 +1124,280 @@ theorem qDisjunctionProperty_arithTD
   intro g hg
   cases hg
 
+
+/-! ## 11 · 🏁 `::` ENTRA — 24 de 34, por COMPOSICIÓN
+
+  ADR-037 bloqueó `::` con esta razón: «`pair` usa `/₂` (medido)». Era cierto, y por eso
+  el bloqueo **cae solo** en cuanto `/₂` queda determinado (ADR-042):
+
+  ```
+  pair x y        = cantor_func x y = div2 (cantor_poly x y)
+  cantor_poly x y = (x+y)·σ(x+y) + 2·y          -- sólo `+`, `·`, `σ`, `2`
+  ax_L0_cons_def  : ∀x∀y.  x :: y = pair x (σy)
+  ```
+
+  ⭐ **Aquí no hay teoría nueva**: `cantor_poly` de numerales baja a numeral con
+  `numeralI_add`/`numeralI_mul`, y `numeralI_div2` cierra. Es composición de lo que ya
+  había — y por eso este símbolo sale más barato que `τ` o `%₂`, que necesitaron cada uno
+  su propio argumento. -/
+
+def LQtdc (s : String) (n : Nat) : Bool := LQtd s n || (s == cons_sym && n == 2)
+
+def arithTDCAxioms : List Formula := arithTDAxioms ++ [ax_L0_cons_def]
+
+/-- ⛔ **EVIDENCIA**: los 24 son sentencias del lenguaje extendido. -/
+theorem arithTDCAxioms_sentences :
+    arithTDCAxioms.map (fun g => collapseF LQtdc (substF zeroS g)) = arithTDCAxioms := by rfl
+
+/-- ⛔ **EVIDENCIA**: `::` **no añade dureza** — `ax_L0` es de Harrop. -/
+theorem arithTDCAxioms_hard :
+    arithTDCAxioms.filter (fun g => !isHarrop g)
+      = [ax13_lt_def, ax19_lt_trichotomy, ax21_mod2_range] := by rfl
+
+theorem arithTDC_of_arithTD {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g) :
+    ∀ g, List.Mem g arithTDAxioms → Γ ⊢ᵢ g :=
+  fun g hg => hΓ g (List.mem_append_left _ hg)
+
+theorem arithTDC_of_arith {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g) :
+    ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g :=
+  fun g hg => arithTD_of_arith (arithTDC_of_arithTD hΓ) g hg
+
+/-- `ax_L0` es el último de los 24. -/
+theorem axCL0 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g) :
+    Γ ⊢ᵢ ax_L0_cons_def :=
+  hΓ ax_L0_cons_def (by repeat (first | exact List.Mem.head _ | apply List.Mem.tail))
+
+/-- `ax_L0` instanciado en términos anclados. -/
+theorem ax_L0I {Γ : List Formula} (hL0 : Γ ⊢ᵢ ax_L0_cons_def) (L : String → Nat → Bool)
+    {t u : Term} (ht : Grounded L t) (hu : Grounded L u) :
+    Γ ⊢ᵢ Formula.eq (cons t u) (pair t (succ u)) := by
+  have h := specI (specI hL0 t) u
+  simpa (config := { decide := true }) only [ax_L0_cons_def, forall_2, substFormula,
+    substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, cons, pair, cantor_func,
+    cantor_poly, div2, add, mul, succ, two, one, zero,
+    grounded_liftTerm L ht, grounded_liftTerm L hu,
+    grounded_substTerm L ht, grounded_substTerm L hu] using h
+
+/-- El numeral que `m̄ :: n̄` denota: el emparejamiento de Cantor de `m` y `n+1`. -/
+def consNat (m n : Nat) : Nat :=
+  ((m + (n + 1)) * ((m + (n + 1)) + 1) + 2 * (n + 1)) / 2
+
+/-- 🏁 **`m̄ :: n̄` ES demostrablemente un numeral.** Y sin una línea de teoría nueva. -/
+theorem numeralI_cons {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hTM : ∀ g, List.Mem g arithTMAxioms → Γ ⊢ᵢ g)
+    (h17 : Γ ⊢ᵢ ax17_div_mod_eq) (hL0 : Γ ⊢ᵢ ax_L0_cons_def)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hm : L mul_sym 2 = true) (ha2 : L add_sym 2 = true)
+    (hsu : L succ_sym 1 = true) (hd : L div2_sym 1 = true) (m n : Nat) :
+    Γ ⊢ᵢ Formula.eq (cons (numeralM m) (numeralM n)) (numeralM (consNat m n)) := by
+  have hmg : Grounded L (numeralM m) := grounded_numeralM L hsu m
+  have hng : Grounded L (numeralM n) := grounded_numeralM L hsu n
+  have e0 : Γ ⊢ᵢ Formula.eq (cons (numeralM m) (numeralM n))
+      (div2 (add (mul (add (numeralM m) (numeralM (n + 1)))
+                      (succ (add (numeralM m) (numeralM (n + 1)))))
+                 (mul (numeralM 2) (numeralM (n + 1))))) :=
+    ax_L0I hL0 L hmg hng
+  have e1 : Γ ⊢ᵢ Formula.eq (add (numeralM m) (numeralM (n + 1)))
+      (numeralM (m + (n + 1))) := numeralI_add hΓ m (n + 1)
+  have e3 : Γ ⊢ᵢ Formula.eq
+      (mul (add (numeralM m) (numeralM (n + 1)))
+           (succ (add (numeralM m) (numeralM (n + 1)))))
+      (numeralM ((m + (n + 1)) * (m + (n + 1) + 1))) :=
+    eqI_trans (eqI_congr_fun2 mul_sym e1 (eqI_congr_succ e1))
+      (numeralI_mul hΓ (m + (n + 1)) (m + (n + 1) + 1))
+  have e5 : Γ ⊢ᵢ Formula.eq
+      (add (mul (add (numeralM m) (numeralM (n + 1)))
+                (succ (add (numeralM m) (numeralM (n + 1)))))
+           (mul (numeralM 2) (numeralM (n + 1))))
+      (numeralM ((m + (n + 1)) * (m + (n + 1) + 1) + 2 * (n + 1))) :=
+    eqI_trans (eqI_congr_fun2 add_sym e3 (numeralI_mul hΓ 2 (n + 1)))
+      (numeralI_add hΓ ((m + (n + 1)) * (m + (n + 1) + 1)) (2 * (n + 1)))
+  refine eqI_trans e0 (eqI_trans (eqI_congr_fun1 div2_sym e5) ?_)
+  exact numeralI_div2 hΓ hTM h17 hlift hm ha2 hsu hd
+    ((m + (n + 1)) * (m + (n + 1) + 1) + 2 * (n + 1))
+
+
+/-- Evaluar un símbolo de `LQtdc`: si ya estaba en `LQtd`, se delega; si no, es `::`. -/
+theorem numOf_of_LQtdc {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ (sy : String) (args : List Term), LQtdc sy args.length = true →
+    (∀ u, List.Mem u args → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n))) →
+    ∃ n : Nat, Γ ⊢ᵢ (Formula.eq (Term.func sy args) (numeralM n)) := by
+  intro sy args hL hargs
+  by_cases hD : LQtd sy args.length = true
+  · exact numOf_of_LQtd (arithTDC_of_arithTD hΓ) hlift sy args hD hargs
+  · have hc : And (sy = cons_sym) (args.length = 2) := by
+      simp only [LQtdc, Bool.or_eq_true, Bool.and_eq_true, beq_iff_eq] at hL
+      rcases hL with h | h
+      · exact absurd h hD
+      · exact h
+    obtain ⟨hsy, hlen⟩ := hc
+    match args, hlen with
+    | [a, b], _ =>
+        obtain ⟨m, hm⟩ := hargs a (List.Mem.head _)
+        obtain ⟨n, hn⟩ := hargs b (List.Mem.tail _ (List.Mem.head _))
+        subst hsy
+        refine ⟨consNat m n, eqI_trans (eqI_congr_fun2 cons_sym hm hn) ?_⟩
+        exact numeralI_cons (arithTDC_of_arith hΓ)
+          (arithTD_of_arithTM (arithTDC_of_arithTD hΓ)) (axD17 (arithTDC_of_arithTD hΓ))
+          (axCL0 hΓ) hlift (L := LQtdc) (by decide) (by decide) (by decide) (by decide) m n
+
+mutual
+/-- ⭐ `hNum` para la signatura con `::`. -/
+theorem numOfC_grounded {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ {t : Term}, Grounded LQtdc t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+  intro t h
+  cases t with
+  | var n =>
+      exfalso
+      have hc : (zero : Term) = Term.var n := h.2 (fun _ => zero)
+      rw [zero] at hc
+      exact Term.noConfusion hc
+  | func sy ts =>
+      by_cases hL : LQtdc sy ts.length = true
+      · have hall := h.1
+        rw [collapseT, if_pos hL] at hall
+        injection hall with _ hts
+        refine numOf_of_LQtdc hΓ hlift sy ts hL ?_
+        exact numOfC_grounded_list hΓ hlift ts hts (fun ρ => by
+          have hx := h.2 ρ; simp only [substT] at hx; injection hx)
+      · exfalso
+        have hall := h.1
+        rw [collapseT, if_neg hL, zero] at hall
+        injection hall with h1 h2
+        exact hL (by rw [← h1, ← h2]; decide)
+
+theorem numOfC_grounded_list {Γ : List Formula}
+    (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ) :
+    ∀ (ts : List Term), collapseTs LQtdc ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
+  intro ts hc hs
+  cases ts with
+  | nil => intro u hu; cases hu
+  | cons t ts0 =>
+      rw [collapseTs] at hc
+      injection hc with hc1 hc2
+      intro u hu
+      cases hu with
+      | head =>
+          exact numOfC_grounded hΓ hlift ⟨hc1, fun ρ => by
+            have hx := hs ρ; simp only [substTs] at hx; injection hx⟩
+      | tail _ hu0 =>
+          exact numOfC_grounded_list hΓ hlift ts0 hc2
+            (fun ρ => by have hx := hs ρ; simp only [substTs] at hx; injection hx) u hu0
+end
+
+
+/-! ### La DP del fragmento con `::` — 24 de 34 -/
+
+def ctxC (insts : List Formula) : List Formula :=
+  arithTDCAxioms ++ insts.map inductionFormula
+
+theorem axC' {insts : List Formula} {g : Formula} (h : List.Mem g arithTDCAxioms) :
+    ctxC insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
+
+theorem arithTDCAxioms_sentence (g : Formula) (hg : List.Mem g arithTDCAxioms) :
+    collapseF LQtdc (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF LQtdc (substF zeroS g)) arithTDCAxioms
+    arithTDCAxioms_sentences g hg
+
+theorem hNumC_fragment {insts : List Formula}
+    (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts) : ∀ t : Term, Grounded LQtdc t →
+    ∃ n : Nat, ctxC insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
+  fun _ ht => numOfC_grounded (fun _ hg => axC' hg) hlift ht
+
+/-- ⭐⭐ **Los 24 axiomas, barrados.** El vigesimocuarto, `ax_L0`, es de Harrop. -/
+theorem slash_arithTDCAxioms {insts : List Formula}
+    (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts)
+    (hcon : Not (ctxC insts ⊢ᵢ Formula.bottom)) :
+    ∀ g, List.Mem g arithTDCAxioms → Slash (ctxC insts) (Grounded LQtdc) g := by
+  have hA : ∀ g, List.Mem g arithTDCAxioms → ctxC insts ⊢ᵢ g := fun _ hg => axC' hg
+  intro g hg
+  simp only [arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms, List.append] at hg
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax2_peano_succ_neq_zero rfl (axC' (List.Mem.head _))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax3_peano_succ_inj rfl (axC' (List.Mem.tail _ (List.Mem.head _)))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax4_add_zero rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax5_add_succ rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax6_add_comm rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax7_add_assoc rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax8_mul_zero rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax9_mul_succ rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax10_mul_comm rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax11_mul_assoc rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax12_mul_distrib rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax13 LQtdc (by decide) (arithTDC_of_arith hA) hlift hcon (hNumC_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax18_lt_irrefl rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax19 LQtdc (arithTDC_of_arith hA) (hNumC_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_L1_in_nil rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_pow_zero rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_pow_succ rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax25_pred_zero rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax26_pred_succ rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax16_mod2_succ rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_ax21 LQtdc (by decide) (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))) (arithTDC_of_arith hA) hcon (hNumC_fragment hlift)
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax24_mod2_of_even rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax17_div_mod_eq rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))))))))))))
+  rcases hg with _ | ⟨_, hg⟩
+  · exact slash_of_isHarrop _ _ hcon ax_L0_cons_def rfl (axC' (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _)))))))))))))))))))))))))
+  cases hg
+
+
+/-- 🏁 La DP del fragmento con `::`, con instancias de inducción. -/
+theorem qDisjunctionPropertyC (insts : List Formula)
+    (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts)
+    (hcon : Not (ctxC insts ⊢ᵢ Formula.bottom))
+    (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
+      Slash (ctxC insts) (Grounded LQtdc) (collapseF LQtdc (substF zeroS g)))
+    {A B : Formula}
+    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxC insts ⊢ᵢ Formula.or A B) :
+    Or (ctxC insts ⊢ᵢ A) (ctxC insts ⊢ᵢ B) := by
+  refine disjunction_property_of_slashed (ctxC insts) (Grounded LQtdc) LQtdc
+    (fun _ hu => grounded_fix LQtdc hu) (grounded_collapse_subst LQtdc)
+    zeroS (fun _ => grounded_zero LQtdc) (fun g hg => ?_) hAB h
+  rcases List.mem_append.mp hg with hcore | hind
+  · rw [arithTDCAxioms_sentence g hcore]
+    exact slash_arithTDCAxioms hlift hcon g hcore
+  · exact hInd g hind
+
+/-- 🏁🏁🏁 **24 de los 34** — sin instancias de inducción: la consistencia y nada más. -/
+theorem qDisjunctionProperty_arithTDC
+    (hcon : Not (ctxC [] ⊢ᵢ Formula.bottom))
+    {A B : Formula}
+    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (h : ctxC [] ⊢ᵢ Formula.or A B) :
+    Or (ctxC [] ⊢ᵢ A) (ctxC [] ⊢ᵢ B) := by
+  refine qDisjunctionPropertyC [] (by rfl) hcon ?_ hAB h
+  intro g hg
+  cases hg
+
 end PeanoRF.HA

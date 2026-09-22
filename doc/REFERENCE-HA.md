@@ -23,7 +23,7 @@ modelo estándar sobre `ℕ` que descarga la consistencia.
 | [`PeanoRF/HA/Domain.lean`](../PeanoRF/HA/Domain.lean) | el dominio `Grounded`, definido **por sus clausuras** | 2.1 |
 | [`PeanoRF/HA/SlashAxioms.lean`](../PeanoRF/HA/SlashAxioms.lean) | 🏁🏁 los **34** axiomas de `coreAxioms` barrados | 2.2 |
 | [`PeanoRF/HA/Order.lean`](../PeanoRF/HA/Order.lean) | 🏁 **el orden sobre términos anclados** — la herramienta que refutó ADR-037 | 2.3 |
-| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → **23** | 2.4 |
+| [`PeanoRF/HA/Fragment.lean`](../PeanoRF/HA/Fragment.lean) | el **fragmento aritmético**: 17 → 19 → 22 → 23 → **24** | 2.4 |
 | [`PeanoRF/HA/Model.lean`](../PeanoRF/HA/Model.lean) | 🏁 el modelo sobre `ℕ`: `hcon` descargada, `−` medido | 2.5 |
 | [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean) | el conjunto de axiomas, `gen_closed`, `Closed` | 2.6 |
 | [`PeanoRF/HA/Numerals.lean`](../PeanoRF/HA/Numerals.lean) | los numerales y el puente sintaxis ↔ `ℕ` | 2.7 |
@@ -205,7 +205,7 @@ dominio.
 **Namespace**: `PeanoRF.HA`
 **Dependencies**: `PeanoRF.HA.SlashAxioms`
 **Last updated**: 2026-09-21
-**Status**: ✅ tres fragmentos encajados, 17 → 19 → 22
+**Status**: ✅ cinco fragmentos encajados, 17 → 19 → 22 → 23 → 24
 
 ⛔ **La medición que manda el módulo**: `hNum` sobre los **trece** símbolos de Q⁺⁺ es
 inalcanzable, y para `−` es **falsa** — ese símbolo aparece en **un solo axioma**
@@ -216,6 +216,8 @@ inalcanzable, y para `−` es **falsa** — ese símbolo aparece en **un solo ax
 | **A** | `LQ` = `0 σ + * ^` | `arithAxioms` (17) | `qDisjunctionProperty_arith` |
 | **T** | `LQt` = A `+ τ` | `arithTAxioms` (19) | `qDisjunctionProperty_arithT` |
 | **TM** | `LQtm` = T `+ %₂` | `arithTMAxioms` (22) | `qDisjunctionProperty_arithTM` |
+| **TD** | `LQtd` = TM `+ /₂` | `arithTDAxioms` (23) | `qDisjunctionProperty_arithTD` |
+| **TDC** | `LQtdc` = TD `+ ::` | `arithTDCAxioms` (24) | `qDisjunctionProperty_arithTDC` |
 
 **Evidencia, toda por `rfl`** — el kernel verifica las cifras y las dos propiedades que el
 fragmento necesita:
@@ -242,9 +244,16 @@ fragmento necesita:
 | `arithT_of_arith` / `arithTM_of_arithT` / `arithTM_of_arith` | los contextos crecen: lo que valía en A vale en T y en TM | — |
 | `slash_arithAxioms` / `slash_arithTAxioms` / `slash_arithTMAxioms` | ⭐⭐ los 17 / 19 / **22** axiomas **barrados** | `propext, Quot.sound` |
 | `qDisjunctionPropertyA` / `…T` / `…TM` | la DP con instancias de inducción | `propext, Quot.sound` |
-| 🏁🏁🏁 **`qDisjunctionProperty_arithTM`** | **22 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
+| 🏁 `numeralI_div2` | `⊢ᵢ /₂ n̄ = (n/2)‾` — por el ORDEN, **sin cancelación** (ADR-042) | `propext, Quot.sound` |
+| 🏁 `numeralI_cons` | `⊢ᵢ m̄ :: n̄ = (cantor(m,n+1))‾` — por **COMPOSICIÓN** (ADR-044) | `propext, Quot.sound` |
+| 🏁🏁🏁 **`qDisjunctionProperty_arithTDC`** | **24 de los 34, con una sola hipótesis: la consistencia** | `propext, Quot.sound` |
 
-🔑 **El criterio que sale de medir, y es lo reutilizable**: un símbolo entra en el fragmento
+⛔ **Y el criterio de ADR-037 quedó refutado dos veces.** `/₂` entra sin estar definido por
+recursión (ADR-042) y `::` entra **por depender de `/₂`** (ADR-044). Lo que decide no es la
+forma del axioma sino si el término queda **encajonado**; y un ⛔ de «no encontramos la
+prueba» no es un ⛔ de «no está determinado».
+
+🔑 **El criterio que sale de medir, y era razonable**: un símbolo entra en el fragmento
 si sus axiomas lo **definen por recursión sobre el constructor** (`0` / `σ`). `τ` y `%₂` lo
 hacen. `/₂`, `√` y `−` están **caracterizados por propiedades** —desigualdades, ecuaciones
 condicionadas—, y de una caracterización no se despeja sin inducción en el objeto.
@@ -287,7 +296,7 @@ eso es lo que convierte el modelo en una **familia**.
 | `natModelK` | el modelo, parametrizado | — |
 | ⭐⭐ `natModelK_sat` | **los 23 axiomas son verdaderos en `natModelK k`, para TODO `k`** | `propext, Quot.sound` |
 | `natModel_sat` | los 22 del fragmento, con `k = 0` | `propext, Quot.sound` |
-| 🏁 **`hcon_fragment`** | **`ctxTM []` no deriva `⊥`** — por `derivesI_soundness` | `propext, Quot.sound` |
+| 🏁 **`hcon_fragment`** / `hcon_fragmentD` / `hcon_fragmentC` | **el contexto no deriva `⊥`** — por `derivesI_soundness`, para 22, 23 y 24 axiomas | `propext, Quot.sound` |
 | 🏁🏁🏁 **`qDisjunctionProperty_arithTM_final`** | **la DP del fragmento, SIN NINGUNA HIPÓTESIS** | `propext, Quot.sound` |
 | `evalT_zero` / `evalT_succ` / `evalT_sub` | las tres ecuaciones de evaluación que sostienen la sección 4 | `propext, Quot.sound` |
 | `eval_numeralM` | en el modelo, los numerales denotan lo que parecen | `propext, Quot.sound` |

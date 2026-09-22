@@ -3,7 +3,14 @@
 **Última actualización:** 2026-09-22
 **Autor**: Julián Calderón Almendros
 
-> 🏁🏁🏁 **2026-09-22 · `/₂` ENTRA — 23 DE 34, SIN HIPÓTESIS** (ADR-042).
+> 🏁🏁🏁 **2026-09-22 · `/₂` y `::` ENTRAN — 24 DE 34, SIN HIPÓTESIS** (ADR-042, ADR-044).
+> Y `::` entró **por COMPOSICIÓN**: ADR-037 lo bloqueaba con «`pair` usa `/₂`», que no era
+> una propiedad suya sino una **dependencia** — al caer `/₂`, cayó con él, sin teoría nueva.
+> 🔑 De ahí la lección: ADR-037 metió en la misma columna ⛔ lo **libre** (`−`, que los
+> modelos deciden) y lo **determinado en todo modelo** (`/₂`, `√`, `::`, donde los modelos
+> no pueden dar un negativo nunca). De sus cinco ⛔, ya van **tres** caídos.
+>
+> 🏁 **2026-09-22 · `/₂` ENTRA — 23 DE 34, SIN HIPÓTESIS** (ADR-042).
 > `qDisjunctionProperty_arithTD_final`. Módulo nuevo `PeanoRF/HA/Order.lean`: **el orden de
 > Q⁺⁺ sobre términos anclados**, que hasta hoy sólo existía sobre numerales.
 > ⛔ Y con él, la razón que ADR-037 dio para cerrar `/₂` —«pide cancelación de `+` y `·`»—
@@ -238,8 +245,8 @@
 |--------|-------|
 | Módulos propios | 19 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Order,Fragment,Model}`) |
 | Módulos con 0 `sorry` | 19 / 19 |
-| Teoremas propios | 245 |
-| Definiciones propias | 13 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, `LQtd`) |
+| Teoremas propios | 268 |
+| Definiciones propias | 16 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, `LQtd`, `LQtdc`, `consNat`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
 | Build | ✅ 52 jobs (ver la reserva del banner) |
@@ -261,7 +268,7 @@
 | `PeanoRF/Calculus/DerivesI.lean` | 2 | 1 | 0 | ✅ El cálculo `⊢ᵢ` + puentes |
 | `PeanoRF/Calculus/Eq.lean` | 5 | 0 | 0 | ✅ Igualdad sobre `⊢ᵢ` |
 | `PeanoRF/Calculus/Soundness.lean` | 2 | 0 | 0 | 🏁 **H3**: solidez **CONSTRUCTIVA** (`propext, Quot.sound`) |
-| `PeanoRF/HA/Model.lean` | 15 | 2 | 0 | 🏁 **ADR-039**: modelo estándar sobre `ℕ` ⇒ `hcon` descargada, y `−` medido |
+| `PeanoRF/HA/Model.lean` | 17 | 2 | 0 | 🏁 **ADR-039**: modelo estándar sobre `ℕ` ⇒ `hcon` descargada, y `−` medido |
 | `PeanoRF/HA/Order.lean` | 17 | 0 | 0 | 🏁 **ADR-042**: el orden sobre términos anclados — refuta el ⛔ de ADR-037 |
 
 *Códigos*: ✅ Completo · 🧊 Congelado · 🔶 Parcial · 🔄 En curso · ❌ Pendiente

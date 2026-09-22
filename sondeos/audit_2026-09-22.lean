@@ -22,3 +22,5 @@ import PeanoRF.HA.Order
 #print axioms PeanoRF.HA.qDisjunctionProperty_arithTD_final
 #print axioms PeanoRF.HA.zeroI_or_succ
 #print axioms PeanoRF.HA.numeralI_div2
+#print axioms PeanoRF.HA.qDisjunctionProperty_arithTDC_final
+#print axioms PeanoRF.HA.hcon_fragmentC

@@ -1550,6 +1550,14 @@ caracterización no se despeja sin inducción en el objeto.
   Queda escrito como deuda, igual que la no-derivabilidad del contraejemplo de `junk_probe`.
   ✅ **La de `−` está PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
   con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
+- 🚨 **Y sobre esas dos, el 2026-09-22 apareció contraevidencia MEDIDA** —ver
+  `sondeos/sqrt_div2_probe.lean`—. El ⛔ de `/₂` decía «pide cancelación de `+` y `·`»; la
+  cancelación **no hace falta**, porque la caracterización se despeja **por el ORDEN**: la
+  tricotomía contra el numeral candidato más monotonía de la suma, que sale de `ax13` sin
+  inducción. Y la pieza que se daba por ausente —«todo `x` es `0` o sucesor», que Robinson
+  Q **postula** y `coreAxioms` no tiene— **se DERIVA**: `zeroI_or_succ`, en
+  `[propext, Quot.sound]`. ⏳ El veredicto de las dos casillas queda **abierto hasta
+  terminar la cadena**; lo que ya no se sostiene es la razón que se dio.
   â **La de `−` estÃ¡ PAGADA** desde el 2026-09-21 (ADR-039): `sub_neither` la mide, y no
   con dos modelos sueltos sino con **uno parametrizado**. Quedan `√` y `/₂`.
 

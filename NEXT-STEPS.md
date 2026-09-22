@@ -102,9 +102,17 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
 - **Formalizar la no-derivabilidad de las ramas** del contraejemplo. Hoy es argumento por
   solidez; en esta familia un argumento no es una medición. ⭐ Y desde ADR-039 se sabe **con
   qué herramienta**: un modelo. `sub_neither` es la plantilla.
-- ⛔ **`√` y `/₂`**: las dos casillas de ADR-037 que siguen siendo ARGUMENTO. La de `−` se
-  pagó con ADR-039; éstas no son libres —sus axiomas son desigualdades que sí acotan—, así
-  que el modelo que las mueva hay que buscarlo.
+- 🔶 **`√` y `/₂`** — EN CURSO (2026-09-22, `sondeos/sqrt_div2_probe.lean`). ⛔ Y lo primero
+  que salió es que **la razón que daba ADR-037 no se sostiene**: decía que `/₂` «pide
+  cancelación de `+` y `·`», y la cancelación no hace falta — la caracterización se despeja
+  **por el ORDEN**. Medido ya, todo en `[propext, Quot.sound]`:
+  · `exI_of_ltI` / la dirección ⇒ de `ax13` para términos **anclados**;
+  · `notI_lt_zero` — nada es menor que cero (`ax5` + `ax2`);
+  · ⭐⭐ **`zeroI_or_succ`** — «todo término anclado es `0` o sucesor», **que Robinson Q
+    POSTULA** (su axioma 3) y `coreAxioms` **no tiene**: se deriva de la tricotomía.
+  ⏳ Falta la cadena de monotonía (`a<b → a+c<b+c`, transitividad, `x ≤ x+m`) y con ella
+  `numeralI_div2` y `numeralI_sqrt`. **El veredicto de las dos casillas sigue abierto**;
+  lo que ya no se sostiene es el argumento por el que se cerraron.
 - ⛔ **El alcance de `sub_neither` es `subAxioms` (23), no `coreAxioms` (34).** Subirlo pide
   un modelo de `coreAxioms` entero: listas, pares de Cantor, `√`, `Π_p`.
 - ✅ ~~`[C]` mira la FILA, no la SECCIÓN~~ **endurecido el 2026-09-22** (ADR-041): pide fila

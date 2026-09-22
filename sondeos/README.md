@@ -23,6 +23,7 @@ bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 | `h2b_probe.lean` | **2026-09-16**: qué meta-reglas siguen siendo `axiom` aguas arriba |
 | `h2c_probe.lean` | **2026-09-16**: footprint de `succ_add` (caso con parámetro) sobre `⊢ᵢ` |
 | `param_probe.lean` | **2026-09-16**: 🔑 qué hipótesis exige el parámetro para que el contexto sea cerrado |
+| ⭐ `sqrt_div2_probe.lean` | **2026-09-22**: ⛔ ¿están `√` y `/₂` determinados sobre numerales? Mide que Q⁺⁺ **DERIVA** «todo término es 0 o sucesor» —que en Q es un AXIOMA y en `coreAxioms` no está—, y con eso el ⛔ de ADR-037 para `/₂` («pide cancelación») queda **en revisión** |
 | ⭐ `check_C_smoke.bash` | **2026-09-22**: que el control `[C]` de `check-doc-sync.bash` **NO ES VACUO** — ocho casos, dos positivos y seis negativos, incluida la regresión del agujero de la subcadena |
 
 ⚠️ `peano_probe.lean` tuvo que anotar `Nat` a mano (`Nat.add`, `Nat.sub`): con `Peano`

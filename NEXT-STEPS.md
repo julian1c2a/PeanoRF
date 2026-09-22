@@ -131,8 +131,16 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   ⭐ Lo que sí destrabó todo fue quitar un `Grounded` que sobraba en `addI_assoc` y
   `mulI_distrib`: el doble levantamiento de `forall_3` lo deshace `FOL.substTerm_liftLift`,
   que estaba en el mismo fichero que el lema que sí usábamos.
-  ⏳ Falta `numeralI_sqrt`: montar las dos ramas de la tricotomía con los hechos numéricos
-  `k² ≤ n < (k+1)²` y tratar el `≤` de `ax14`, que es una disyunción.
+  🏁🏁 **`numeralI_sqrt` HECHO** el 2026-09-22 (`Order.lean` §10–§11), en
+  `[propext, Quot.sound]`: **`√` está DETERMINADO**, y con eso caen las CINCO casillas ⛔ de
+  ADR-037 que se podían cerrar —`−` medida negativa, `/₂`, `::` y `√` demostrados—.
+  Los tres auxiliares de `≤` (`notI_lt_of_le`, `leI_mul_self`, `leI_trans`) salen de
+  `ltI_trans` + `ltI_mul_self` + `ltI_irrefl`, y dan uso portante a lo que estaba 🏗️.
+  ⚠️ **El núcleo de Lean no trae `Nat.sqrt`** (vive en Mathlib), así que el enunciado toma
+  `k` con sus dos cotas. Más general, y separa la aritmética del meta de la derivación.
+  ⏳ **Falta meterlo en el FRAGMENTO** (26 axiomas): pide `isqrt` propia con sus dos cotas
+  para evaluar, y ⚠️ `ax14` **NO es de Harrop** — es de los seis duros, así que la cadena
+  necesita `slash_ax14`, que ya existe. Más el modelo, que tiene que interpretar `√`.
 
   (anterior) ⏳ Queda `√`, y ya con dos de sus tres piezas puestas: ⭐ `notI_add_succ_self` —ningún
   término anclado cumple `x + σy = x`, que para NUMERALES costó inducción meta

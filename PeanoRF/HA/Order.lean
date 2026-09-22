@@ -387,8 +387,8 @@ theorem notI_add_succ_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 
 /-- ⭐ **Transitividad de `<`.** `a+σj=b` y `b+σi=c` dan `a + σ(j + σi) = c`.
 
-    🏗️ **ANDAMIO de `√`**: `/₂` se pudo cerrar sin transitividad (ver `ltI_mul_two`), pero
-    las DOS desigualdades de `√` la piden. Sin uso portante todavía. -/
+    ✅ `/₂` se pudo cerrar SIN transitividad (ver `ltI_mul_two`), pero las dos desigualdades
+    de `√` la piden, y ahí la usan `notI_lt_of_le` y `leI_trans`. -/
 theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} {a b c : Term}
@@ -513,7 +513,8 @@ theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 
 /-- ⭐ **DISCRECIÓN**: entre `a` y `σa` no hay nada.
 
-    🏗️ **ANDAMIO de `√`**: sin uso portante hasta que `ax14`/`ax15` entren. -/
+    ✅ Uso portante desde el mismo día: es lo que convierte `s < k̄` en `σs ≤ k̄` dentro de
+    `numeralI_sqrt`. -/
 theorem ltI_succ_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hs : L succ_sym 1 = true) {a b : Term}
@@ -558,7 +559,7 @@ theorem ltI_succ_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 
 /-- ⭐ **Monotonía estricta del cuadrado**: `a < b ⟹ a·a < b·b`.
 
-    🏗️ **ANDAMIO de `√`**, como `ltI_succ_le` y `ltI_trans`: sin uso portante todavía. -/
+    ✅ Uso portante desde el mismo día, vía `leI_mul_self`. -/
 theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) {a b : Term}
@@ -615,6 +616,213 @@ theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   exact ltI_of_add hΓ1 L (grounded_func2 L hm ha ha) (grounded_func2 L hm hb hb)
     (add (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a)) (Term.var 0))
     (eqI_symm hfin)
+
+
+/-! ## 10 · Los tres auxiliares de `≤`
+
+    `le p q` es `lt p q ∨ p = q`, así que todo lo de aquí es un `elim_or` y un caso de
+    igualdad que se cierra reescribiendo DENTRO del predicado (`eqI_rw_atom2_*`). -/
+
+/-- `p ≤ q` y `q < p` se contradicen. -/
+theorem notI_lt_of_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} {p q : Term} (hp : Grounded L p) (hq : Grounded L q)
+    (hle : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q))
+    (hlt : Γ ⊢ᵢ lt q p) : Γ ⊢ᵢ Formula.bottom := by
+  refine Derivesᵢ.elim_or _ _ _ _ hle ?_ ?_
+  · -- `p < q` y `q < p` ⇒ `q < q`
+    have hΓ1 : ∀ g, List.Mem g arithAxioms → (lt p q :: Γ) ⊢ᵢ g := hyps_cons hΓ (lt p q)
+    have hqp : (lt p q :: Γ) ⊢ᵢ lt q p :=
+      Derivesᵢ.weakening _ _ _ hlt (fun _ hz => List.Mem.tail _ hz)
+    have htr := Derivesᵢ.elim_impl _ _ _
+      (Derivesᵢ.elim_impl _ _ _
+        (Derivesᵢ.weakening Γ (lt p q :: Γ) _ (ltI_trans hΓ hlift hq hp hq)
+          (fun _ hz => List.Mem.tail _ hz))
+        hqp)
+      (Derivesᵢ.hyp _ _ (List.Mem.head _))
+    exact Derivesᵢ.elim_impl _ _ _ (ltI_irrefl hΓ1 L hq) htr
+  · -- `p = q` ⇒ `q < p` se vuelve `q < q`
+    have hΓ1 : ∀ g, List.Mem g arithAxioms → (Formula.eq p q :: Γ) ⊢ᵢ g :=
+      hyps_cons hΓ (Formula.eq p q)
+    have hqp : (Formula.eq p q :: Γ) ⊢ᵢ lt q p :=
+      Derivesᵢ.weakening _ _ _ hlt (fun _ hz => List.Mem.tail _ hz)
+    exact Derivesᵢ.elim_impl _ _ _ (ltI_irrefl hΓ1 L hq)
+      (eqI_rw_atom2_r lt_sym q (Derivesᵢ.hyp _ _ (List.Mem.head _)) hqp)
+
+/-- `p ≤ q` ⇒ `p·p ≤ q·q`. -/
+theorem leI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hm : L mul_sym 2 = true) {p q : Term}
+    (hp : Grounded L p) (hq : Grounded L q)
+    (hle : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q)) :
+    Γ ⊢ᵢ Formula.or (lt (mul p p) (mul q q)) (Formula.eq (mul p p) (mul q q)) := by
+  refine Derivesᵢ.elim_or _ _ _ _ hle ?_ ?_
+  · refine Derivesᵢ.intro_or_l _ _ _ ?_
+    exact Derivesᵢ.elim_impl _ _ _
+      (Derivesᵢ.weakening Γ (lt p q :: Γ) _ (ltI_mul_self hΓ hlift hm hp hq)
+        (fun _ hz => List.Mem.tail _ hz))
+      (Derivesᵢ.hyp _ _ (List.Mem.head _))
+  · refine Derivesᵢ.intro_or_r _ _ _ ?_
+    exact eqI_congr_fun2 mul_sym (Derivesᵢ.hyp _ _ (List.Mem.head _))
+      (Derivesᵢ.hyp _ _ (List.Mem.head _))
+
+/-- `≤` es transitiva. Cuatro casos, y los tres con alguna igualdad se cierran
+    reescribiendo. -/
+theorem leI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} {p q r : Term}
+    (hp : Grounded L p) (hq : Grounded L q) (hr : Grounded L r)
+    (h1 : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q))
+    (h2 : Γ ⊢ᵢ Formula.or (lt q r) (Formula.eq q r)) :
+    Γ ⊢ᵢ Formula.or (lt p r) (Formula.eq p r) := by
+  refine Derivesᵢ.elim_or _ _ _ _ h1 ?_ ?_
+  · -- `p < q`
+    have h2' : (lt p q :: Γ) ⊢ᵢ Formula.or (lt q r) (Formula.eq q r) :=
+      Derivesᵢ.weakening _ _ _ h2 (fun _ hz => List.Mem.tail _ hz)
+    refine Derivesᵢ.elim_or _ _ _ _ h2' ?_ ?_
+    · -- `p < q < r`
+      refine Derivesᵢ.intro_or_l _ _ _ ?_
+      exact Derivesᵢ.elim_impl _ _ _
+        (Derivesᵢ.elim_impl _ _ _
+          (Derivesᵢ.weakening Γ (lt q r :: lt p q :: Γ) _ (ltI_trans hΓ hlift hp hq hr)
+            (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz)))
+          (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _))))
+        (Derivesᵢ.hyp _ _ (List.Mem.head _))
+    · -- `p < q = r`
+      refine Derivesᵢ.intro_or_l _ _ _ ?_
+      exact eqI_rw_atom2_r lt_sym p (Derivesᵢ.hyp _ _ (List.Mem.head _))
+        (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+  · -- `p = q`
+    have h2' : (Formula.eq p q :: Γ) ⊢ᵢ Formula.or (lt q r) (Formula.eq q r) :=
+      Derivesᵢ.weakening _ _ _ h2 (fun _ hz => List.Mem.tail _ hz)
+    refine Derivesᵢ.elim_or _ _ _ _ h2' ?_ ?_
+    · -- `p = q < r`
+      refine Derivesᵢ.intro_or_l _ _ _ ?_
+      exact eqI_rw_atom2_l lt_sym r
+        (eqI_symm (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _))))
+        (Derivesᵢ.hyp _ _ (List.Mem.head _))
+    · -- `p = q = r`
+      refine Derivesᵢ.intro_or_r _ _ _ ?_
+      exact eqI_trans (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
+        (Derivesᵢ.hyp _ _ (List.Mem.head _))
+
+
+/-! ## 11 · 🏁 `√` SOBRE NUMERALES — la última casilla de ADR-037 que se podía cerrar
+
+    `ax14` y `ax15` **encajonan** `√n` entre dos cuadrados consecutivos, y en un orden total
+    y discreto eso lo determina. La tricotomía contra el candidato cierra las dos ramas
+    malas, cada una con una cadena de `≤` y `ax18` al final. -/
+
+theorem ax14I (h14 : Γ ⊢ᵢ ax14_sqrt_le) (L : String → Nat → Bool)
+    {t : Term} (ht : Grounded L t) :
+    Γ ⊢ᵢ Formula.or (lt (mul (sqrt t) (sqrt t)) t)
+                    (Formula.eq (mul (sqrt t) (sqrt t)) t) := by
+  have h := specI h14 t
+  simpa (config := { decide := true }) only [ax14_sqrt_le, forall_, le, sq, substFormula,
+    substTerms, substTerm, ite_true, ite_false, lt, mul, sqrt,
+    grounded_substTerm L ht] using h
+
+theorem ax15I (h15 : Γ ⊢ᵢ ax15_lt_succ_sqrt) (L : String → Nat → Bool)
+    {t : Term} (ht : Grounded L t) :
+    Γ ⊢ᵢ lt t (mul (succ (sqrt t)) (succ (sqrt t))) := by
+  have h := specI h15 t
+  simpa (config := { decide := true }) only [ax15_lt_succ_sqrt, forall_, sq, substFormula,
+    substTerms, substTerm, ite_true, ite_false, lt, mul, sqrt, succ,
+    grounded_substTerm L ht] using h
+
+/-! ## 🏁 `numeralI_sqrt` — con `k` como PARÁMETRO y sus dos cotas
+
+    ⚠️ El núcleo de Lean **no trae `Nat.sqrt`** (vive en Mathlib, que aquí no hay), así que
+    el enunciado toma `k` y sus dos hipótesis. Más general, y separa la aritmética del meta
+    de la derivación del objeto. -/
+
+/-- 🏁 **`√n̄` ES demostrablemente `k̄`**, para el único `k` con `k² ≤ n < (k+1)²`.
+
+    🏁 **ENTREGABLE**: es la medición de que `√` está DETERMINADO —la última casilla de
+    ADR-037 que se podía cerrar demostrando—, y todavía no la consume el fragmento: para eso
+    hace falta meter `ax14`/`ax15` en la lista, y `ax14` **no es de Harrop**. -/
+theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
+    (h14 : Γ ⊢ᵢ ax14_sqrt_le) (h15 : Γ ⊢ᵢ ax15_lt_succ_sqrt)
+    (hlift : Γ.map (liftFormula 0) = Γ)
+    {L : String → Nat → Bool} (hm : L mul_sym 2 = true) (hsu : L succ_sym 1 = true)
+    (hsq : L sqrt_sym 1 = true)
+    (n k : Nat) (hk1 : k * k ≤ n) (hk2 : n < (k + 1) * (k + 1)) :
+    Γ ⊢ᵢ Formula.eq (sqrt (numeralM n)) (numeralM k) := by
+  have hng : Grounded L (numeralM n) := grounded_numeralM L hsu n
+  have hkg : Grounded L (numeralM k) := grounded_numeralM L hsu k
+  have hsg : Grounded L (sqrt (numeralM n)) := grounded_func1 L hsq hng
+  have hssg : Grounded L (succ (sqrt (numeralM n))) := grounded_func1 L hsu hsg
+  have hskg : Grounded L (numeralM (k + 1)) := grounded_numeralM L hsu (k + 1)
+  -- `k̄·k̄ ≤ n̄`
+  have hkn : Γ ⊢ᵢ Formula.or (lt (mul (numeralM k) (numeralM k)) (numeralM n))
+      (Formula.eq (mul (numeralM k) (numeralM k)) (numeralM n)) := by
+    have hmul := numeralI_mul hΓ k k
+    rcases Nat.lt_or_ge (k * k) n with hlt | hge
+    · exact Derivesᵢ.intro_or_l _ _ _
+        (eqI_rw_atom2_l lt_sym (numeralM n) (eqI_symm hmul) (numeralI_lt hΓ hlt))
+    · have heq : k * k = n := by omega
+      exact Derivesᵢ.intro_or_r _ _ _ (by rw [heq] at hmul; exact hmul)
+  -- `n̄ < (k+1)‾·(k+1)‾`
+  have hnk : Γ ⊢ᵢ lt (numeralM n) (mul (numeralM (k + 1)) (numeralM (k + 1))) :=
+    eqI_rw_atom2_r lt_sym (numeralM n) (eqI_symm (numeralI_mul hΓ (k + 1) (k + 1)))
+      (numeralI_lt hΓ hk2)
+  -- tricotomía de `√n̄` contra `k̄`
+  have htri := specI (specI (ax19I hΓ) (sqrt (numeralM n))) (numeralM k)
+  have htri' : Γ ⊢ᵢ Formula.or (lt (sqrt (numeralM n)) (numeralM k))
+      (Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
+                  (lt (numeralM k) (sqrt (numeralM n)))) := by
+    simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt,
+      grounded_liftTerm L hsg, grounded_liftTerm L hkg,
+      grounded_substTerm L hsg, grounded_substTerm L hkg] using htri
+  refine Derivesᵢ.elim_or _ _ _ _ htri' ?_ ?_
+  · -- `√n̄ < k̄` ⇒ `σ√n̄ ≤ k̄` ⇒ `(σ√n̄)² ≤ k̄² ≤ n̄`, contra `ax15`
+    refine Derivesᵢ.bot_elim _ _ ?_
+    have hΓ1 : ∀ g, List.Mem g arithAxioms →
+        (lt (sqrt (numeralM n)) (numeralM k) :: Γ) ⊢ᵢ g :=
+      hyps_cons hΓ (lt (sqrt (numeralM n)) (numeralM k))
+    have hW : ∀ {f : Formula}, Γ ⊢ᵢ f → (lt (sqrt (numeralM n)) (numeralM k) :: Γ) ⊢ᵢ f :=
+      fun hf => Derivesᵢ.weakening _ _ _ hf (fun _ hz => List.Mem.tail _ hz)
+    have hlift1 : (lt (sqrt (numeralM n)) (numeralM k) :: Γ).map (liftFormula 0)
+        = lt (sqrt (numeralM n)) (numeralM k) :: Γ := by
+      simp only [List.map_cons, hlift, liftFormula, liftTerms, lt,
+        grounded_liftTerm L hsg, grounded_liftTerm L hkg]
+    have hsucc := Derivesᵢ.elim_impl _ _ _
+      (hW (ltI_succ_le hΓ hlift hsu hsg hkg)) (Derivesᵢ.hyp _ _ (List.Mem.head _))
+    have hsq1 := leI_mul_self hΓ1 hlift1 hm hssg hkg hsucc
+    have hle := leI_trans hΓ1 hlift1 (grounded_func2 L hm hssg hssg)
+      (grounded_func2 L hm hkg hkg) hng hsq1 (hW hkn)
+    exact notI_lt_of_le hΓ1 hlift1 (grounded_func2 L hm hssg hssg) hng
+      hle (hW (ax15I h15 L hng))
+  refine Derivesᵢ.elim_or _ _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _)) ?_ ?_
+  · exact Derivesᵢ.hyp _ _ (List.Mem.head _)
+  · -- `k̄ < √n̄` ⇒ `σk̄ ≤ √n̄` ⇒ `(σk̄)² ≤ (√n̄)² ≤ n̄`, contra `n < (k+1)²`
+    refine Derivesᵢ.bot_elim _ _ ?_
+    have hΓ3 : ∀ g, List.Mem g arithAxioms →
+        (lt (numeralM k) (sqrt (numeralM n))
+          :: Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
+               (lt (numeralM k) (sqrt (numeralM n))) :: Γ) ⊢ᵢ g :=
+      hyps_cons (hyps_cons hΓ _) _
+    have hW3 : ∀ {f : Formula}, Γ ⊢ᵢ f →
+        (lt (numeralM k) (sqrt (numeralM n))
+          :: Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
+               (lt (numeralM k) (sqrt (numeralM n))) :: Γ) ⊢ᵢ f :=
+      fun hf => Derivesᵢ.weakening _ _ _ hf
+        (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz))
+    have hlift3 : (lt (numeralM k) (sqrt (numeralM n))
+          :: Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
+               (lt (numeralM k) (sqrt (numeralM n))) :: Γ).map (liftFormula 0)
+        = lt (numeralM k) (sqrt (numeralM n))
+          :: Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
+               (lt (numeralM k) (sqrt (numeralM n))) :: Γ := by
+      simp only [List.map_cons, hlift, liftFormula, liftTerms, lt,
+        grounded_liftTerm L hsg, grounded_liftTerm L hkg]
+    have hsucc := Derivesᵢ.elim_impl _ _ _
+      (hW3 (ltI_succ_le hΓ hlift hsu hkg hsg)) (Derivesᵢ.hyp _ _ (List.Mem.head _))
+    have hsq3 := leI_mul_self hΓ3 hlift3 hm hskg hsg hsucc
+    have hle := leI_trans hΓ3 hlift3 (grounded_func2 L hm hskg hskg)
+      (grounded_func2 L hm hsg hsg) hng hsq3 (hW3 (ax14I h14 L hng))
+    exact notI_lt_of_le hΓ3 hlift3 (grounded_func2 L hm hskg hskg) hng hle (hW3 hnk)
+
 
 
 end PeanoRF.HA

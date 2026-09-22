@@ -1892,6 +1892,66 @@ es justo `x < x`. El orden hace barato lo que la recursión hacía caro.
 
 ---
 
+## ADR-043: la CI dice CONTRA QUÉ compiló, y distingue el entorno del código
+
+**Fecha**: 2026-09-22
+**Estado**: Aceptado. Cierra dos deudas abiertas en la auditoría del mismo día.
+
+**Contexto**: dos fallos de la misma familia, los dos medidos el 2026-09-22.
+
+1. ⛔ **Un verde no decía contra qué lo era.** El workflow clona FOL, ROB++ y Peano en
+   `ref: master`, que es **flotante**. Ese día las tres se movieron —FOL generificó
+   `Model (D)` a `ModelG (S D)`, y `HA/Model.lean` usa `Model Nat` **directamente**— y no
+   había forma de saber qué builds pasados cubrían ese cambio y cuáles no. Es el mismo
+   agujero por el que el 2026-09-21 el gate se quedó ciego ante `Derives₀`: **aguas arriba
+   se mueve y aquí no queda rastro**.
+2. ⛔ **Un rojo no decía si era del proyecto.** El paso `Install Lean toolchain` se quedó
+   **20 minutos** colgado descargando y murió con «error during download / Recv failure:
+   Connection reset by peer». La CI salió **roja sin que el código ni aguas arriba tuvieran
+   nada que ver**, y el relanzamiento pasó en **1m41s**. Sin reloj, una caída de red se come
+   el runner entero; sin reintento, se come además la sesión de quien la mira.
+
+**Decisión**:
+
+* **Certificar el CUARTETO** —`PeanoRF`, `FOL`, `ROBINSON_PlusPlus`, `Peano`— con su SHA y
+  el asunto de su último commit, en el `GITHUB_STEP_SUMMARY`. Con **`if: always()`**, porque
+  el certificado hace más falta cuando el build sale rojo.
+* **Reintento con reloj** en el toolchain: `timeout 300` por intento (mata el cuelgue), tres
+  intentos con espera creciente (absorben lo transitorio), `timeout-minutes: 20` de tope
+  duro, y un `::error::` final que **dice cómo distinguir** una caída de red de un fallo
+  real. Y `timeout-minutes: 5` en la instalación de elan, por la misma razón.
+
+**Justificación**:
+
+* ⚠️ **Certificar NO es fijar, y la diferencia es una decisión.** Fijar los SHA quitaría el
+  ruido, pero también dejaría de avisarnos de que aguas arriba nos rompió hasta el día que
+  subiéramos el pin — y este proyecto **quiere** enterarse pronto: `master` flotante es lo
+  que hizo que la generificación de `Model` se midiera el mismo día. Se registra y se sigue
+  flotando, a propósito.
+* Aguas arriba hace lo mismo: FOL certifica el par `(FOL@sha, RPP@sha)` desde su ADR-073.
+  Aquí son cuatro porque son cuatro las que entran en el build.
+* 🔑 **El reintento NO debilita el control.** Tres fallos seguidos siguen dando rojo; lo que
+  cambia es que un fallo **transitorio** deja de disfrazarse de fallo del proyecto. Probado
+  con los cuatro casos antes de subir —éxito al primer intento, recuperación tras dos
+  fallos (el caso real), rojo tras tres, y `timeout` matando un cuelgue con `rc=124`—.
+
+**Consecuencias**:
+- ✅ A partir de ahora, **cada run publica el cuarteto**: un rojo se puede atribuir y un
+  verde se puede citar.
+- ⚠️ **Lo que esto NO arregla**: que aguas arriba rompa. Sigue pudiendo pasar y seguirá
+  saliendo en rojo — pero ahora el certificado dice **contra qué SHA**, que es lo que
+  convierte un rojo en un diagnóstico.
+- 🔑 De método, y es lo reutilizable: **un control que no distingue «el sujeto falló» de
+  «el instrumento falló» no es un control, es ruido con suerte.** Es la misma lección que
+  «falta de medida es ROJO, no verde» (AI-GUIDE §27.1) mirada por el otro lado: si el
+  instrumento puede fallar por su cuenta, el resultado tiene que decir cuál de los dos fue.
+- ⚠️ Y una honesta sobre esta sesión: al ver el rojo dije que la CI «estaba reconstruyendo
+  FOL y RPP desde cero contra los HEAD nuevos». **Era falso** — el job murió en el primer
+  paso y nunca clonó nada. Diagnosticar antes de leer el log es exactamente lo que este ADR
+  viene a hacer innecesario.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

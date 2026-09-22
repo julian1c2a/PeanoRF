@@ -140,13 +140,15 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`. ⏳ **Sin contestar al 2026-09-22**: FOL no
   menciona PeanoRF en ningún documento, y de lo pedido sólo existe `formulaComplexity`
   (en `Canonical0.lean`, que M-5 **prohíbe importar**).
-- ⛔ **La CI de PeanoRF no deja constancia de CONTRA QUÉ compiló.** El workflow clona FOL,
-  RPP y Peano en `ref: master` —flotante—, así que un verde pasado no dice contra qué SHA
-  lo fue, y un rojo nuevo no se puede atribuir. Aguas arriba ya lo resolvieron: FOL
-  **certifica el par (FOL@sha, RPP@sha)** en el step summary. Son ~6 líneas.
+- ✅ ~~La CI no deja constancia de contra qué compiló~~ **CERRADO el 2026-09-22** (ADR-043):
+  el workflow certifica el **cuarteto** (`PeanoRF`, `FOL`, `RPP`, `Peano`) con SHA y asunto,
+  con `if: always()`. Y de paso el toolchain va con **reintento y reloj**, porque ese mismo
+  día una caída de red dio 20 minutos de runner y un rojo que no era del proyecto.
+  ⚠️ **Certificar no es fijar**, y es deliberado: seguimos en `master` flotante para
+  enterarnos pronto de que aguas arriba nos rompe.
 - ⚠️ **Divergencia de polimorfismo con FOL, VIVA**: siete ficheros de FOL son ya genéricos
-  en `Sym` —`FOL`, `DecEq`, `Derives0`, `Eigenvariable`, `Rename`, `Semantics`,
-  `SymClasses`— y PeanoRF importa **cinco**. Hoy no cuesta nada porque cada paso lleva su
+  en `Sym` —los ficheros `FOL/{FOL,DecEq,Derives0,Eigenvariable,Rename,Semantics,
+  SymClasses}.lean` de aguas arriba, no símbolos nuestros— y PeanoRF importa **cinco**. Hoy no cuesta nada porque cada paso lleva su
   `abbrev` (`Term`, `Formula`, `Model`); el riesgo es el paso que no lo lleve.
 - ✅ ~~`SYMBOL_PREFIXES` vacío ⇒ control [B] apagado~~ activado el 2026-09-21, con 15+ familias.
 - ✅ ~~`metaDebtIsError := true`~~ hecho el 2026-09-18 (ADR-024). Deuda heredada: **0**.

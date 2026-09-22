@@ -15,6 +15,44 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### 2026-09-22 (d) · ⚙️ La CI dice CONTRA QUÉ compiló, y separa el entorno del código
+
+Dos fallos de la misma familia, los dos medidos hoy, los dos cerrados.
+
+⛔ **Un verde no decía contra qué lo era.** El workflow clona FOL, ROB++ y Peano en
+`ref: master`, que es **flotante**. Hoy las tres se movieron —FOL generificó `Model (D)` a
+`ModelG (S D)`, y `HA/Model.lean` usa `Model Nat` **directamente**— y no había forma de
+saber qué builds pasados cubrían ese cambio.
+⇒ **El cuarteto certificado**: `PeanoRF`, `FOL`, `ROBINSON_PlusPlus` y `Peano` con su SHA y
+el asunto de su último commit, en el step summary, con `if: always()` — porque el
+certificado hace más falta cuando el build sale **rojo**.
+
+⛔ **Un rojo no decía si era del proyecto.** `Install Lean toolchain` se quedó **20 minutos**
+colgado y murió con «error during download / Recv failure: Connection reset by peer». Roja
+sin que el código ni aguas arriba tuvieran nada que ver; el relanzamiento pasó en **1m41s**.
+⇒ **Reintento con reloj**: `timeout 300` por intento mata el cuelgue, tres intentos con
+espera creciente absorben lo transitorio, `timeout-minutes` pone el tope duro, y el
+`::error::` final **dice cómo distinguir** una caída de red de un fallo real.
+
+🔑 **El reintento no debilita el control**: tres fallos seguidos siguen dando rojo. Lo que
+cambia es que un fallo **transitorio** deja de disfrazarse de fallo del proyecto. Probado
+con los cuatro casos antes de subir —éxito al primero, recuperación tras dos fallos (el caso
+real de hoy), rojo tras tres, y `timeout` matando un cuelgue con `rc=124`—, más `yaml.safe_load`
+sobre el workflow.
+
+⚠️ **Certificar NO es fijar, y es deliberado.** Fijar los SHA quitaría ruido pero dejaría de
+avisarnos de que aguas arriba nos rompió hasta el día de subir el pin. Este proyecto quiere
+enterarse pronto: `master` flotante es justo lo que hizo que la generificación de `Model` se
+midiera **el mismo día**. Se registra y se sigue flotando.
+
+⚠️ Y una corrección: al ver el rojo dije que la CI «estaba reconstruyendo FOL y RPP desde
+cero contra los HEAD nuevos». **Era falso** — el job murió en el primer paso y nunca clonó
+nada. Diagnosticar antes de leer el log es lo que este cambio viene a hacer innecesario.
+
+ADR-043. **52 jobs · 19 módulos · 0 sorry · 382 declaraciones.**
+
+---
+
 ### 2026-09-22 (c) · 🏁🏁🏁 `/₂` ENTRA — **23 de 34**, y ADR-037 REFUTADO
 
 Todo lo que estaba en el sondeo pasa a producción, y con ello el fragmento crece.

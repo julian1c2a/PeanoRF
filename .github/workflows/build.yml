@@ -51,7 +51,43 @@ jobs:
           ref: master
           path: Peano
 
+      # ⭐ EL CUARTETO CERTIFICADO (ADR-043). Las tres hermanas se clonan en `ref: master`,
+      # que es FLOTANTE: sin esto, un verde no dice contra QUÉ lo fue, y un rojo nuevo no se
+      # puede atribuir. Medido el 2026-09-22: FOL y RPP se movieron los dos el mismo día, y
+      # FOL generificó `Model` a `ModelG` —justo el tipo que `HA/Model.lean` usa—, sin que la
+      # CI dejara rastro de qué builds cubrían ese cambio y cuáles no.
+      #
+      # ⚠️ Esto REGISTRA, no FIJA. Fijar los SHA es otra decisión y tiene su precio: dejas de
+      # enterarte de que aguas arriba te rompió hasta el día que subes el pin. Aguas arriba
+      # hace lo mismo que aquí: FOL certifica el par (FOL@sha, RPP@sha) desde su ADR-073.
+      #
+      # `if: always()`: el certificado hace MÁS falta cuando el build sale rojo.
+      - name: Certificar el cuarteto (PeanoRF, FOL, RPP, Peano)
+        if: always()
+        run: |
+          fila () {
+            if [ -d "$2/.git" ]; then
+              printf '| %s | `%s` | %s |\n' "$1" \
+                "$(git -C "$2" rev-parse HEAD)" \
+                "$(git -C "$2" log -1 --format=%s | cut -c1-60)"
+            else
+              printf '| %s | ⛔ NO CLONADO | — |\n' "$1"
+            fi
+          }
+          {
+            echo "### Cuarteto certificado"
+            echo ""
+            echo "| repo | sha | último commit |"
+            echo "|---|---|---|"
+            fila "PeanoRF"           PeanoRF
+            fila "FOL"               FOL
+            fila "ROBINSON_PlusPlus" ROBINSON_PlusPlus
+            fila "Peano"             Peano
+          } >> "$GITHUB_STEP_SUMMARY"
+        continue-on-error: true
+
       - name: Install elan (Lean version manager)
+        timeout-minutes: 5
         run: |
           curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --no-modify-path
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
@@ -59,12 +95,39 @@ jobs:
       # ⚠️ Escalar de bloque (`run: |`) a propósito: en una sola línea, el `-d:` de
       # `cut` lleva dos puntos seguidos de espacio y YAML lo lee como un mapa
       # («mapping values are not allowed here»). Ése era el fallo original.
+      #
+      # 🚨 CON REINTENTO Y CON RELOJ (ADR-043). El 2026-09-22 este paso se quedó **20
+      # minutos** colgado descargando el toolchain y murió con «error during download /
+      # Recv failure: Connection reset by peer». La CI salió ROJA sin que el código ni
+      # aguas arriba tuvieran nada que ver, y el relanzamiento pasó en 1m41s.
+      #
+      # ⛔ Lo que eso enseña no es que hubiera una caída de red —eso pasa—, sino que **la CI
+      # no distinguía «el código está mal» de «el entorno falló»**, y sin reloj una caída
+      # se come el runner entero. `timeout 300` por intento mata el cuelgue, tres intentos
+      # con espera creciente absorben lo transitorio, y `timeout-minutes` es el tope duro
+      # por si el bucle mismo se atasca.
       - name: Install Lean toolchain
+        timeout-minutes: 20
         run: |
           # ⚠️ `tr -d '\r'` NO es decorativo: si `lean-toolchain` llega con CRLF —le pasó
           # a AczelSetTheory, cuyo blob lo tenía— `cut` devuelve «v4.31.0\r» y elan
           # contesta «invalid toolchain name». Medido: su CI murió en 11 s por ese byte.
-          elan toolchain install $(cut -d: -f2 PeanoRF/lean-toolchain | tr -d '\r')
+          TOOLCHAIN=$(cut -d: -f2 PeanoRF/lean-toolchain | tr -d '\r')
+          echo "toolchain pedido: $TOOLCHAIN"
+          for intento in 1 2 3; do
+            if timeout 300 elan toolchain install "$TOOLCHAIN"; then
+              echo "✅ toolchain instalado en el intento $intento"
+              exit 0
+            fi
+            if [ "$intento" -lt 3 ]; then
+              echo "::warning::intento $intento de 3: falló la instalación de $TOOLCHAIN (red o cuelgue). Reintento."
+              sleep $((intento * 20))
+            fi
+          done
+          echo "::error::no se pudo instalar el toolchain $TOOLCHAIN tras 3 intentos."
+          echo "    Si el log dice «error during download» o «Connection reset by peer»,"
+          echo "    esto es el ENTORNO y no el proyecto: relanzar el job."
+          exit 1
 
       - name: Cache Lake builds
         uses: actions/cache@v4

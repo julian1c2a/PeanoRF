@@ -1,6 +1,6 @@
 # Decisiones de Diseño — PeanoRF
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-23
 **Autor**: Julián Calderón Almendros
 
 Registro de decisiones arquitectónicas (ADR) de este proyecto. Cada entrada documenta
@@ -2140,6 +2140,105 @@ es una tarea acotada y que este proyecto ya sabe hacer (`sub_neither`).
   igual y no son lo mismo.** Este proyecto ha confundido las dos cinco veces en la misma
   tabla. La regla que sale: antes de cerrar una casilla, preguntar **si el modelo estándar
   la decide**; si la decide, es demostrable o abierta, nunca «imposible».
+
+---
+
+## ADR-047: la respuesta de FOL — lo que nos corrige, lo que nos frena y lo que no nos alcanza
+
+**Fecha**: 2026-09-23
+**Estado**: Aceptado. ⬜ Dos puntos quedan a decisión del propietario.
+**Origen**: respuesta del agente de FOL al informe de auditoría del 2026-09-23.
+
+**Contexto**: la auditoría del 2026-09-23 encontró duplicación entre PeanoRF y ROB++ y
+pidió a FOL el estado del encargo. La respuesta llegó el mismo día, verificó nuestras siete
+afirmaciones comprobables, y trae tres cosas que no podíamos saber.
+
+### 1 · ⬜ Lo que nos FRENA: la codificación de listas va a cambiar
+
+ADR-093 de ROB++ (`sondeos/CantorSobreyectivo.lean`, verificado aquí: existe y compila con
+`cantorN_surj`, `sin_basura`, `cola_decrece`): `ax_L0_cons_def` dice hoy
+`cons a b = pair a (σb)`, y el `σ` sólo está para que `cons h t ≠ nil`. Sacándolo fuera
+—`cons a b = σ (pair a b)`— **el Cantor pelado es sobreyectivo** y `σ∘pair` es biyección
+`ℕ² → ℕ≥1` con `nil = 0` fuera de la imagen ⇒ **todo número es `nil` o un `cons`**.
+
+⛔⛔ **Eso tumbaría nuestro ADR-046.** Reclasificamos los cinco axiomas de lista de «piden
+inducción» a «probablemente LIBRES sobre la basura» **porque hay basura**. Sin basura,
+vuelven a la casilla «determinados», y lo que había que **medir** pasa a ser lo que hay que
+**demostrar**.
+
+**Decisión**: ⬜ **no fijar `consNat` ni tocar la línea de listas** hasta que el propietario
+decida sobre `ax_L0_cons_def`. Y cuando caiga, **revisar ADR-046 en cualquiera de los dos
+sentidos**.
+
+🔑 De método: **una medición puede caducar porque cambie el objeto medido, no porque
+estuviera mal hecha.** ADR-046 está bien medido sobre la codificación de hoy, y eso no lo
+protege de un cambio de codificación. Lo que hay que escribir al lado de una medición es
+**de qué depende**.
+
+### 2 · ✅ Lo que nos CORRIGE, y es más preciso que lo nuestro
+
+Escribimos que lo que nos salva del ADR-088 de ROB++ —`Prf` no es sólido respecto del modelo
+estándar— es que «nuestro modelo no usa ningún esquema de inducción». Cierto, **pero no es
+la razón**: la basura está igual en nuestro modelo, porque nuestro `consNat` **es** su
+`consN` (probado, `sondeos/audit_2026-09-23.lean`).
+
+✅ Lo que nos protege es **que ningún axioma de `coreAxioms` afirma que todo elemento del
+dominio sea `nil` o un `cons`**. La inducción es el mecanismo por el que la basura se vuelve
+letal, no su causa. Aceptado y escrito donde toca.
+
+### 3 · ✅ Lo que NO nos alcanza, y está medido
+
+ADR-092 de FOL: el modelo canónico (`FOL/Canonical0.lean:162-176`) toma
+`IsMaximalConsistent₀ S` como hipótesis ya en `termSetoid` ⇒ **usarlo para probar
+consistencia es circular**. Verificado ahí.
+
+⇒ **No nos llega, y no por argumento**:
+
+```
+módulos prohibidos en el entorno: []      -- Canonical0, Completeness, Compacity
+total de módulos importados: 2302
+```
+
+Nuestro modelo es `natModelK : Model Nat`, **concreto y escrito a mano**, verificado axioma a
+axioma sobre `ℕ`. 🔑 **Un modelo canónico consume consistencia; uno concreto la produce** —
+y es exactamente por eso que `derivesI_consistent` y `hcon_fragment*` son el mismo patrón a
+dos alturas.
+
+### 4 · ⛔ Lo que nosotros escribimos mal
+
+«El encargo a FOL sigue sin contestar: no nos mencionan en ningún documento». **Falso**:
+`FOL/SequentSound0.lean:70` nos cita por nombre en producción, y ese hit **ya había salido
+en la auditoría del 2026-09-21**. Se escribió la frase más ancha igual.
+
+⚠️ Y su corrección también trae un error de atribución, medido: las cuatro referencias `.md`
+que listan —ADR-047, ADR-061, ADR-065, `NEXT-STEPS.md:762`— **son de ROB++, no de FOL**.
+`grep -rn "PeanoRF" ../FOL --include=*.md` da **cero**.
+
+🔑 La regla que nos devuelven y que tomamos: **una ausencia se mide con un `grep`**. Las dos
+veces de este párrafo lo confirman, en las dos direcciones.
+
+### 5 · ⬜ Las dos decisiones del propietario
+
+1. **§2 del encargo — la sustitución paralela.** FOL entra hoy en congelación. Nuestra
+   recomendación: **que NO entre hoy**. Congelar un árbol con un módulo recién metido en su
+   núcleo sintáctico es peor que no meterlo; seguimos manteniendo `Calculus/Subst.lean`
+   aquí, con la duplicación declarada en ADR-010, y se revisa al descongelar. Si hay margen
+   para medir antes, su ofrecimiento —alcance, footprint, y si mueve alguno de los 147
+   vigilados— es el número que decide.
+2. **`ax_L0_cons_def`** — no es nuestra decisión, pero nos cambia el plan. Pedida
+   notificación.
+
+**Consecuencias**:
+- ✅ **§3 del encargo, ACEPTADO por FOL**: `formulaComplexity` y `complexity_substFormula`
+  bajan a un módulo base ⇒ se puede **planificar la retirada de `fdepth`**. Anotado como
+  deuda con fecha en su ciclo de cierre.
+- ⏳ **La línea de listas queda congelada por nuestra parte**, no por falta de camino sino
+  porque el objeto va a cambiar.
+- 📄 La respuesta completa, en `doc/RESPUESTA-FOL-2026-09-23.md`.
+- 🔑 Y una de método que vale para las dos direcciones: **este intercambio corrigió a los dos
+  lados el mismo día.** Nosotros les dijimos dos veces que algo suyo era falso y una lo era;
+  ellos nos han dicho una y lo era. Un informe que publica sus refutaciones se puede leer
+  sin re-medirlo — y los dos lo estamos haciendo.
 
 ---
 

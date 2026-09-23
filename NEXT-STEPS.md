@@ -181,16 +181,33 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   raíz de 286 líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`. 🔑 Y el criterio para el corte
   siguiente: **no es el número de líneas sino el de módulos que hay que atravesar**; si `HA/`
   pasa de la docena, se corta por capas **antes** de añadir la fila trece.
-- `Calculus/Subst.lean` y `fdepth`: infraestructura de sintaxis duplicada (ADR-010),
-  ofrecida en `doc/ENCARGO-FOL-2026-09-17.md`. ⏳ **Sin contestar al 2026-09-22**: FOL no
-  menciona PeanoRF en ningún documento, y de lo pedido sólo existe `formulaComplexity`
-  (en `Canonical0.lean`, que M-5 **prohíbe importar**).
+- ✅ **CONTESTADO el 2026-09-23** (ADR-047, `doc/RESPUESTA-FOL-2026-09-23.md`):
+  * **§3 ACEPTADO por FOL** — `formulaComplexity` y `complexity_substFormula` bajan a un
+    módulo base ⇒ **se puede planificar la retirada de `fdepth`**;
+  * ⬜ **§2 (sustitución paralela) queda a decisión del propietario, y FOL congela HOY.**
+    Nuestra recomendación: **que no entre hoy** — congelar un árbol con un módulo recién
+    metido en su núcleo sintáctico es peor que no meterlo.
+  ⛔ Y la frase «no nos mencionan en ningún documento» **era FALSA**:
+  `FOL/SequentSound0.lean:70` nos cita por nombre en producción, y ese hit ya había salido
+  en la auditoría del 09-21. (Su corrección también erraba el árbol: las cuatro referencias
+  `.md` que citan son de ROB++; en los `.md` de FOL hay **cero**.)
 - ✅ ~~La CI no deja constancia de contra qué compiló~~ **CERRADO el 2026-09-22** (ADR-043):
   el workflow certifica el **cuarteto** (`PeanoRF`, `FOL`, `RPP`, `Peano`) con SHA y asunto,
   con `if: always()`. Y de paso el toolchain va con **reintento y reloj**, porque ese mismo
   día una caída de red dio 20 minutos de runner y un rojo que no era del proyecto.
   ⚠️ **Certificar no es fijar**, y es deliberado: seguimos en `master` flotante para
   enterarnos pronto de que aguas arriba nos rompe.
+- ⬜⬜ **LA LÍNEA DE LISTAS, CONGELADA POR NOSOTROS** (2026-09-23, ADR-047): ROB++ tiene
+  medido y compilado que sacando el `σ` fuera —`cons a b = σ (pair a b)`— **el Cantor pelado
+  es sobreyectivo y no queda basura**. Si el propietario lo adopta, **ADR-046 se cae**: los
+  cinco de lista vuelven de «probablemente libres» a «determinados», y lo que había que
+  MEDIR pasa a ser lo que hay que DEMOSTRAR. ⇒ **no fijar `consNat` ni tocar listas hasta la
+  decisión.**
+  🔑 Una medición puede caducar porque cambie el OBJETO medido, no porque estuviera mal
+  hecha. Al lado de una medición hay que escribir **de qué depende**.
+- ✅ **ADR-092 de FOL (el modelo canónico es circular) NO nos alcanza** — medido: cero
+  módulos prohibidos en un entorno de 2302. Nuestro modelo es concreto sobre `ℕ`, no
+  canónico. 🔑 Uno canónico **consume** consistencia; uno concreto la **produce**.
 - ⭐⭐ **DUPLICACIÓN medida el 2026-09-23, y es cara.** RPP construyó el mismo día un
   **modelo estándar sobre `ℕ`** (`sondeos/ModeloNat.lean`, ADR-086/087) importando
   `FOL.Semantics` —**la misma maquinaria que `PeanoRF/HA/Model.lean`**—, con 25 de los 34;

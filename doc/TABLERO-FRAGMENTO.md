@@ -56,6 +56,12 @@ qDisjunctionProperty_arithTDCS_final :
 | `ax_C1_concat_nil` `ax_C2_concat_cons` `ax_C3_concat_assoc` | `##` | recursión sobre lista | ⛔ ver abajo |
 | `ax_prodp_nil` `ax_prodp_cons` | `Π_p` | idem | ⛔ ver abajo |
 
+> ⬜⬜ **CONGELADO el 2026-09-23 (ADR-047): la codificación VA A CAMBIAR.** ROB++ tiene
+> medido y compilado (`sondeos/CantorSobreyectivo.lean`) que sacando el `σ` fuera
+> —`cons a b = σ (pair a b)`— **el Cantor pelado es sobreyectivo y no queda basura**. Si el
+> propietario lo adopta, lo de abajo **se cae**: los cinco vuelven a «determinados» y lo que
+> había que MEDIR pasa a ser lo que hay que DEMOSTRAR. **No fijar `consNat` hasta entonces.**
+>
 > ⛔⛔ **RECTIFICADO el 2026-09-22 (ADR-046): NO es que falte inducción sobre listas.**
 > Medido en `sondeos/listas_probe.lean`: `nil` es `0` y `cons h t = π(h, t+1)`, luego los
 > valores de `cons` son **todos menos `{0, 1, 3, 6, 10, …}`** —los triangulares—. Como `0`
@@ -63,8 +69,11 @@ qDisjunctionProperty_arithTDCS_final :
 > es sobreyectiva**, y «todo término es `[]` o un `::`» es **FALSO en el modelo estándar**.
 >
 > ⇒ no hay nada que demostrar, y un esquema de inducción no lo arreglaría. Lo que toca es
-> **medir el negativo**, como con `−`. ⏳ Falta: inyectividad de Cantor, la relación `MemN`
-> y su variante, y mirar `ax_C3` —la asociatividad **sí** dice algo sobre la basura—.
+> **medir el negativo**, como con `−`. ⏳ Falta: la relación `MemN` y su variante, y mirar
+> `ax_C3` —la asociatividad **sí** dice algo sobre la basura—.
+> ⭐ La **inyectividad de Cantor ya no hay que construirla**: es `consN_inj`, en producción
+> de ROB++ y medida limpia. ⚠️ Pero **sobre la codificación de HOY** — ver el aviso de
+> arriba.
 
 ---
 

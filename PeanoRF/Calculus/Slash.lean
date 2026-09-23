@@ -220,7 +220,7 @@ decreasing_by
 
 /-! ## ⭐ Las fórmulas de HARROP — donde la barra COINCIDE con la derivabilidad
 
-    La etapa 3 de H3ter pide barrar los 33 axiomas de `coreAxioms`, y hacerlo uno a uno
+    La etapa 3 de H3ter pide barrar los 34 axiomas de `coreAxioms`, y hacerlo uno a uno
     sería absurdo. Casi todos caen de un solo lema, y la razón es clásica: **para una fórmula
     de Harrop, estar barrada no es más que ser derivable.**
 

@@ -47,8 +47,11 @@ import ROBINSON_PlusPlus.Full.Induction
   charsCodeM s.toList`, y la puerta es **`String.toList`**; `charsCodeM` sobre `List Char`
   es net-0. Es deuda de implementación del núcleo, no matemática.
 
-  ⭐ `coreAxioms` **no depende de ningún axioma** (medido), y contiene los 33 axiomas
-  aritméticos y de listas de Q⁺⁺ — incluidos los seis que este proyecto usa.
+  ⭐ `coreAxioms` **no depende de ningún axioma** (medido), y contiene los **34** axiomas
+  aritméticos y de listas de Q⁺⁺ — incluidos los seis duros que este proyecto barra.
+  ⚠️ Aquí ponía «33» hasta el 2026-09-23. La cifra la verifica hoy el kernel
+  (`sondeos/audit_fragmento.lean`), y `[A]` **no la habría cazado**: sólo mira la línea
+  canónica y la cabecera de los `.md`, no la prosa de un docstring.
 
   🔑 **Y el cambio no es un truco de footprint: es una corrección.** Los cinco sucios son
   axiomas sobre el **verificador object de demostraciones** (la maquinaria de Gödel de RPP).

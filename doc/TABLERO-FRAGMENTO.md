@@ -1,6 +1,6 @@
 # TABLERO · el fragmento de Q⁺⁺ con propiedad de disyunción
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-23
 **Autor**: Julián Calderón Almendros
 
 > Cuadro de mando de H3ter: **qué axiomas y qué símbolos están dentro del fragmento, cuáles
@@ -122,8 +122,8 @@ cosas a la vez: `hcon_fragment*` (con `k` fijo) y la medición de `−` (variand
 | | qué es | estado |
 |---|---|---|
 | **`hIn`** | decidir `∈` sobre términos anclados | ⛔ **no se sigue de Q⁺⁺**, y ⚠️ **la razón NO es la que estaba escrita** (ADR-046): no es que falte inducción para probar «todo término es `[]` o un `::`» — esa disyunción es **FALSA**, porque la codificación no es sobreyectiva |
-| **`##` y `Π_p`** | los dos que faltan de la signatura | ⏳ **probablemente LIBRES sobre la basura**, como `−`: la medición está acotada y descrita en ADR-046 |
-| **modelo de `coreAxioms` entero** | los 34 en un modelo | ⏳ subiría la medición de `−` de 27 axiomas a 34, y haría **medible** la no-derivabilidad de las ramas de `junk_probe` |
+| **`##` y `Π_p`** | los dos que faltan de la signatura | ⏳ **probablemente LIBRES sobre la basura**, como `−`: la medición está acotada y descrita en ADR-046. ⭐ Y **la inyectividad de Cantor que hacía falta YA EXISTE**: `ROBINSON_PlusPlus.Meta.CodeNatInjPrf.consN_inj`, limpia (auditoría del 2026-09-23) |
+| **modelo de `coreAxioms` entero** | los 34 en un modelo | ⏳ subiría la medición de `−` de 27 axiomas a 34, y haría **medible** la no-derivabilidad de las ramas de `junk_probe`. ⚠️ **RPP tiene 25 de los 34 en `sondeos/ModeloNat.lean`, con la MISMA maquinaria** — antes de seguir, hablarlo con ellos |
 | **no-derivabilidad de `junk_probe`** | la otra mitad del contraejemplo de H3ter | ⏳ hoy es **argumento por solidez**, no medición. La herramienta ya está: un modelo parametrizado por la interpretación de `foo`/`bar` |
 | **el encargo a FOL** | `Calculus/Subst.lean` y `fdepth` duplicados | ⏳ sin contestar |
 | **divergencia de polimorfismo** | FOL generiza en `Sym`, PeanoRF sigue monomórfico | ⚠️ hoy gratis por los `abbrev`; el riesgo es el paso que no lleve uno |

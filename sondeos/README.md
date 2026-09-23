@@ -24,6 +24,7 @@ bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 | `h2c_probe.lean` | **2026-09-16**: footprint de `succ_add` (caso con parámetro) sobre `⊢ᵢ` |
 | `param_probe.lean` | **2026-09-16**: 🔑 qué hipótesis exige el parámetro para que el contexto sea cerrado |
 | `audit_2026-09-22.lean` | **2026-09-22**: re-medición contra FOL@`2d5b7c8` (ModelG) y RPP@`132f584` — los siete footprints **intactos** |
+| 🔍 `audit_2026-09-23.lean` | **2026-09-23**: re-medición contra RPP@`e68354a` (doce ADR nuevos) — lo nuestro **intacto**; que su ADR-088 **no nos toca**; y ⭐ que `consN_inj` ya existe en producción de RPP, limpio, **y que su `consN` es EL MISMO número que nuestro `consNat`** (probado) |
 | 📋 `audit_fragmento.lean` | **2026-09-22**: **las cifras del TABLERO, por `rfl`** — longitudes de las seis listas de axiomas y pertenencia a cada signatura. Si `doc/TABLERO-FRAGMENTO.md` miente, esto se pone rojo |
 | ⭐ `sqrt2_probe.lean` | **2026-09-22**: 🏁 **`numeralI_sqrt`** — `√` está DETERMINADO. Los tres auxiliares de `≤` y las dos ramas de la tricotomía. ⚠️ Lean no trae `Nat.sqrt` |
 | ⭐ `listas_probe.lean` | **2026-09-22**: ⛔⛔ **los cinco de lista NO piden inducción** — `cons h t ≥ 2`, luego `1, 3, 6, …` no son NI `[]` NI `h::t`: la codificación **no es sobreyectiva** (ADR-046) |

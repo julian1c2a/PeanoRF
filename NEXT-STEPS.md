@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-23
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -25,8 +25,16 @@
 >
 > ▶ **Punto de reanudación**: el **modelo de `coreAxioms` entero** —subiría la medición de
 > `−` de 27 axiomas a 34 y haría MEDIBLE la no-derivabilidad de las ramas de `junk_probe`—
-> y las dos deudas no matemáticas. ⛔ Lo que NO tiene camino por aquí son los cinco de
-> lista: piden inducción sobre listas, que `coreAxioms` no tiene.
+> y las dos deudas no matemáticas.
+>
+> ⚠️ Esta línea decía «lo que NO tiene camino son los cinco de lista: piden inducción sobre
+> listas». **ADR-046 lo refutó el mismo día** y aquí se quedó sin corregir hasta el 09-23.
+>
+> 🔍 **Auditoría del 2026-09-23**: aguas arriba **intacto para nosotros** —ni un fichero que
+> importemos cambió—, pero ⭐ **RPP construyó el mismo modelo que nosotros el mismo día**
+> (`sondeos/ModeloNat.lean`, 25 de 34, con `FOL.Semantics`), midió **lo mismo** sobre la
+> basura cinco horas antes (su ADR-088), y **ya tiene en producción `consN_inj`** — la
+> inyectividad de Cantor que ADR-046 pide construir. Ver «Deudas vivas».
 
 **H3ter — y lo primero es mirar si FOL ha contestado.**
 
@@ -183,6 +191,21 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   día una caída de red dio 20 minutos de runner y un rojo que no era del proyecto.
   ⚠️ **Certificar no es fijar**, y es deliberado: seguimos en `master` flotante para
   enterarnos pronto de que aguas arriba nos rompe.
+- ⭐⭐ **DUPLICACIÓN medida el 2026-09-23, y es cara.** RPP construyó el mismo día un
+  **modelo estándar sobre `ℕ`** (`sondeos/ModeloNat.lean`, ADR-086/087) importando
+  `FOL.Semantics` —**la misma maquinaria que `PeanoRF/HA/Model.lean`**—, con 25 de los 34;
+  nosotros tenemos 27 y **en producción**. Los dos tropezamos con las mismas dos piedras:
+  `Nat.sqrt` no existe en el core, y `⇔` es `FOL.iff` que `simp` no atraviesa.
+  ⇒ ⚠️ **Antes de seguir con el modelo de `coreAxioms` entero, hablarlo con RPP.**
+  ⭐ Y lo inmediato: **`consN`, `triN`, `two_mul_consN` y `consN_inj` ya están en producción
+  de RPP**, medidos limpios — `consN_inj` es justo lo que ADR-046 pide construir, y su
+  `consN` es **el mismo número** que nuestro `consNat` (probado en el sondeo).
+  Su propio ADR dice que van «DOCE de antes de construir, buscar»; nuestro `isqrt` es el
+  decimotercero, porque `Peano/PeanoNat/Sqrt.lean` también existe.
+- ✅ **ADR-088 de RPP NO nos toca** (verificado el 2026-09-23): dicen que `Prf` no es sólido
+  respecto del modelo estándar porque `listInd` con Φ := «es `nil` o es `cons`» tiene base y
+  paso verdaderos y **conclusión falsa en `ℕ`**. Aquí `ax_list_induction` **no está en
+  `coreAxioms`**, está en la lista `omegaAxioms` del gate, y tenemos **cero usos**.
 - ⚠️ **Divergencia de polimorfismo con FOL, VIVA**: siete ficheros de FOL son ya genéricos
   en `Sym` —los ficheros `FOL/{FOL,DecEq,Derives0,Eigenvariable,Rename,Semantics,
   SymClasses}.lean` de aguas arriba, no símbolos nuestros— y PeanoRF importa **cinco**. Hoy no cuesta nada porque cada paso lleva su

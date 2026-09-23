@@ -1,6 +1,6 @@
 # Guía Maestra de la IA — Estándares de Documentación y Desarrollo
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-23
 **Autor:** Julián Calderón Almendros
 
 > Este documento define lo **universal**: aplica a cualquier proyecto Lean 4 que nazca
@@ -345,7 +345,7 @@ Transición: 🔄 → 🔶 → ✅ → 🧊 (el estado 🧊 es final).
 | `bash git-lock.bash init` | Instala/reinstala el hook pre-commit |
 | `bash new-module.bash NombreModulo` | Crea un módulo nuevo desde la plantilla |
 | `bash gen-root.bash` | Regenera el fichero de importación raíz |
-| `bash check-sorry.bash` | Localiza todos los `sorry` (excluyendo comentarios) |
+| `bash check-sorry.bash` | **[S1]** localiza los `sorry` reales (token, no prosa) y **[S2]** censa los **agujeros de confianza**: `native_decide`, `unsafe`, `opaque`, `@[implemented_by]`, `@[extern]`. Los dos son bloqueantes |
 | `bash check-doc-sync.bash` | **Comprueba que la documentación cuadra con el código** (§27). `--quick` omite el build |
 | `bash check-coherencia.bash` | **Comprueba que los documentos no se contradigan ENTRE SÍ** (§28). [F] rompe, [G] avisa |
 | `bash update-toolchain.bash vX.Y.Z` | Actualiza el toolchain de Lean con verificación de build |

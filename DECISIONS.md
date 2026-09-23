@@ -2364,6 +2364,100 @@ un árbol al que le falta la infraestructura de su propio siguiente objetivo.
 
 ---
 
+## PRF-049: la propuesta (C) — SÍ, pero son SIETE módulos y la «única línea» es la que no puede viajar
+
+**Fecha**: 2026-09-23
+**Estado**: ⬜ **Recomendación. La decisión del reparto es del propietario.**
+**Origen**: RPP-098 §5, sancionada por el propietario en ROB++, y enviada como propuesta en
+`../FOL/RESPUESTA-PEANORF-2026-09-23.md` §1. **FOL no se sella hasta que contestemos.**
+
+**Contexto**: FOL y ROB++ midieron que `PeanoRF/Calculus/DerivesI.lean` es literalmente
+`Derives₀` menos los tres constructores clásicos y que `Slash.lean` prueba la DP que FOL
+quería, y proponen **(C): que `Subst.lean`, `DerivesI.lean` y `Slash.lean` bajen a FOL**,
+porque son sobre `FOL.Formula` y `FOL.Derives0`, no sobre HA. Su medida del acoplamiento con
+RPP y Peano: «**una sola línea**, `Collapse.lean:72`».
+
+### 1 · ✅ La dirección es correcta, y es nuestro propio argumento
+
+Es el §2 de nuestro encargo llevado a su consecuencia: *«es infraestructura de SINTAXIS, no de
+nuestro cálculo»*. ADR-010/M-4 prohíben duplicar el núcleo del lenguaje, y `Subst.lean` lo
+duplicaba. La DP debe vivir donde vive su sujeto.
+
+### 2 · ⚠️ Pero la propuesta está mal medida **en los dos sentidos**
+
+**Más GRANDE**: `Slash.lean:7-10` importa `Consistency`, `SubstDerives`, `Eq` y `Collapse`.
+⇒ son **7 de los 8** módulos de `Calculus/` (todo menos `Soundness`): **114 de nuestras 442
+declaraciones**, 2 487 de 2 668 líneas. Su frase «lo que os quedaríais: `Collapse`,
+`Consistency`, `Eq`» es **incompatible** con llevarse `Slash`.
+
+**Más BARATA**: de los siete, **seis tienen CERO acoplamiento de código** con RPP/Peano. Los
+hits de `Subst` (l. 48-49) y `DerivesI` (l. 18, 145) están **en comentarios**;
+`SubstDerives`, `Consistency` y `Slash` dan cero absoluto; y los 7 de `Eq.lean` son **un solo
+lema**, `eqI_congr_succ`, que **`Slash` no usa** — de `Eq` sólo usa `eqI_symm` y `specI`,
+lógica pura.
+
+### 3 · ⛔ Y la condición que BLOQUEA
+
+`Collapse.lean:61` hace `open ROBINSON_PlusPlus.Minimal.Axioms` para el `zero` al que colapsa
+todo símbolo fuera de la signatura. Medido: **RPP importa FOL**
+(`ROBINSON_PlusPlus/Minimal/Axioms.lean:7`) y **FOL no importa RPP** (cero en todo `FOL/`).
+
+⇒ ese `open` dentro de FOL sería un **CICLO**. 🔑 **La «única línea de acoplamiento» que
+midieron no es una línea barata: es la única que no puede viajar.**
+
+⭐ Y no hay contenido detrás: `zero` es `.func "0" []`, sintaxis pura de FOL que *casualmente*
+se define en RPP, y lo único que `Collapse.lean` usa de él es que sea **cerrado** (su propio
+docstring, l. 42). Salidas: que FOL defina su `zeroT`, o —mejor— **parametrizar `collapseT`
+por el término por defecto**. Ofrecido hacerlo aquí antes de entregar.
+
+### 4 · ⚠️ El aviso de calendario
+
+`Slash.lean` es **frente abierto**: `hIn`, el modelo de `coreAxioms` entero, y la línea de
+listas congelada esperando `ax_L0_cons_def`. El `git-lock.bash` de FOL permite **añadir** por
+`*Ext.lean`, no **cambiar** — y lo que H3ter puede pedir es cambiar el **enunciado**: el
+parámetro `T` de `Slash` se añadió el 2026-09-18 justo porque sin él la DP de HA no se podía
+enunciar.
+
+**Decisión**: ⬜ **recomendamos un reparto en DOS TIEMPOS**:
+
+| | qué | cuándo |
+|---|---|---|
+| ahora | `Subst`, `DerivesI`, `SubstDerives`, `Consistency` (44 decls) | ✅ hoy |
+| después | `Eq` sin `eqI_congr_succ`, `Collapse` parametrizado, `Slash` | ⏳ al cerrar H3ter, **o** hoy si `Slash` queda fuera del freeze |
+
+**Justificación**: la parte «ahora» no tiene ni acoplamiento ni frente abierto, así que
+retirarla es ganancia pura y sin riesgo. La parte «después» es la que puede cambiar de
+enunciado, y meterla en un árbol sellado convierte cada paso de H3ter en una negociación.
+
+### 5 · ✅ Su §4.1, aceptado a medias — y el hueco real, TAPADO hoy
+
+Su aviso: «vuestro gate no es un detector de `sorry`, `sorryAx` está en `allowedAxioms`».
+**Cierto, y está escrito ahí mismo**: el docstring de `AxiomCheck.lean:138-140` dice
+literalmente que este gate no es un detector de `sorry`. Quien lo detecta es
+`check-sorry.bash`, uno de los siete controles, en la CI.
+
+⭐ **Pero su censo de agujeros de confianza sí era un hueco real.** Añadido como **[S2]** a
+`check-sorry.bash`: `native_decide`, `unsafe`, `opaque`, `@[implemented_by]`, `@[extern]`.
+El árbol da **cero** — que es cuando un trinquete sirve—, y **está probado en los dos
+sentidos** (exit 1 con cada uno de los tres probados; exit 0 limpio). ⚠️ `partial` queda
+fuera a propósito: no es un agujero de confianza.
+
+**Consecuencias**:
+- ⬜ Tres cosas pedidas al propietario: el reparto, la forma de quitar el `open` de
+  `Collapse`, y —si va todo hoy— que `Slash.lean` quede **fuera del freeze**.
+- ⚠️ Si (C) sale, **114 declaraciones salen del alcance de nuestro gate de tres ejes**, y en
+  particular del control de constructores por telescopio, que es lo que hace **medible** la
+  tesis del proyecto. Los 18 constructores de `Derivesᵢ` pasarían de propios a **ajenos
+  vigilados** (hoy el censo tiene 45 ajenos, 12 clásicos). Hay que actualizar el censo en el
+  mismo movimiento, o la pureza deja de estar medida — y **falta de medida = ROJO**.
+- 📄 La respuesta completa, en `doc/RESPUESTA-FOL-2026-09-23c.md`.
+- 🔑 Y una de método, que va con las otras: **medir el acoplamiento de un módulo por el de su
+  import no es medirlo** (lo escribieron ellos) — pero tampoco basta contar los hits: hay que
+  mirar si están en el **código** o en un **comentario**, y **hacia dónde va la flecha de
+  dependencia**. Seis de siete eran comentarios; el que no lo era, era un ciclo.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

@@ -50,5 +50,59 @@ if [ "$TOTAL" -eq 0 ]; then
     echo "✅ No sorry found."
 else
     echo "⚠️  Total: $TOTAL sorry in $FILES_WITH_SORRY file(s)."
+fi
+
+# ============================================================================
+# [S2] CENSO DE AGUJEROS DE CONFIANZA — aviso de FOL, 2026-09-23 (PRF-049 §5)
+# ============================================================================
+#
+# ⚠️ El gate `PeanoRF/Meta/AxiomCheck.lean` NO es un detector de `sorry` (lo dice su
+#    propio docstring: `sorryAx` está en `allowedAxioms` a proposito). Quien lo detecta es
+#    [S1], de arriba. Pero `sorry` no es el unico modo de meter algo que el kernel no ha
+#    comprobado, y esos otros NO los miraba nadie:
+#
+#      native_decide      delega en el compilador: fuera del kernel
+#      unsafe             se salta la comprobacion de terminacion y de tipos
+#      opaque             declara sin definir
+#      @[implemented_by]  sustituye la definicion en tiempo de ejecucion
+#      @[extern]          idem, por FFI
+#
+# 🔑 Se anade con el arbol en CERO, que es cuando un trinquete sirve de algo. Si algun dia
+#    hace falta uno legitimo, la via es sancionarlo en una ADR y nombrarlo AQUI — no
+#    ablandar el patron.
+#
+# ⚠️ `partial` NO esta en la lista a proposito: no es un agujero de confianza, solo impide
+#    reducir. Meterlo daria rojos que no dicen nada.
+
+HOLES=0
+HOLES_FILES=0
+HOLE_RE='(^|[^a-zA-Z_`])native_decide([^a-zA-Z_`]|$)|^[[:space:]]*(unsafe|opaque)[[:space:]]|@\[implemented_by|@\[extern'
+
+echo ""
+echo "=== censo de agujeros de confianza ==="
+while IFS= read -r FILE; do
+    [ -z "$FILE" ] && continue
+    [ ! -f "$FILE" ] && continue
+    HC=$(grep -cE "$HOLE_RE" "$FILE" 2>/dev/null | head -1 || true)
+    HC="${HC//[^0-9]/}"
+    HC="${HC:-0}"
+    if [ "$HC" -gt 0 ] 2>/dev/null; then
+        echo ""
+        echo "📄 $FILE ($HC agujero(s))"
+        grep -nE "$HOLE_RE" "$FILE" | sed 's/^/   /'
+        HOLES=$((HOLES + HC))
+        HOLES_FILES=$((HOLES_FILES + 1))
+    fi
+done <<< "$LEAN_FILES"
+
+echo ""
+if [ "$HOLES" -eq 0 ]; then
+    echo "✅ Sin agujeros de confianza (native_decide / unsafe / opaque / implemented_by / extern)."
+else
+    echo "⛔ Total: $HOLES agujero(s) de confianza en $HOLES_FILES fichero(s)."
+    exit 1
+fi
+
+if [ "$TOTAL" -ne 0 ]; then
     exit 1
 fi

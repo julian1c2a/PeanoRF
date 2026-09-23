@@ -220,6 +220,34 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   día una caída de red dio 20 minutos de runner y un rojo que no era del proyecto.
   ⚠️ **Certificar no es fijar**, y es deliberado: seguimos en `master` flotante para
   enterarnos pronto de que aguas arriba nos rompe.
+- ⬜⬜⬜ **LA PROPUESTA (C) — DECISIÓN DEL PROPIETARIO, Y FOL NO SE SELLA HASTA QUE CONTESTEMOS**
+  (2026-09-23, **PRF-049**, `doc/RESPUESTA-FOL-2026-09-23c.md`). FOL y ROB++ proponen que
+  `Subst.lean`, `DerivesI.lean` y `Slash.lean` **bajen a FOL**. ✅ La dirección es correcta y
+  es nuestro propio argumento del encargo. ⚠️ Pero está **mal medida en los dos sentidos**:
+  * **son SIETE módulos, no tres** — `Slash.lean:7-10` importa `Consistency`, `SubstDerives`,
+    `Eq` y `Collapse` ⇒ 7 de los 8 de `Calculus/`, **114 de las 442 declaraciones**;
+  * ⭐ **y seis de los siete tienen CERO acoplamiento de código**: los hits de `Subst` y
+    `DerivesI` están **en comentarios**, y los 7 de `Eq` son **un solo lema**
+    (`eqI_congr_succ`) que `Slash` **no usa**;
+  * ⛔ **la condición que bloquea**: `Collapse.lean:61` hace
+    `open ROBINSON_PlusPlus.Minimal.Axioms` y **RPP importa FOL**, así que ese `open` en FOL
+    sería un **CICLO**. 🔑 La «única línea de acoplamiento» que midieron es justo **la única
+    que no puede viajar**. Sin contenido detrás: `zero` es `.func "0" []` ⇒ parametrizar
+    `collapseT` por el término por defecto, u ofrecerles su propio `zeroT`.
+  ⇒ ⬜ **Recomendamos reparto en DOS TIEMPOS**: hoy `Subst` + `DerivesI` + `SubstDerives` +
+  `Consistency` (44 decls, sin riesgo); después `Eq`(sin `eqI_congr_succ`) + `Collapse`
+  (parametrizado) + `Slash` — **o hoy también, si `Slash` queda FUERA DEL FREEZE**, porque es
+  frente abierto (`hIn`, el modelo entero, las listas) y el `*Ext.lean` de su `git-lock.bash`
+  deja **añadir** pero no **cambiar el enunciado**.
+  ⚠️ **Y lo que hay que hacer en el mismo movimiento si sale**: los 18 constructores de
+  `Derivesᵢ` pasan de propios a **ajenos vigilados** en el censo del gate (hoy 45 ajenos, 12
+  clásicos). Si no, la pureza deja de estar medida — y **falta de medida = ROJO**.
+- ✅ **[S2], censo de agujeros de confianza — CERRADO el 2026-09-23** (PRF-049 §5, aviso de
+  FOL): `check-sorry.bash` mira ahora también `native_decide`, `unsafe`, `opaque`,
+  `@[implemented_by]` y `@[extern]`. El árbol da **cero** —que es cuando un trinquete sirve—
+  y está **probado en los dos sentidos**. ⚠️ Su otra mitad del aviso («el gate no detecta
+  `sorry`») es **cierta y estaba escrita**: lo dice el docstring de `AxiomCheck.lean:138-140`,
+  y quien lo detecta es `check-sorry.bash`.
 - ⬜⬜ **LA LÍNEA DE LISTAS, CONGELADA POR NOSOTROS** (2026-09-23, ADR-047): ROB++ tiene
   medido y compilado que sacando el `σ` fuera —`cons a b = σ (pair a b)`— **el Cantor pelado
   es sobreyectivo y no queda basura**. Si el propietario lo adopta, **ADR-046 se cae**: los

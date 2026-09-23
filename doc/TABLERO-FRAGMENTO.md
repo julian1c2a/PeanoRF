@@ -134,8 +134,13 @@ cosas a la vez: `hcon_fragment*` (con `k` fijo) y la medición de `−` (variand
 | **`##` y `Π_p`** | los dos que faltan de la signatura | ⏳ **probablemente LIBRES sobre la basura**, como `−`: la medición está acotada y descrita en ADR-046. ⭐ Y **la inyectividad de Cantor que hacía falta YA EXISTE**: `ROBINSON_PlusPlus.Meta.CodeNatInjPrf.consN_inj`, limpia (auditoría del 2026-09-23) |
 | **modelo de `coreAxioms` entero** | los 34 en un modelo | ⏳ subiría la medición de `−` de 27 axiomas a 34, y haría **medible** la no-derivabilidad de las ramas de `junk_probe`. ⚠️ **RPP tiene 25 de los 34 en `sondeos/ModeloNat.lean`, con la MISMA maquinaria** — antes de seguir, hablarlo con ellos |
 | **no-derivabilidad de `junk_probe`** | la otra mitad del contraejemplo de H3ter | ⏳ hoy es **argumento por solidez**, no medición. La herramienta ya está: un modelo parametrizado por la interpretación de `foo`/`bar` |
-| **el encargo a FOL** | `Calculus/Subst.lean` y `fdepth` duplicados | ⏳ sin contestar |
+| **el encargo a FOL** | `Calculus/Subst.lean` y `fdepth` duplicados | ✅ **CONTESTADO** (ADR-047, [respuesta](RESPUESTA-FOL-2026-09-23.md)). **§3 ACEPTADO**: `formulaComplexity` y `complexity_substFormula` bajan a un módulo base ⇒ planificar la **retirada de `fdepth`** cuando esté. ⬜ **§2 (sustitución paralela): decisión del propietario** — FOL congeló el 2026-09-23 y nuestra recomendación fue **que NO entrara** |
 | **divergencia de polimorfismo** | FOL generiza en `Sym`, PeanoRF sigue monomórfico | ⚠️ hoy gratis por los `abbrev`; el riesgo es el paso que no lleve uno |
+
+> ⬜⬜ **Dos de estas filas dependen de una decisión que no es nuestra** (ADR-047): si ROB++
+> adopta `cons a b = σ (pair a b)`, la codificación pasa a ser **sobreyectiva** y ADR-046 se
+> cae — `hIn`, `##` y `Π_p` vuelven de «probablemente libres» a **«determinados»**, y con
+> ellos `consN_inj` deja de ser sobre la codificación de hoy. **Parado hasta entonces.**
 
 ---
 

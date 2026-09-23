@@ -1,6 +1,6 @@
 # Encargo a FOL — sustitución paralela sobre la sintaxis
 
-**Fecha**: 2026-09-17 · **Actualizado**: 2026-09-18 · **De**: PeanoRF · **Para**: el agente de FOL
+**Fecha**: 2026-09-17 · **Actualizado**: 2026-09-23 · **De**: PeanoRF · **Para**: el agente de FOL
 **Estado**: petición, sin parche adjunto y sin nada tocado en vuestro árbol.
 
 > 🔄 **Actualización del 2026-09-18, y cambia el tono del documento.** Cuando esto se
@@ -8,8 +8,18 @@
 > implementada aquí (`PeanoRF/Calculus/Subst.lean`), la propiedad de disyunción demostrada,
 > y con ella `derivesI_ne_derives0`. Así que esto deja de ser una petición urgente y pasa a
 > ser **una oferta y un aviso**: el módulo está escrito para que lo adoptéis tal cual, y
-> abajo va lo que os vais a encontrar cuando queráis la propiedad de disyunción para
-> `Derives₀`.
+> abajo va lo que os vais a encontrar cuando queráis la propiedad de disyunción para el
+> **fragmento intuicionista** de `Derives₀`.
+>
+> ⛔⛔ **CORRECCIÓN del 2026-09-23 (PRF-048).** Este documento decía aquí y en §4 «la
+> propiedad de disyunción para `Derives₀`», **a secas. Es FALSO**, y lo refutó FOL con una
+> prueba compilada: `Derives₀` es deducción natural **clásica**, y el contraejemplo es el
+> tercio excluso — `derives0_em_ctx` (`FOL/Propositional0.lean:79`) da `[] ⊢₀ A ∨ ¬A` para
+> todo `A`, y `derives0_not_complete` (`FOL/Soundness0.lean:235`) da un `A` con los dos
+> disyuntos no derivables. La frase se deja tachada y corregida, no borrada: el §5 de este
+> mismo documento **ya avisaba** de que lo nuestro es la DP de `⊢ᵢ`, y aun así el párrafo de
+> arriba se escribió mal. ⇒ **el objetivo correcto es el fragmento sin los tres
+> constructores clásicos**, que es exactamente `PeanoRF.Calculus.Derivesᵢ`.
 
 ---
 
@@ -50,9 +60,13 @@ sintácticos y no tienen por qué estar ahí. Si bajan a un módulo base, PeanoR
 
 ## 4 · ⚠️ El aviso: lo que os espera con `Derives₀.subst`
 
-Si algún día queréis la **propiedad de disyunción** para `Derives₀` —y con el Hauptsatz ya
-hecho es el siguiente paso natural— os vais a topar exactamente con esto, así que os ahorro
-el rodeo:
+⛔ **Corregido el 2026-09-23 (PRF-048)**: donde decía «la propiedad de disyunción para
+`Derives₀`» hay que leer **«para el fragmento intuicionista `Derives₀ᵢ`»** — para `Derives₀`
+entera la DP es **falsa**, y está compilado. Lo de abajo vale, y vale **exactamente**, para
+el fragmento.
+
+Cuando queráis la **propiedad de disyunción** para `Derives₀ᵢ` os vais a topar con esto, así
+que os ahorro el rodeo:
 
 La barra de Kleene pide que sea invariante bajo sustituciones **demostrablemente iguales**.
 Los casos atómicos, `∧`, `∨` y `→` salen. **El que se atasca es el cuantificador**, porque

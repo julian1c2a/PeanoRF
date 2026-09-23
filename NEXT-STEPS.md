@@ -181,16 +181,39 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   raíz de 286 líneas + `doc/REFERENCE-{Meta,Calculus,HA}.md`. 🔑 Y el criterio para el corte
   siguiente: **no es el número de líneas sino el de módulos que hay que atravesar**; si `HA/`
   pasa de la docena, se corta por capas **antes** de añadir la fila trece.
-- ✅ **CONTESTADO el 2026-09-23** (ADR-047, `doc/RESPUESTA-FOL-2026-09-23.md`):
+- ✅ **CONTESTADO el 2026-09-23, DOS VECES el mismo día** (PRF-047 y **PRF-048**,
+  `doc/RESPUESTA-FOL-2026-09-23.md` y `-23b.md`):
   * **§3 ACEPTADO por FOL** — `formulaComplexity` y `complexity_substFormula` bajan a un
-    módulo base ⇒ **se puede planificar la retirada de `fdepth`**;
-  * ⬜ **§2 (sustitución paralela) queda a decisión del propietario, y FOL congela HOY.**
-    Nuestra recomendación: **que no entre hoy** — congelar un árbol con un módulo recién
-    metido en su núcleo sintáctico es peor que no meterlo.
-  ⛔ Y la frase «no nos mencionan en ningún documento» **era FALSA**:
-  `FOL/SequentSound0.lean:70` nos cita por nombre en producción, y ese hit ya había salido
-  en la auditoría del 09-21. (Su corrección también erraba el árbol: las cuatro referencias
-  `.md` que citan son de ROB++; en los `.md` de FOL hay **cero**.)
+    módulo base ⇒ **se puede planificar la retirada de `fdepth`**. ⭐ Y con PRF-048 deja de
+    ser un favor: `Slash` se define por recursión bien fundada en `fdepth` y su
+    `decreasing_by` usa `fdepth_subst`, así que **si FOL va a por la DP los necesita para
+    sí misma**;
+  * ⬜ **§2 (sustitución paralela) REABRE, y nuestra recomendación CAMBIA**: por la mañana
+    era «que no entre hoy»; por la tarde FOL decidió ir a por la propiedad de disyunción y
+    con eso `Subst.lean` **tiene consumidor dentro de FOL** —el `∀ ρ` va dentro de la
+    inducción de `slash_of_derives`—. ⇒ **recomendamos que entre, y §3 con ella.** Decisión
+    del propietario, pedida hoy.
+  ⛔ Y **dos frases nuestras que eran FALSAS**, las dos corregidas en el origen:
+  * «no nos mencionan en ningún documento» — `FOL/SequentSound0.lean:70` nos cita por nombre
+    en producción, y ese hit ya había salido en la auditoría del 09-21. (Su corrección
+    también erraba el árbol: las cuatro referencias `.md` que citan son de ROB++; en los
+    `.md` de FOL hay **cero**.)
+  * ⛔⛔ «la **propiedad de disyunción** para `Derives₀`», en el encargo, dos veces
+    (PRF-048). **`Derives₀` es ND CLÁSICA y su DP es falsa**, y FOL la refutó compilada:
+    `derives0_em_ctx` (`FOL/Propositional0.lean:79`) + `derives0_not_complete`
+    (`FOL/Soundness0.lean:235`). ⚠️ Lo grave es que **el §5 del mismo documento ya avisaba**
+    de que lo nuestro es la DP de `⊢ᵢ`: un documento puede refutarse a sí mismo dos
+    secciones más abajo y **ningún control mira eso**.
+- 🏁 **Y lo que les devolvemos, que es más de lo que pedían** (PRF-048): el fragmento
+  `Derives₀ᵢ` que FOL iba a construir **ya existe** — es `PeanoRF.Calculus.Derivesᵢ`, los
+  mismos 18 constructores nombre por nombre, con `derivesI_to_derives0` y con la DP
+  demostrada. Sus dos incógnitas —¿sirve el Hauptsatz? ¿sobrevive a la igualdad?— **no
+  aparecen en la prueba**, porque la ruta es la **barra de Kleene** y no mira la forma del
+  secuente. ⚠️ Lo que sí cuesta es `slash_eq_congr`, que es justo lo que el §4 del encargo
+  avisaba — lo único de aquel aviso que sigue en pie.
+  🔒 Centinela: `sondeos/fragmento_intuicionista.lean` pone al **kernel** a contar los dos
+  juegos de constructores (21 y 18); si FOL añade o quita uno, se pone rojo. **Probado con
+  dos smoke tests**, no supuesto.
 - ✅ ~~La CI no deja constancia de contra qué compiló~~ **CERRADO el 2026-09-22** (ADR-043):
   el workflow certifica el **cuarteto** (`PeanoRF`, `FOL`, `RPP`, `Peano`) con SHA y asunto,
   con `if: always()`. Y de paso el toolchain va con **reintento y reloj**, porque ese mismo

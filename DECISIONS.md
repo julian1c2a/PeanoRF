@@ -2242,6 +2242,128 @@ veces de este párrafo lo confirman, en las dos direcciones.
 
 ---
 
+## PRF-048: la DP de `Derives₀` es FALSA — y el fragmento que FOL quiere construir YA EXISTE
+
+**Fecha**: 2026-09-23
+**Estado**: Aceptado. ⬜ Una decisión del propietario: §2 del encargo **REABRE**.
+**Origen**: segunda respuesta del agente de FOL, el mismo día, tras decidir ir a por la
+propiedad de disyunción.
+**Prefijo**: ⚠️ a partir de aquí las ADR de este proyecto llevan **`PRF-`** y las de ROB++
+`RPP-`, a petición de FOL: hay **dos ADR-047** distintas sobre esta misma relación y se
+estaban citando la una por la otra.
+
+**Contexto**: FOL decidió ir a por la propiedad de disyunción y, antes de construir,
+**refutó el objetivo tal como nosotros se lo habíamos escrito**. Su contraejemplo está
+compilado en net-0 y lo hemos verificado pieza a pieza en su árbol.
+
+### 1 · ⛔ Lo que escribimos mal, y es un error nuestro de bulto
+
+`doc/ENCARGO-FOL-2026-09-17.md` decía dos veces —cabecera y §4— «la **propiedad de
+disyunción** para `Derives₀`». **Es falso**, y no por matiz: `Derives₀` es deducción natural
+**clásica**, y la DP es la marca de lo intuicionista. Verificado en su árbol, las dos
+mitades del contraejemplo:
+
+| pieza | dónde, medido | qué da |
+|---|---|---|
+| `derives0_em_ctx` | `FOL/Propositional0.lean:79` | `Δ ⊢₀ A ∨ ¬A` para **todo** `Δ`, por `dne_rule` |
+| `derives0_not_complete` | `FOL/Soundness0.lean:235` | `∃A, ¬([] ⊢₀ A) ∧ ¬([] ⊢₀ ¬A)` |
+
+Para ese `A`: `[] ⊢₀ A ∨ ¬A` y ninguno de los dos disyuntos es derivable. ⛔ **Es una
+refutación, no una objeción**, y la aceptamos entera.
+
+⚠️ Y lo que la hace nuestra y no suya: nuestro propio §5 del encargo **sí** distingue —dice
+que lo demostrado es la DP de `⊢ᵢ` sobre contexto vacío— y añade que lo decimos «porque es
+el tipo de matiz que se pierde al citar de segunda mano». **Se perdió en el párrafo de
+arriba del mismo documento.** Es la séptima forma de dar verde sin comprobar, otra vez del
+agente y no de un script: un documento puede refutarse a sí mismo dos secciones más abajo y
+ningún control mira eso.
+
+**Decisión**: corregido el encargo en los dos sitios, con el porqué y las dos referencias,
+en vez de borrar la frase.
+
+### 2 · 🏁 Lo que les devolvemos, y es más de lo que piden: el cálculo ya está escrito
+
+FOL plantea construir `Derives₀ᵢ = Derives₀` menos los tres constructores clásicos, y lo
+cotiza como «un cálculo nuevo más una metateoría». **Medido hoy, ese cálculo es literalmente
+`PeanoRF.Calculus.Derivesᵢ`**:
+
+```
+FOL/Derives0.lean:98   Derives₀  → 21 constructores
+                       menos dne_rule, dne_schema, forall_not_ex_not
+PeanoRF/Calculus/DerivesI.lean:66  Derivesᵢ → 18, el MISMO conjunto, nombre por nombre
+PeanoRF/Calculus/DerivesI.lean     derivesI_to_derives0 : (Γ ⊢ᵢ f) → (Γ ⊢₀ f)
+```
+
+y su DP está demostrada: `PeanoRF.Calculus.disjunction_property`, más la de existencia.
+
+### 3 · ✅ Sus dos incógnitas, contestadas — y las dos se evaporan por la MISMA razón
+
+**(a) ¿Tiene igualdad nuestro `⊢ᵢ`?** ⭐ **SÍ, las tres cosas que temen**: `refl`, `subst`
+**y** `rewrite_at` son constructores nuestros, y la DP está probada **con ellos dentro**. Lo
+que cuesta cada uno, medido en `PeanoRF/Calculus/Slash.lean`:
+
+| caso | qué pide | dónde |
+|---|---|---|
+| `refl` | nada — `Slash` de una ecuación **es** «`T ⊢ᵢ` la ecuación» | `:774` |
+| `subst` | ⭐ **`slash_eq_congr`**: la barra es invariante bajo sustituciones **demostrablemente iguales** | `:581`, usado en `:777` |
+| `rewrite_at` | `slash_rewrite` + que `LocalRule` sea intuicionista (sólo `commuteImpl`) | `:435`, usado en `:765` |
+
+**(b) ¿Última regla o secuentes?** ⛔ **Ninguna de las dos: es la BARRA DE KLEENE**, y ésa
+es la respuesta que les ahorra el sondeo. `Slash T D : Formula → Prop` se define por
+recursión bien fundada sobre la fórmula (`Slash.lean:147`), y el teorema es
+`slash_of_derives` (`:681`): *toda derivación desde un contexto barrado barra su
+conclusión*, por **inducción sobre la derivación**. La DP sale de la ecuación de `∨`.
+
+🔑 **Y por eso las dos incógnitas que cotizan se caen a la vez**: la hipótesis inductiva no
+es «la última regla fue `orR`», es «la conclusión está barrada». **No se mira la forma del
+secuente en ningún punto** ⇒ multi-conclusión, `implR`/`allR`/`struct` y la
+especialización del Hauptsatz a `|Δ| ≤ 1` **no aparecen en la prueba**. Y la igualdad no es
+una trampa sino tres casos más de la misma inducción, que ya están escritos.
+
+⚠️ **El precio, que sí lo hay y no es el que temen**: la pieza cara es `slash_eq_congr`,
+porque el cuantificador obliga a generalizar sobre **todas** las sustituciones —el índice en
+que dos sustituciones difieren sube al pasar bajo un `∀`—. Eso es exactamente lo que ya les
+avisamos en §4 del encargo, y **es lo único de aquello que sigue en pie**.
+
+### 4 · ⬜ §2 REABRE, y ahora con razón medida
+
+FOL dice que con este objetivo `Subst.lean` deja de ser un módulo huérfano. **Confirmado, y
+podemos decir por qué exactamente**: el `∀ ρ` va **dentro** de la inducción de
+`slash_of_derives` —sin cuantificar sobre todas las sustituciones, el caso `intro_forall` no
+cierra—, y eso **es** el álgebra de sustitución paralela. `leibniz_at` es su consecuencia y
+es lo que hace andar el caso atómico de `slash_eq_congr`.
+
+⭐ Y **§3 deja de ser un favor que nos hacen**: `Slash` se define por recursión bien fundada
+en `fdepth` y `decreasing_by` usa `fdepth_subst`. Sus dos lemas —`formulaComplexity` y
+`complexity_substFormula` (`FOL/Canonical0.lean:299,313`, vivos, detrás de la cadena
+clásica)— son **precisamente** los que la definición de la barra necesita. Si FOL toma esta
+ruta, los necesita **para sí misma**, no para que nosotros retiremos un duplicado.
+
+**Decisión**: ⬜ **recomendación revisada, y es la contraria a la de esta mañana** (PRF-047 §7):
+con consumidor dentro de FOL, **§2 debería entrar**, y §3 con ella. El sello no se pone
+hasta tenerlas. Sigue siendo decisión del propietario.
+
+**Justificación**: esta mañana la recomendación era «que no entre», y el argumento era *«congelar
+un árbol con un módulo recién metido en su núcleo sintáctico es peor que no meterlo»*. Ese
+argumento valía para un módulo **sin consumidor**. Con consumidor, lo que se congelaría es
+un árbol al que le falta la infraestructura de su propio siguiente objetivo.
+
+**Consecuencias**:
+- ⚠️ **Lo que NO se traslada tal cual, y hay que decirlo**: su `Derives₀` es hoy polimórfico
+  (`{Sym : Type}`, `FOL/Derives0.lean:98`) y nuestro `Derivesᵢ` es monomórfico sobre
+  `Formula = FormulaG String` (`FOL/FOL.lean:44`). Generalizar los 18 constructores parece
+  mecánico —ninguno menciona `String`—, pero **la capa de colapso de `Slash.lean` sí lo
+  lleva** (`L : String → Nat → Bool`). ⭐ Para la DP de la LÓGICA sobre `[]` eso es vacuo: ahí
+  `L` es total y el colapso es la identidad (`collapseF_trivial`). Es la divergencia de
+  polimorfismo que llevamos vigilando desde el 2026-09-22, y **éste es el primer sitio donde
+  cuesta algo**.
+- ⛔ **Lo que seguimos sin tener, y no lo vendemos**: nuestra DP es de la **lógica** sobre
+  contexto vacío, y la de HA sólo para el **fragmento de 26 axiomas**. Para `coreAxioms`
+  entero siguen `hNum` y `hIn` como hipótesis, y `hNum` está **medida como falsa** para `−`.
+- 📄 La respuesta completa, en `doc/RESPUESTA-FOL-2026-09-23b.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ## ADR-NNN: [Título]

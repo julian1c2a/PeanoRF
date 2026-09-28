@@ -204,7 +204,7 @@ private def omegaLayer : Name := `PeanoRF.Omega
     La primera versión por tipo reconocía **una forma fija**, `List Formula → Formula →
     Prop`. La auditoría de la tarde midió lo que eso deja fuera: en 24 h FOL estrenó
     `LK₀` y `LKc` (secuentes de DOS lados, `List Formula → List Formula → Prop`) y `LKh`
-    (indexado por altura, `Nat → …`), y RPP tenía desde antes `Prf`/`Prf₀`, Hilbert SIN
+    (indexado por altura, `Nat → …`), y RPP tenía desde antes `Prf`/`Prf₀` (hoy `Prfᵢ`, RPP ADR-102), Hilbert SIN
     contexto (`Formula → Prop`). **Cinco relaciones, 67 constructores, invisibles.**
     Probado: un teorema con `LK₀.ax` y otro con `LKc.cut` pasaban sin una palabra.
 

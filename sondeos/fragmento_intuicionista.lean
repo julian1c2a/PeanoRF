@@ -16,7 +16,7 @@
 -- Uso: lake env lean sondeos/fragmento_intuicionista.lean
 
 import PeanoRF.Calculus.DerivesI
-open FOL
+-- (sin `open FOL`: desde PRF-050 `DerivesI` sólo trae `FOL.FOL`, que no abre ese namespace)
 namespace PeanoRF.Calculus
 
 set_option autoImplicit false

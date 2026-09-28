@@ -13,7 +13,9 @@ License: MIT
 
 -- ── FOL: SOLO el cálculo de pruebas, NO la mitad modelo-teórica ──────────────
 -- Se importa módulo a módulo, y NO el barrel `FOL`, para dejar fuera
--- `FOL.Semantics`, `FOL.Soundness`, `FOL.Completeness` y `FOL.Compacity`.
+-- `FOL.Semantics` y la cadena clásica de solidez, completitud y compacidad: hoy
+-- `FOL.Soundness0`, `FOL.Canonical0` y `FOL.Compacity0` (hasta el 2026-09-23, `FOL.Soundness`,
+-- `FOL.Completeness` y `FOL.Compacity`).
 -- Medido (sondeos/axiom_probe.lean, 2026-09-06): ahí viven los 52 `Classical.choice`
 -- de FOL y los 5 axiomas de completitud, y es el ÚNICO sitio desde el que se usan los
 -- tres axiomas CLÁSICOS de nivel objeto. Dejarla fuera hace la contaminación

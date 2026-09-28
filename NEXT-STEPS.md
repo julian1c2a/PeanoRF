@@ -1,6 +1,6 @@
 # Next Steps — PeanoRF
 
-**Última actualización:** 2026-09-23
+**Última actualización:** 2026-09-28
 **Autor**: Julián Calderón Almendros
 
 > Fases de desarrollo a corto y medio plazo. Para el rumbo largo, ver
@@ -23,7 +23,17 @@
 > **no es sobreyectiva** —`1, 3, 6, …` no son ni `[]` ni `h::t`—, así que «todo término es
 > `[]` o un `::`» es **falso**. Pasan a la clase de `−`: hay que **medir el negativo**.
 >
-> ▶ **Punto de reanudación**: el **modelo de `coreAxioms` entero** —subiría la medición de
+> 📦 **2026-09-28 · PRF-050: la entrega (C) sale HOY, en UNA tanda** (`99ee4de`, carta en
+> `doc/RESPUESTA-FOL-2026-09-28.md`). `Calculus/` (salvo `Soundness`) ya **sólo ve FOL**, medido
+> con el compilador. ⬜ **Lo primero al retomar**: que FOL confirme que los siete compilan en SU
+> build, y entonces, **en el mismo movimiento**: (1) re-apuntar los imports de `HA/*`,
+> `Soundness`, `Meta/AxiomCheck` y la raíz; (2) borrar nuestras copias; (3) pasar los 18
+> constructores de `Derivesᵢ` a **ajenos vigilados** en el censo del gate, porque si no la
+> pureza deja de estar medida; (4) re-apuntar el centinela `sondeos/fragmento_intuicionista.lean`.
+> ⚠️ Pedido a FOL: `Slash` con `lock` y **fuera de la criba de congelación hasta que cierre
+> H3ter**.
+>
+> ▶ **Punto de reanudación** (detrás de la entrega): el **modelo de `coreAxioms` entero** —subiría la medición de
 > `−` de 27 axiomas a 34 y haría MEDIBLE la no-derivabilidad de las ramas de `junk_probe`—
 > y las dos deudas no matemáticas.
 >
@@ -220,7 +230,13 @@ haDisjunctionProperty_core : la DP de HA con `coreAxioms` YA DESCARGADO
   día una caída de red dio 20 minutos de runner y un rojo que no era del proyecto.
   ⚠️ **Certificar no es fijar**, y es deliberado: seguimos en `master` flotante para
   enterarnos pronto de que aguas arriba nos rompe.
-- ⬜⬜⬜ **LA PROPUESTA (C) — DECISIÓN DEL PROPIETARIO, Y FOL NO SE SELLA HASTA QUE CONTESTEMOS**
+- ✅ **LA PROPUESTA (C) — DECIDIDA el 2026-09-28 (PRF-050)**: **una tanda, entrega HOY**
+  (`99ee4de`). La condición del propietario de FOL —«FOL no depende de nada más allá de sí
+  mismo»— está cumplida y **medida con el compilador**: dentro de una copia de FOL, y relanzable
+  desde aquí en `sondeos/entrega-fol-2026-09-28/`. El `open` de `Collapse` desapareció al
+  parametrizar por el SÍMBOLO `k`. `Slash`: `lock`, y fuera del freeze hasta que cierre H3ter.
+  ⬜ Queda nuestro paso, en el mismo movimiento: ver el banner. Lo que sigue es la historia de
+  PRF-049:
   (2026-09-23, **PRF-049**, `doc/RESPUESTA-FOL-2026-09-23c.md`). FOL y ROB++ proponen que
   `Subst.lean`, `DerivesI.lean` y `Slash.lean` **bajen a FOL**. ✅ La dirección es correcta y
   es nuestro propio argumento del encargo. ⚠️ Pero está **mal medida en los dos sentidos**:

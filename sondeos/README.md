@@ -1,6 +1,6 @@
 # `sondeos/` — mediciones fuera del build
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-28
 
 Ficheros de medición y experimento. **No forman parte de la librería** (`lakefile.lean`
 no los incluye) y por tanto no rompen el build ni entran en el recuento de módulos.
@@ -27,6 +27,7 @@ bash sondeos/check_C_smoke.bash        # los que son shell, no Lean
 | 🔍 `audit_2026-09-23.lean` | **2026-09-23**: re-medición contra RPP@`e68354a` (doce ADR nuevos) — lo nuestro **intacto**; que su ADR-088 **no nos toca**; y ⭐ que `consN_inj` ya existe en producción de RPP, limpio, **y que su `consN` es EL MISMO número que nuestro `consNat`** (probado) |
 | 📋 `audit_fragmento.lean` | **2026-09-22**: **las cifras del TABLERO, por `rfl`** — longitudes de las seis listas de axiomas y pertenencia a cada signatura. Si `doc/TABLERO-FRAGMENTO.md` miente, esto se pone rojo |
 | ⭐ `sqrt2_probe.lean` | **2026-09-22**: 🏁 **`numeralI_sqrt`** — `√` está DETERMINADO. Los tres auxiliares de `≤` y las dos ramas de la tricotomía. ⚠️ Lean no trae `Nat.sqrt` |
+| 📦 `entrega-fol-2026-09-28/` | **2026-09-28**: la entrega (C) **compilada contra FOL solo**. Es un proyecto Lake cuyo único `require` es FOL, con los siete de `Calculus/` tal como quedan en PRF-050. Resultado: 25 jobs y 240 constantes en `[propext, Quot.sound]`. Se relanza con `cd` y `lake build` (ver su `README.md`) |
 | ⭐ `listas_probe.lean` | **2026-09-22**: ⛔⛔ **los cinco de lista NO piden inducción** — `cons h t ≥ 2`, luego `1, 3, 6, …` no son NI `[]` NI `h::t`: la codificación **no es sobreyectiva** (ADR-046) |
 | ⭐ `sqrt_probe.lean` | **2026-09-22**: las TRES piezas de `√` —discreción y monotonía del cuadrado—, y ⛔ que **la puerta NO era la forma ∀ de `zeroI_or_succ`** que yo había anunciado. Conserva el PASO 0: el `Grounded` que sobraba en `addI_assoc`/`mulI_distrib` |
 | ⭐ `cons_probe.lean` | **2026-09-22**: que `::` cae por COMPOSICIÓN al estar `/₂` determinado (ADR-044) |

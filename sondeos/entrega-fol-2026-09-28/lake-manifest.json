@@ -1,0 +1,13 @@
+{"version": "1.2.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"type": "path",
+   "scope": "",
+   "name": "FOL",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "../../../FOL",
+   "configFile": "lakefile.lean"}],
+ "name": "FOLSpike",
+ "lakeDir": ".lake",
+ "fixedToolchain": false}

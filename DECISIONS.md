@@ -2499,6 +2499,25 @@ fije para TODA `L`, y eso sólo vale para una constante (FOL, carta (3) §2).
   `sqrt_div2_probe`, …) no están en el build y siguen con la firma antigua.
 - 📄 La respuesta completa, en `doc/RESPUESTA-FOL-2026-09-28.md`.
 
+**Apéndice (2026-09-28, tras fusionar el PR #1)** — lo que faltaba, medido:
+- ✅ **Re-medido contra FOL `b919b57`** (el de hoy, no `f2f7188`): el árbol compila, 53 jobs,
+  gate OK, **439** declaraciones (salen `fdepth`, `fdepth_subst` y `fdepth.eq_def`).
+- ✅ **Relanzable desde este repo**: `sondeos/entrega-fol-2026-09-28/`, un proyecto cuyo único
+  `require` es FOL, con los siete tal como quedan en `99ee4de`: **240 constantes en
+  `[propext, Quot.sound]`**, auditor probado en los dos sentidos. La medición en la copia de FOL
+  no se podía relanzar desde aquí.
+- ⛔ **El centinela `sondeos/fragmento_intuicionista.lean` había dejado de compilar**: tenía el
+  mismo `open FOL` vacuo. Arreglado. No es un sondeo histórico sino un control vivo, y no
+  compilar lo apagaba.
+- ⬜ **Faltaba en el «mismo movimiento»**: al borrar nuestras copias, **los 18 constructores de
+  `Derivesᵢ` pasan de propios a ajenos vigilados** en el censo del gate (PRF-049). Si no, la
+  pureza deja de estar medida, y aquí la falta de medida es ROJO.
+- Citas caducadas corregidas: `Prelim.lean:16` (`FOL.Soundness0`/`Canonical0`/`Compacity0`) y
+  `Meta/AxiomCheck.lean:207` (`Prf₀` → `Prfᵢ`, RPP ADR-102).
+- 🔑 **Lo reutilizable**: *el grep ve el texto; el compilador ve el grafo.* Los `open FOL` vacuos y
+  el `substTerm_liftTerm` que llegaba a `Eq` de rebote por RPP sólo los vio el compilador. ⇒
+  **Medir un traslado es compilarlo en un entorno donde falte lo que se quiere dejar atrás.**
+
 ---
 
 ## Plantilla para nuevas decisiones

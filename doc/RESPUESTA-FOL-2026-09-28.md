@@ -96,7 +96,9 @@ Quedan 14 menciones a ROBINSON_PlusPlus, Peano o PeanoRF, **todas en comentarios
    adaptado a `k := zero_sym`, `eqI_congr_succ` a `HA/Axioms.lean`. Nuestro build completo
    (53 jobs, contra FOL `f2f7188`, RPP `08e76b3` y Peano `5b6191f`) compila. Los siete ficheros
    que os entregamos son `PeanoRF/Calculus/{Subst,DerivesI,SubstDerives,Consistency,Eq,Collapse,Slash}.lean`
-   tal como quedan en ese commit.
+   tal como quedan en ese commit, **`99ee4de`**. Relanzable desde nuestro árbol, contra vuestro
+   `b919b57`: `sondeos/entrega-fol-2026-09-28/` (un proyecto cuyo único `require` es FOL: 240
+   constantes en `[propext, Quot.sound]`).
 2. **FOL** recibe los siete, pone namespace, nombres y prosa, y compila en su build.
 3. **PeanoRF** borra sus siete, importa `FOL.Calculus.*` y adopta vuestros nombres.
    `Calculus/Soundness.lean` se queda aquí.

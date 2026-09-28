@@ -231,8 +231,8 @@ Todos en **`[propext, Quot.sound]`** salvo donde se diga.
 ⛔ **Lo que estos teoremas NO dicen.** El enunciado ingenuo de H3ter —«HA tiene la propiedad
 de disyunción»— es **falso** sobre la sintaxis genérica de FOL, y está medido
 (`sondeos/junk_probe.lean`): `ctx [] ⊢ᵢ (foo < bar ∨ foo = bar ∨ bar < foo)` es derivable con
-`foo`, `bar` **ajenos al lenguaje**, y ninguna rama lo es. Por eso el dominio (`Grounded L`)
-y el colapso (`collapseF L`) están **en el enunciado** y no en la letra pequeña.
+`foo`, `bar` **ajenos al lenguaje**, y ninguna rama lo es. Por eso el dominio (`Grounded k L`)
+y el colapso (`collapseF k L`) están **en el enunciado** y no en la letra pequeña.
 
 ---
 

@@ -4,7 +4,7 @@ Author: Julián Calderón Almendros
 License: MIT
 -/
 
-import PeanoRF.Prelim
+import FOL.FOL
 import FOL.Derives0
 
 /-! # `⊢ᵢ` — deducción natural INTUICIONISTA, finitaria y sin habitantes-axioma
@@ -56,7 +56,6 @@ import FOL.Derives0
 
 namespace PeanoRF.Calculus
 
-open FOL
 
 set_option autoImplicit false
 

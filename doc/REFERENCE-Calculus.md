@@ -1,6 +1,6 @@
 # REFERENCE · Calculus — el cálculo `⊢ᵢ`, su solidez y la barra de Kleene
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-28
 **Autor**: Julián Calderón Almendros
 
 > **Nodo temático del sistema REFERENCE** (AI-GUIDE §0.5).
@@ -41,7 +41,7 @@ este proyecto afirma se afirma sobre `⊢ᵢ` (ADR-017).
 **Fichero**: [`PeanoRF/Calculus/DerivesI.lean`](../PeanoRF/Calculus/DerivesI.lean)
 
 **Namespace**: `PeanoRF.Calculus`
-**Dependencies**: `PeanoRF.Prelim`, `FOL.Derives0`
+**Dependencies**: `FOL.FOL`, `FOL.Derives0`
 **Last updated**: 2026-09-16
 **Status**: ✅ Completo
 **@axiom_system**: ninguno — **0 habitantes-axioma** (por eso se puede inducir sobre él)
@@ -96,8 +96,8 @@ lo nuestro entra en su mundo, lo suyo no entra en el nuestro.
 **Fichero**: [`PeanoRF/Calculus/Eq.lean`](../PeanoRF/Calculus/Eq.lean)
 
 **Namespace**: `PeanoRF.Calculus`
-**Dependencies**: `PeanoRF.Calculus.DerivesI`
-**Last updated**: 2026-09-16
+**Dependencies**: `PeanoRF.Calculus.DerivesI`, `FOL.Theorems.Eq`
+**Last updated**: 2026-09-28
 **Status**: ✅ Completo
 **@importance**: high
 
@@ -105,12 +105,15 @@ El **coste medido de la migración** (ADR-017): aguas arriba estos lemas existen
 enunciados sobre `⊢`, y los teoremas de `⊢` no bajan a `⊢ᵢ` — sólo suben. Son cinco, y
 las pruebas son las mismas con los constructores renombrados.
 
+⚠️ **2026-09-28**: `eqI_congr_succ` se trasladó a `HA/Axioms.lean` (ver
+[REFERENCE-HA.md](REFERENCE-HA.md)), porque nombra `succ` de RPP y este módulo baja a FOL
+sin RPP (`doc/RESPUESTA-FOL-2026-09-28.md`).
+
 | nombre | notación matemática | firma Lean 4 |
 |---|---|---|
 | `eqI_refl` | `Γ ⊢ᵢ t = t` | `(t : Term) → Γ ⊢ᵢ (Formula.eq t t)` |
 | `eqI_symm` | `Γ ⊢ᵢ t₁ = t₂  ⟹  Γ ⊢ᵢ t₂ = t₁` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq t₂ t₁)` |
 | `eqI_trans` | `t₁ = t₂, t₂ = t₃  ⟹  t₁ = t₃` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq t₂ t₃) → Γ ⊢ᵢ (.eq t₁ t₃)` |
-| `eqI_congr_succ` | `t₁ = t₂  ⟹  σt₁ = σt₂` | `Γ ⊢ᵢ (.eq t₁ t₂) → Γ ⊢ᵢ (.eq (succ t₁) (succ t₂))` |
 | `specI` | `Γ ⊢ᵢ ∀A  ⟹  Γ ⊢ᵢ A[t]` | `Γ ⊢ᵢ (.forall A) → (t : Term) → Γ ⊢ᵢ substFormula 0 t A` |
 
 Las tres primeras usan la misma táctica: un testigo `f` con `#0` y `liftTerm 0 t₁`, y
@@ -188,9 +191,7 @@ qué depende la prueba, y `#print axioms` **no distingue** «usa un modelo» de 
 
 | nombre | notación matemática | firma Lean 4 | footprint |
 |---|---|---|---|
-| `fdepth` | complejidad lógica | `Formula → Nat` | — |
-| `fdepth_subst` | `‖f[t/v]‖ = ‖f‖` | `fdepth (substFormula v t f) = fdepth f` | `propext` |
-| `Slash` | `∣_{T,D} f` | `List Formula → (Term → Prop) → Formula → Prop` (recursión en `fdepth`) | `propext, Quot.sound` |
+| `Slash` | `∣_{T,D} f` | `List Formula → (Term → Prop) → Formula → Prop` (recursión en `FOL.Complexity.formulaComplexity`) | `propext, Quot.sound` |
 | `slash_derives` (**L1**) | `∣ f ⟹ ⊢ᵢ f` | `Slash f → ([] ⊢ᵢ f)` | `propext, Quot.sound` |
 | `cut_context` | `Γ` derivable ⟹ `Γ` sobra | `(∀ g ∈ Γ, [] ⊢ᵢ g) → (Γ ⊢ᵢ f) → ([] ⊢ᵢ f)` | `propext` |
 | **`slash_rewrite`** | la barra sobrevive a `rewrite_at` | — | `propext, Quot.sound` |
@@ -245,7 +246,7 @@ aguas arriba.
 **Fichero**: [`PeanoRF/Calculus/Subst.lean`](../PeanoRF/Calculus/Subst.lean)
 
 **Namespace**: `PeanoRF.Calculus`
-**Dependencies**: `PeanoRF.Prelim`
+**Dependencies**: `FOL.FOL`
 **Last updated**: 2026-09-17
 **Status**: ✅ Completo — ⚠️ **deuda declarada**: es infraestructura de SINTAXIS, o sea de FOL
 **@importance**: **foundational**
@@ -294,14 +295,14 @@ inductiva se usa con otra sustitución.
 **Fichero**: [`PeanoRF/Calculus/Collapse.lean`](../PeanoRF/Calculus/Collapse.lean)
 
 **Namespace**: `PeanoRF.Calculus`
-**Dependencies**: `PeanoRF.Calculus.DerivesI`
-**Last updated**: 2026-09-18
+**Dependencies**: `PeanoRF.Calculus.DerivesI`, `PeanoRF.Calculus.Subst`
+**Last updated**: 2026-09-28
 **Status**: ✅ Completo
 **@importance**: **foundational**
 
 | nombre | notación matemática | footprint |
 |---|---|---|
-| `collapseT` / `collapseF` | todo símbolo fuera de `L` ↦ `zero` | — |
+| `collapseT k L` / `collapseF k L` | todo símbolo fuera de `L` ↦ la constante `.func k []` | — |
 | `collapseF_lift` / `collapseF_subst` | conmuta con lift y subst | `propext` |
 | `collapse_getAt?` / `collapse_replaceAt` / `collapse_localRule` | navegación | `propext` |
 | ⭐⭐ **`derivesI_collapse`** | `Γ ⊢ᵢ f ⟹ Γᴸ ⊢ᵢ fᴸ` | `propext, Quot.sound` |
@@ -310,14 +311,19 @@ inductiva se usa con otra sustitución.
 término, así que HA deriva instancias de sus axiomas sobre símbolos ajenos
 (`sondeos/junk_probe.lean`) ⇒ **la DP falla sobre la sintaxis ambiente**. El colapso
 **transforma** la derivación en vez de restringirla: una instanciación con basura pasa a ser
-una con `collapseT L t`, que sí es del lenguaje.
+una con `collapseT k L t`, que sí es del lenguaje.
 
 ⭐ **Sale más barato que `derivesI_subst`** porque el colapso **no cambia al entrar bajo una
-ligadura**: `collapseF L (∀a) = ∀ (collapseF L a)`, con la misma `L`. Por eso su navegación
+ligadura**: `collapseF k L (∀a) = ∀ (collapseF k L a)`, con la misma `L`. Por eso su navegación
 no va indexada por `posDepth` y la de la sustitución sí.
 
 ⚠️ Parametrizado por la signatura `L : String → Bool`, no clavado a Q⁺⁺. Y los **predicados**
 ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, sin testigo.
+
+⚠️ **2026-09-28 · el reemplazo es un SÍMBOLO `k`**, no el `zero` de RPP: así el módulo no abre
+RPP y puede bajar a FOL. Tiene que ser una constante y no un término cerrado cualquiera:
+`collapseT_idem` pasa por `collapseT_zero`, que pide que el colapso lo fije para toda `L`
+(FOL, carta (3) §2). HA instancia `k := zero_sym`.
 
 ---
 ## 3. Teoremas
@@ -327,7 +333,7 @@ ajenos no se colapsan, a propósito: la barra de un átomo es su derivabilidad, 
 |---|---|
 | `derivesI_to_derives0` | `Γ ⊢ᵢ f → Γ ⊢₀ f` — inducción sobre `⊢ᵢ`, legítima (0 habitantes-axioma) |
 | `derivesI_to_derives` | `Γ ⊢ᵢ f → Γ ⊢ f` |
-| `eqI_refl` · `eqI_symm` · `eqI_trans` · `eqI_congr_succ` · `specI` | igualdad y especialización sobre `⊢ᵢ` |
+| `eqI_refl` · `eqI_symm` · `eqI_trans` · `specI` | igualdad y especialización sobre `⊢ᵢ` |
 
 
 ---
@@ -350,7 +356,7 @@ Derivesᵢ                  -- el inductivo (18 constructores)
 Γ ⊢ᵢ f                    -- notación (infix:50)
 derivesI_to_derives0     -- puente a ⊢₀  ⇒  solidez heredada
 derivesI_to_derives      -- puente a ⊢   ⇒  consumo de RPP en la dirección correcta
-eqI_refl  eqI_symm  eqI_trans  eqI_congr_succ  specI
+eqI_refl  eqI_symm  eqI_trans  specI
 ```
 
 ---

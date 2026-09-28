@@ -56,7 +56,7 @@ set_option autoImplicit false
 
 /-! # ⚠️ §1–§2 SON EVIDENCIA Y ANDAMIO, NO MAQUINARIA EN PRODUCCIÓN
 
-    **Auditado el 2026-09-21**: desde que el dominio pasó a `Grounded LQpp` (§3), toda esta
+    **Auditado el 2026-09-21**: desde que el dominio pasó a `Grounded zero_sym LQpp` (§3), toda esta
     capa de cinco símbolos **no tiene ningún uso portante**. `LQ`, `collapse_fix_closed`,
     `closed_of_LQ`, `closed_collapse_subst` y `closed_collapse_substs` sólo se usan **entre
     sí**; las menciones que aparecen en `Calculus/Slash.lean` son PROSA, no código.
@@ -81,7 +81,7 @@ def LQ (s : String) (n : Nat) : Bool :=
 
 /-! ## 1 · El colapso FIJA el dominio — lo que pide `intro_forall` -/
 
-theorem collapse_fix_closed : ∀ {u : Term}, ClosedQTerm u → collapseT LQ u = u := by
+theorem collapse_fix_closed : ∀ {u : Term}, ClosedQTerm u → collapseT zero_sym LQ u = u := by
   intro u h
   induction h with
   | zero =>
@@ -160,16 +160,16 @@ mutual
     aridades erróneas incluidos. Es lo que hace innecesario un cálculo indexado por el
     lenguaje. -/
 theorem closed_collapse_subst (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
-    ∀ t : Term, ClosedQTerm (collapseT LQ (substT ρ t)) := by
+    ∀ t : Term, ClosedQTerm (collapseT zero_sym LQ (substT ρ t)) := by
   intro t
   cases t with
   | var n =>
-      show ClosedQTerm (collapseT LQ (ρ n))
+      show ClosedQTerm (collapseT zero_sym LQ (ρ n))
       rw [collapse_fix_closed (hρ n)]
       exact hρ n
   | func s ts =>
       have ih := closed_collapse_substs ρ hρ ts
-      show ClosedQTerm (collapseT LQ (Term.func s (substTs ρ ts)))
+      show ClosedQTerm (collapseT zero_sym LQ (Term.func s (substTs ρ ts)))
       rw [collapseT]
       by_cases hL : LQ s (substTs ρ ts).length = true
       · rw [if_pos hL]
@@ -180,7 +180,7 @@ theorem closed_collapse_subst (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
         exact ClosedQTerm.zero
 
 theorem closed_collapse_substs (ρ : Subst) (hρ : ∀ n, ClosedQTerm (ρ n)) :
-    ∀ (ts : List Term), ∀ u ∈ collapseTs LQ (substTs ρ ts), ClosedQTerm u := by
+    ∀ (ts : List Term), ∀ u ∈ collapseTs zero_sym LQ (substTs ρ ts), ClosedQTerm u := by
   intro ts
   cases ts with
   | nil => intro u hu; cases hu
@@ -227,19 +227,19 @@ def LQpp (s : String) (n : Nat) : Bool :=
     `peanolib` y el `∧`/`∨` de `FOL`. -/
 def zeroS : Subst := fun _ => zero
 
-theorem zeroS_grounded : ∀ n, Grounded LQpp (zeroS n) := fun _ => grounded_zero LQpp
+theorem zeroS_grounded : ∀ n, Grounded zero_sym LQpp (zeroS n) := fun _ => grounded_zero zero_sym LQpp
 
 /-- Todo `ClosedQTerm` está anclado en la signatura completa. Es el puente con
     `closed_term_eq_numeral`, que sólo habla de los cinco símbolos de los numerales.
 
     🏗️ **ANDAMIO, sin uso portante hoy** (auditado el 2026-09-21): se escribió para
     `hNum` y `hNum` todavía no está. Es la dirección fácil del puente; la difícil —que todo
-    `Grounded LQpp` sea demostrablemente un numeral— es la que falta, y pide evaluar los
+    `Grounded zero_sym LQpp` sea demostrablemente un numeral— es la que falta, y pide evaluar los
     ocho símbolos que no son de los numerales. -/
-theorem closed_grounded : ∀ {t : Term}, ClosedQTerm t → Grounded LQpp t := by
+theorem closed_grounded : ∀ {t : Term}, ClosedQTerm t → Grounded zero_sym LQpp t := by
   intro t h
   induction h with
-  | zero => exact grounded_zero LQpp
+  | zero => exact grounded_zero zero_sym LQpp
   | succ a _ ih =>
       exact ⟨by simp only [succ, collapseT, List.length_cons, List.length_nil,
               if_pos (by decide : LQpp succ_sym 1 = true), collapseTs, ih.1],
@@ -265,24 +265,24 @@ theorem closed_grounded : ∀ {t : Term}, ClosedQTerm t → Grounded LQpp t := b
     (la sustitución no la toca) y sin símbolos ajenos (el colapso no la toca). ⛔ Sin ella el
     enunciado es FALSO — `sondeos/junk_probe.lean`. -/
 theorem qDisjunctionProperty (T : List Formula)
-    (hT : ∀ g, List.Mem g T → Slash T (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+    (hT : ∀ g, List.Mem g T → Slash T (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : T ⊢ᵢ Formula.or A B) :
     (T ⊢ᵢ A) ∨ (T ⊢ᵢ B) :=
-  disjunction_property_of_slashed T (Grounded LQpp) LQpp
-    (fun _ hu => grounded_fix LQpp hu) (grounded_collapse_subst LQpp)
+  disjunction_property_of_slashed T (Grounded zero_sym LQpp) zero_sym LQpp
+    (fun _ hu => grounded_fix zero_sym LQpp hu) (grounded_collapse_subst zero_sym LQpp)
     zeroS zeroS_grounded hT hAB h
 
 /-- 🏁 **La propiedad de existencia**, con el testigo **anclado**: cerrado y del lenguaje. -/
 theorem qExistenceProperty (T : List Formula)
-    (hT : ∀ g, List.Mem g T → Slash T (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+    (hT : ∀ g, List.Mem g T → Slash T (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)))
     {A : Formula}
-    (hA : collapseF LQpp (substF zeroS (Formula.ex A)) = Formula.ex A)
+    (hA : collapseF zero_sym LQpp (substF zeroS (Formula.ex A)) = Formula.ex A)
     (h : T ⊢ᵢ Formula.ex A) :
-    ∃ t : Term, And (Grounded LQpp t) (T ⊢ᵢ substFormula 0 t A) :=
-  existence_property_of_slashed T (Grounded LQpp) LQpp
-    (fun _ hu => grounded_fix LQpp hu) (grounded_collapse_subst LQpp)
+    ∃ t : Term, And (Grounded zero_sym LQpp t) (T ⊢ᵢ substFormula 0 t A) :=
+  existence_property_of_slashed T (Grounded zero_sym LQpp) zero_sym LQpp
+    (fun _ hu => grounded_fix zero_sym LQpp hu) (grounded_collapse_subst zero_sym LQpp)
     zeroS zeroS_grounded hT hA h
 
 /-! ## 5 · 🏁 HA: la DP reducida a TRES obligaciones, y ni una más
@@ -316,27 +316,27 @@ theorem eq_of_map_self {f : Formula → Formula} : ∀ (l : List Formula), l.map
 /-- ⭐ **Los 34 axiomas son sentencias del lenguaje de Q⁺⁺**: ni variables libres ni símbolos
     ajenos. Comprobado por `rfl`, no supuesto. -/
 theorem coreAxioms_sentence (g : Formula) (hg : List.Mem g coreAxioms) :
-    collapseF LQpp (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQpp (substF zeroS g)) coreAxioms (by rfl) g hg
+    collapseF zero_sym LQpp (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQpp (substF zeroS g)) coreAxioms (by rfl) g hg
 
 /-- ⭐⭐ **28 de los 34: los de Harrop caen solos.** Sólo hace falta la consistencia. -/
 theorem slash_coreAxioms_harrop {insts : List Formula}
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
     (g : Formula) (hg : List.Mem g coreAxioms) (hH : isHarrop g = true) :
-    Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)) := by
+    Slash (ctx insts) (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)) := by
   rw [coreAxioms_sentence g hg]
-  exact slash_of_isHarrop (ctx insts) (Grounded LQpp) hcon g hH (ax' hg)
+  exact slash_of_isHarrop (ctx insts) (Grounded zero_sym LQpp) hcon g hH (ax' hg)
 
 /-- 🏁🏁 **LA PROPIEDAD DE DISYUNCIÓN PARA HA**, con lo que falta puesto como hipótesis y
     nada escondido. -/
 theorem haDisjunctionProperty (insts : List Formula)
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
     (hHard : ∀ g, List.Mem g coreAxioms → isHarrop g = false →
-      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+      Slash (ctx insts) (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+      Slash (ctx insts) (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctx insts ⊢ᵢ Formula.or A B) :
     (ctx insts ⊢ᵢ A) ∨ (ctx insts ⊢ᵢ B) := by
   refine qDisjunctionProperty (ctx insts) (fun g hg => ?_) hAB h

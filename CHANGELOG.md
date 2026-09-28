@@ -1,6 +1,6 @@
 # Changelog
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-28
 **Author**: Julián Calderón Almendros
 
 All notable changes to this project will be documented in this file.
@@ -14,6 +14,16 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ---
 
 ## [Unreleased]
+
+### 2026-09-28 · 📦 Los siete de `Calculus/` sin RPP ni Peano — listos para FOL (PRF-050)
+
+- `Subst`, `DerivesI`, `SubstDerives`, `Consistency`, `Eq`, `Collapse` y `Slash` ya no importan
+  `PeanoRF.Prelim`: sólo módulos de FOL.
+- `collapseT`/`collapseF`/`Grounded` y sus lemas toman un símbolo `k` (el reemplazo es
+  `.func k []`); HA pasa `zero_sym`.
+- `eqI_congr_succ` se muda de `Calculus/Eq.lean` a `HA/Axioms.lean`.
+- Retirados `fdepth` y `fdepth_subst`: `Slash` usa `FOL.Complexity.formulaComplexity`.
+- Respuesta a FOL: `doc/RESPUESTA-FOL-2026-09-28.md`.
 
 ### 2026-09-22 (g) · ⛔⛔ Los cinco de lista NO piden inducción — la codificación no es SOBREYECTIVA
 

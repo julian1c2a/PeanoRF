@@ -1,6 +1,6 @@
 # Current Project Status — PeanoRF
 
-**Última actualización:** 2026-09-22
+**Última actualización:** 2026-09-28
 **Autor**: Julián Calderón Almendros
 
 > 🏁🏁🏁 **2026-09-22 · 26 DE LOS 34 AXIOMAS, SIN HIPÓTESIS** —diez símbolos—
@@ -70,7 +70,7 @@
 > caso con parámetro)** están probados ahí, sin ω-reglas y sin `ax_induction`.
 >
 > **Cifras canónicas** (las verifica `check-doc-sync.bash`, AI-GUIDE §27):
-> **52 jobs · 19 módulos propios · 0 sorry vigentes · 0 axiom propios**.
+> **53 jobs · 19 módulos propios · 0 sorry vigentes · 0 axiom propios**.
 >
 > 🏁🏁🏁 **H3bis CONSEGUIDO — `⊢ᵢ` NO es `⊢₀`, y ahora es un TEOREMA.**
 >
@@ -252,11 +252,11 @@
 |--------|-------|
 | Módulos propios | 19 (`Prelim`, `Calculus/{DerivesI,Eq,Soundness,Consistency,Slash,Subst,SubstDerives,Collapse}`, `Meta/AxiomCheck`, `Omega/Basic`, `HA/{Axioms,Arith,Numerals,Domain,SlashAxioms,Order,Fragment,Model}`) |
 | Módulos con 0 `sorry` | 19 / 19 |
-| Teoremas propios | 295 |
-| Definiciones propias | 21 (el álgebra de sustituciones, `fdepth`, `Slash`, `natModelK`, las cinco signaturas `LQ*`, `consNat`, `isqrt`) |
+| Teoremas propios | 294 (2026-09-28: −1, `fdepth_subst` retirado por PRF-050) |
+| Definiciones propias | 20 (el álgebra de sustituciones, `Slash`, `natModelK`, las cinco signaturas `LQ*`, `consNat`, `isqrt`) |
 | Notaciones propias | 0 |
 | `axiom` de Lean propios | 0 |
-| Build | ✅ 52 jobs (ver la reserva del banner) |
+| Build | ✅ 53 jobs (ver la reserva del banner; +1 desde PRF-050: `FOL.Complexity`) |
 | Lean | v4.31.0 |
 | Dependencias | `FOL`, `ROBINSON_PlusPlus`, `peanolib` (rutas locales) |
 | Convención de nombres | Mathlib-style (ver `NAMING-CONVENTIONS.md`) |

@@ -67,7 +67,7 @@ theorem arithAxioms_length : arithAxioms.length = 17 := rfl
 /-- ⛔ **EVIDENCIA.** ⭐ **Son sentencias del lenguaje de los NUMERALES**: ni variables libres ni símbolos
     fuera de los cinco. Por `rfl`, no por argumento. -/
 theorem arithAxioms_sentences :
-    arithAxioms.map (fun g => collapseF LQ (substF zeroS g)) = arithAxioms := by rfl
+    arithAxioms.map (fun g => collapseF zero_sym LQ (substF zeroS g)) = arithAxioms := by rfl
 
 /-- ⛔ **EVIDENCIA.** ⭐ **De los 17, sólo dos no son de Harrop** — y los dos ya están barrados. -/
 theorem arithAxioms_hard :
@@ -75,13 +75,13 @@ theorem arithAxioms_hard :
 
 /-! ## 4 · ⭐ Anclado en `LQ` ⇒ `ClosedQTerm` — y con ello `hNum` para el fragmento
 
-    `Grounded LQ` y `ClosedQTerm` describen lo mismo desde dos lados: el primero por
+    `Grounded zero_sym LQ` y `ClosedQTerm` describen lo mismo desde dos lados: el primero por
     CLAUSURAS (el colapso lo fija, ninguna sustitución lo toca), el segundo por
     CONSTRUCTORES. Ésta es la dirección que faltaba, y con ella `closed_term_eq_numeral`
     **es** `hNum` sobre el fragmento. -/
 
 mutual
-theorem closed_of_grounded : ∀ {t : Term}, Grounded LQ t → ClosedQTerm t := by
+theorem closed_of_grounded : ∀ {t : Term}, Grounded zero_sym LQ t → ClosedQTerm t := by
   intro t h
   cases t with
   | var n =>
@@ -99,11 +99,11 @@ theorem closed_of_grounded : ∀ {t : Term}, Grounded LQ t → ClosedQTerm t := 
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
-theorem closed_of_grounded_list : ∀ (ts : List Term), collapseTs LQ ts = ts →
+theorem closed_of_grounded_list : ∀ (ts : List Term), collapseTs zero_sym LQ ts = ts →
     (∀ ρ : Subst, substTs ρ ts = ts) → ∀ u, List.Mem u ts → ClosedQTerm u := by
   intro ts hc hs
   cases ts with
@@ -123,7 +123,7 @@ end
 
 /-! ## 5 · 🏁🏁🏁 LA DP DEL FRAGMENTO — con UNA sola hipótesis
 
-    Aquí se cierra. Sobre `ctxA`, con dominio `Grounded LQ`:
+    Aquí se cierra. Sobre `ctxA`, con dominio `Grounded zero_sym LQ`:
 
     | | |
     |---|---|
@@ -150,21 +150,21 @@ theorem indA {insts : List Formula} {φ : Formula} (h : List.Mem φ insts) :
 
 /-- ⭐⭐ **`hNum` PARA EL FRAGMENTO — y no es hipótesis, es un TEOREMA.** Es
     `closed_term_eq_numeral` mirado a través de `closed_of_grounded`. -/
-theorem hNum_fragment {insts : List Formula} : ∀ t : Term, Grounded LQ t →
+theorem hNum_fragment {insts : List Formula} : ∀ t : Term, Grounded zero_sym LQ t →
     ∃ n : Nat, ctxA insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => closed_term_eq_numeral (fun _ hg => axA' hg) (closed_of_grounded ht)
 
 /-- Cada axioma del fragmento es punto fijo del colapso y la sustitución. -/
 theorem arithAxioms_sentence (g : Formula) (hg : List.Mem g arithAxioms) :
-    collapseF LQ (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQ (substF zeroS g)) arithAxioms
+    collapseF zero_sym LQ (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQ (substF zeroS g)) arithAxioms
     arithAxioms_sentences g hg
 
 /-- ⭐⭐ **Los 17 axiomas del fragmento, barrados.** -/
 theorem slash_arithAxioms {insts : List Formula}
     (hlift : (ctxA insts).map (liftFormula 0) = ctxA insts)
     (hcon : Not (ctxA insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithAxioms → Slash (ctxA insts) (Grounded LQ) g := by
+    ∀ g, List.Mem g arithAxioms → Slash (ctxA insts) (Grounded zero_sym LQ) g := by
   have hA : ∀ g, List.Mem g arithAxioms → ctxA insts ⊢ᵢ g := fun _ hg => axA' hg
   intro g hg
   simp only [arithAxioms] at hg
@@ -212,14 +212,14 @@ theorem qDisjunctionPropertyA (insts : List Formula)
     (hlift : (ctxA insts).map (liftFormula 0) = ctxA insts)
     (hcon : Not (ctxA insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxA insts) (Grounded LQ) (collapseF LQ (substF zeroS g)))
+      Slash (ctxA insts) (Grounded zero_sym LQ) (collapseF zero_sym LQ (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxA insts ⊢ᵢ Formula.or A B) :
     Or (ctxA insts ⊢ᵢ A) (ctxA insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxA insts) (Grounded LQ) LQ
-    (fun _ hu => grounded_fix LQ hu) (grounded_collapse_subst LQ)
-    zeroS (fun _ => grounded_zero LQ) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxA insts) (Grounded zero_sym LQ) zero_sym LQ
+    (fun _ hu => grounded_fix zero_sym LQ hu) (grounded_collapse_subst zero_sym LQ)
+    zeroS (fun _ => grounded_zero zero_sym LQ) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithAxioms_sentence g hcore]
     exact slash_arithAxioms hlift hcon g hcore
@@ -234,7 +234,7 @@ theorem qDisjunctionPropertyA (insts : List Formula)
 theorem qDisjunctionProperty_arith
     (hcon : Not (ctxA [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQ (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxA [] ⊢ᵢ Formula.or A B) :
     Or (ctxA [] ⊢ᵢ A) (ctxA [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyA [] (by rfl) hcon ?_ hAB h
@@ -260,7 +260,7 @@ def arithTAxioms : List Formula := arithAxioms ++ [ax25_pred_zero, ax26_pred_suc
 
 /-- ⛔ **EVIDENCIA**: los 19 son sentencias del lenguaje extendido. Por `rfl`. -/
 theorem arithTAxioms_sentences :
-    arithTAxioms.map (fun g => collapseF LQt (substF zeroS g)) = arithTAxioms := by rfl
+    arithTAxioms.map (fun g => collapseF zero_sym LQt (substF zeroS g)) = arithTAxioms := by rfl
 
 /-- ⛔ **EVIDENCIA**: añadir `τ` NO añade dureza — los duros siguen siendo los mismos dos. -/
 theorem arithTAxioms_hard :
@@ -392,7 +392,7 @@ theorem numOf_of_LQt {Γ : List Formula}
 mutual
 theorem numOf_grounded {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTAxioms → Γ ⊢ᵢ g) :
-    ∀ {t : Term}, Grounded LQt t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+    ∀ {t : Term}, Grounded zero_sym LQt t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
   intro t h
   cases t with
   | var n =>
@@ -410,13 +410,13 @@ theorem numOf_grounded {Γ : List Formula}
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
 theorem numOf_grounded_list {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTAxioms → Γ ⊢ᵢ g) :
-    ∀ (ts : List Term), collapseTs LQt ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ (ts : List Term), collapseTs zero_sym LQt ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
     ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
   intro ts hc hs
   cases ts with
@@ -443,12 +443,12 @@ theorem axT' {insts : List Formula} {g : Formula} (h : List.Mem g arithTAxioms) 
     ctxT insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
 
 theorem arithTAxioms_sentence (g : Formula) (hg : List.Mem g arithTAxioms) :
-    collapseF LQt (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQt (substF zeroS g)) arithTAxioms
+    collapseF zero_sym LQt (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQt (substF zeroS g)) arithTAxioms
     arithTAxioms_sentences g hg
 
 /-- ⭐⭐ `hNum` para el fragmento con `τ`. Tampoco es hipótesis. -/
-theorem hNumT_fragment {insts : List Formula} : ∀ t : Term, Grounded LQt t →
+theorem hNumT_fragment {insts : List Formula} : ∀ t : Term, Grounded zero_sym LQt t →
     ∃ n : Nat, ctxT insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => numOf_grounded (fun _ hg => axT' hg) ht
 
@@ -456,7 +456,7 @@ theorem hNumT_fragment {insts : List Formula} : ∀ t : Term, Grounded LQt t →
 theorem slash_arithTAxioms {insts : List Formula}
     (hlift : (ctxT insts).map (liftFormula 0) = ctxT insts)
     (hcon : Not (ctxT insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithTAxioms → Slash (ctxT insts) (Grounded LQt) g := by
+    ∀ g, List.Mem g arithTAxioms → Slash (ctxT insts) (Grounded zero_sym LQt) g := by
   have hA : ∀ g, List.Mem g arithTAxioms → ctxT insts ⊢ᵢ g := fun _ hg => axT' hg
   intro g hg
   simp only [arithTAxioms, arithAxioms, List.append] at hg
@@ -506,14 +506,14 @@ theorem qDisjunctionPropertyT (insts : List Formula)
     (hlift : (ctxT insts).map (liftFormula 0) = ctxT insts)
     (hcon : Not (ctxT insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxT insts) (Grounded LQt) (collapseF LQt (substF zeroS g)))
+      Slash (ctxT insts) (Grounded zero_sym LQt) (collapseF zero_sym LQt (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQt (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQt (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxT insts ⊢ᵢ Formula.or A B) :
     Or (ctxT insts ⊢ᵢ A) (ctxT insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxT insts) (Grounded LQt) LQt
-    (fun _ hu => grounded_fix LQt hu) (grounded_collapse_subst LQt)
-    zeroS (fun _ => grounded_zero LQt) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxT insts) (Grounded zero_sym LQt) zero_sym LQt
+    (fun _ hu => grounded_fix zero_sym LQt hu) (grounded_collapse_subst zero_sym LQt)
+    zeroS (fun _ => grounded_zero zero_sym LQt) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithTAxioms_sentence g hcore]
     exact slash_arithTAxioms hlift hcon g hcore
@@ -523,7 +523,7 @@ theorem qDisjunctionPropertyT (insts : List Formula)
 theorem qDisjunctionProperty_arithT
     (hcon : Not (ctxT [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQt (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQt (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxT [] ⊢ᵢ Formula.or A B) :
     Or (ctxT [] ⊢ᵢ A) (ctxT [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyT [] (by rfl) hcon ?_ hAB h
@@ -548,7 +548,7 @@ def arithTMAxioms : List Formula :=
 
 /-- ⛔ **EVIDENCIA**: los 22 son sentencias del lenguaje extendido. -/
 theorem arithTMAxioms_sentences :
-    arithTMAxioms.map (fun g => collapseF LQtm (substF zeroS g)) = arithTMAxioms := by rfl
+    arithTMAxioms.map (fun g => collapseF zero_sym LQtm (substF zeroS g)) = arithTMAxioms := by rfl
 
 /-- ⛔ **EVIDENCIA**: `%₂` añade UN duro, `ax21`, y ya estaba barrado. -/
 theorem arithTMAxioms_hard :
@@ -682,7 +682,7 @@ theorem numOf_of_LQtm {Γ : List Formula}
 mutual
 theorem numOfM_grounded {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTMAxioms → Γ ⊢ᵢ g) :
-    ∀ {t : Term}, Grounded LQtm t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+    ∀ {t : Term}, Grounded zero_sym LQtm t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
   intro t h
   cases t with
   | var n =>
@@ -700,13 +700,13 @@ theorem numOfM_grounded {Γ : List Formula}
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
 theorem numOfM_grounded_list {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTMAxioms → Γ ⊢ᵢ g) :
-    ∀ (ts : List Term), collapseTs LQtm ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ (ts : List Term), collapseTs zero_sym LQtm ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
     ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
   intro ts hc hs
   cases ts with
@@ -733,11 +733,11 @@ theorem axTM' {insts : List Formula} {g : Formula} (h : List.Mem g arithTMAxioms
     ctxTM insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
 
 theorem arithTMAxioms_sentence (g : Formula) (hg : List.Mem g arithTMAxioms) :
-    collapseF LQtm (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQtm (substF zeroS g)) arithTMAxioms
+    collapseF zero_sym LQtm (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQtm (substF zeroS g)) arithTMAxioms
     arithTMAxioms_sentences g hg
 
-theorem hNumTM_fragment {insts : List Formula} : ∀ t : Term, Grounded LQtm t →
+theorem hNumTM_fragment {insts : List Formula} : ∀ t : Term, Grounded zero_sym LQtm t →
     ∃ n : Nat, ctxTM insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => numOfM_grounded (fun _ hg => axTM' hg) ht
 
@@ -745,7 +745,7 @@ theorem hNumTM_fragment {insts : List Formula} : ∀ t : Term, Grounded LQtm t �
 theorem slash_arithTMAxioms {insts : List Formula}
     (hlift : (ctxTM insts).map (liftFormula 0) = ctxTM insts)
     (hcon : Not (ctxTM insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithTMAxioms → Slash (ctxTM insts) (Grounded LQtm) g := by
+    ∀ g, List.Mem g arithTMAxioms → Slash (ctxTM insts) (Grounded zero_sym LQtm) g := by
   have hA : ∀ g, List.Mem g arithTMAxioms → ctxTM insts ⊢ᵢ g := fun _ hg => axTM' hg
   intro g hg
   simp only [arithTMAxioms, arithTAxioms, arithAxioms, List.append] at hg
@@ -801,14 +801,14 @@ theorem qDisjunctionPropertyTM (insts : List Formula)
     (hlift : (ctxTM insts).map (liftFormula 0) = ctxTM insts)
     (hcon : Not (ctxTM insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxTM insts) (Grounded LQtm) (collapseF LQtm (substF zeroS g)))
+      Slash (ctxTM insts) (Grounded zero_sym LQtm) (collapseF zero_sym LQtm (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxTM insts ⊢ᵢ Formula.or A B) :
     Or (ctxTM insts ⊢ᵢ A) (ctxTM insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxTM insts) (Grounded LQtm) LQtm
-    (fun _ hu => grounded_fix LQtm hu) (grounded_collapse_subst LQtm)
-    zeroS (fun _ => grounded_zero LQtm) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxTM insts) (Grounded zero_sym LQtm) zero_sym LQtm
+    (fun _ hu => grounded_fix zero_sym LQtm hu) (grounded_collapse_subst zero_sym LQtm)
+    zeroS (fun _ => grounded_zero zero_sym LQtm) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithTMAxioms_sentence g hcore]
     exact slash_arithTMAxioms hlift hcon g hcore
@@ -818,7 +818,7 @@ theorem qDisjunctionPropertyTM (insts : List Formula)
 theorem qDisjunctionProperty_arithTM
     (hcon : Not (ctxTM [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxTM [] ⊢ᵢ Formula.or A B) :
     Or (ctxTM [] ⊢ᵢ A) (ctxTM [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyTM [] (by rfl) hcon ?_ hAB h
@@ -842,7 +842,7 @@ def arithTDAxioms : List Formula := arithTMAxioms ++ [ax17_div_mod_eq]
 
 /-- ⛔ **EVIDENCIA**: los 23 son sentencias del lenguaje extendido. -/
 theorem arithTDAxioms_sentences :
-    arithTDAxioms.map (fun g => collapseF LQtd (substF zeroS g)) = arithTDAxioms := by rfl
+    arithTDAxioms.map (fun g => collapseF zero_sym LQtd (substF zeroS g)) = arithTDAxioms := by rfl
 
 /-- ⛔ **EVIDENCIA**: `/₂` **no añade dureza** — `ax17` es de Harrop. -/
 theorem arithTDAxioms_hard :
@@ -861,12 +861,12 @@ theorem arithTD_of_arith {Γ : List Formula}
 
 /-- `ax17` instanciado en un término anclado. -/
 theorem ax17I {Γ : List Formula} (h17 : Γ ⊢ᵢ ax17_div_mod_eq)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) :
+    (L : String → Nat → Bool) {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ Formula.eq (add (mul (div2 t) (numeralM 2)) (mod2 t)) t := by
   have h := specI h17 t
   simpa (config := { decide := true }) only [ax17_div_mod_eq, forall_, substFormula,
     substTerms, substTerm, ite_true, ite_false, add, mul, div2, mod2, two, one, zero,
-    succ, numeralM, grounded_substTerm L ht] using h
+    succ, numeralM, grounded_substTerm zero_sym L ht] using h
 
 /-- 🏁 **`/₂ n̄` ES demostrablemente `(n/2)‾`.** `ax17` da `(/₂n̄)·2̄ + %₂n̄ = n̄`,
     `numeralI_mod2` fija `%₂n̄`, y la tricotomía contra `(n/2)‾` cierra las dos ramas malas:
@@ -878,9 +878,9 @@ theorem numeralI_div2 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms �
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) (ha2 : L add_sym 2 = true)
     (hsu : L succ_sym 1 = true) (hd : L div2_sym 1 = true) (n : Nat) :
     Γ ⊢ᵢ Formula.eq (div2 (numeralM n)) (numeralM (n / 2)) := by
-  have hng : Grounded L (numeralM n) := grounded_numeralM L hsu n
-  have hyg : Grounded L (div2 (numeralM n)) := grounded_func1 L hd hng
-  have hkg : Grounded L (numeralM (n / 2)) := grounded_numeralM L hsu (n / 2)
+  have hng : Grounded zero_sym L (numeralM n) := grounded_numeralM L hsu n
+  have hyg : Grounded zero_sym L (div2 (numeralM n)) := grounded_func1 zero_sym L hd hng
+  have hkg : Grounded zero_sym L (numeralM (n / 2)) := grounded_numeralM L hsu (n / 2)
   -- (1) `(/₂ n̄)·2̄ + (n%2)‾ = n̄`
   have hy : Γ ⊢ᵢ Formula.eq
       (add (mul (div2 (numeralM n)) (numeralM 2)) (numeralM (n % 2))) (numeralM n) :=
@@ -899,10 +899,10 @@ theorem numeralI_div2 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms �
       (Formula.or (Formula.eq (div2 (numeralM n)) (numeralM (n / 2)))
                   (lt (numeralM (n / 2)) (div2 (numeralM n)))) := by
     simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt,
-      grounded_liftTerm L hyg, grounded_liftTerm L hkg,
-      grounded_substTerm L hyg, grounded_substTerm L hkg] using htri
+      grounded_liftTerm zero_sym L hyg, grounded_liftTerm zero_sym L hkg,
+      grounded_substTerm zero_sym L hyg, grounded_substTerm zero_sym L hkg] using htri
   -- una rama mala, parametrizada por el lado
-  have bad : ∀ (p q : Term), Grounded L p → Grounded L q →
+  have bad : ∀ (p q : Term), Grounded zero_sym L p → Grounded zero_sym L q →
       Γ ⊢ᵢ Formula.eq (add (mul p (numeralM 2)) (numeralM (n % 2))) (numeralM n) →
       Γ ⊢ᵢ Formula.eq (add (mul q (numeralM 2)) (numeralM (n % 2))) (numeralM n) →
       (lt p q :: Γ) ⊢ᵢ Formula.bottom := by
@@ -914,8 +914,8 @@ theorem numeralI_div2 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms �
       (Derivesᵢ.hyp _ _ (List.Mem.head _))
     have hmono := Derivesᵢ.elim_impl _ _ _
       (Derivesᵢ.weakening _ _ _
-        (ltI_add_right hΓ hlift ha2 (L := L) (grounded_func2 L hm hp
-          (grounded_numeralM L hsu 2)) (grounded_func2 L hm hq
+        (ltI_add_right hΓ hlift ha2 (L := L) (grounded_func2 zero_sym L hm hp
+          (grounded_numeralM L hsu 2)) (grounded_func2 zero_sym L hm hq
           (grounded_numeralM L hsu 2)) (grounded_numeralM L hsu (n % 2)))
         (fun _ hz => List.Mem.tail _ hz))
       hlt2
@@ -976,7 +976,7 @@ mutual
 theorem numOfD_grounded {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ {t : Term}, Grounded LQtd t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+    ∀ {t : Term}, Grounded zero_sym LQtd t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
   intro t h
   cases t with
   | var n =>
@@ -994,14 +994,14 @@ theorem numOfD_grounded {Γ : List Formula}
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
 theorem numOfD_grounded_list {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ (ts : List Term), collapseTs LQtd ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ (ts : List Term), collapseTs zero_sym LQtd ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
     ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
   intro ts hc hs
   cases ts with
@@ -1029,12 +1029,12 @@ theorem axD' {insts : List Formula} {g : Formula} (h : List.Mem g arithTDAxioms)
     ctxD insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
 
 theorem arithTDAxioms_sentence (g : Formula) (hg : List.Mem g arithTDAxioms) :
-    collapseF LQtd (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQtd (substF zeroS g)) arithTDAxioms
+    collapseF zero_sym LQtd (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQtd (substF zeroS g)) arithTDAxioms
     arithTDAxioms_sentences g hg
 
 theorem hNumD_fragment {insts : List Formula}
-    (hlift : (ctxD insts).map (liftFormula 0) = ctxD insts) : ∀ t : Term, Grounded LQtd t →
+    (hlift : (ctxD insts).map (liftFormula 0) = ctxD insts) : ∀ t : Term, Grounded zero_sym LQtd t →
     ∃ n : Nat, ctxD insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => numOfD_grounded (fun _ hg => axD' hg) hlift ht
 
@@ -1042,7 +1042,7 @@ theorem hNumD_fragment {insts : List Formula}
 theorem slash_arithTDAxioms {insts : List Formula}
     (hlift : (ctxD insts).map (liftFormula 0) = ctxD insts)
     (hcon : Not (ctxD insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithTDAxioms → Slash (ctxD insts) (Grounded LQtd) g := by
+    ∀ g, List.Mem g arithTDAxioms → Slash (ctxD insts) (Grounded zero_sym LQtd) g := by
   have hA : ∀ g, List.Mem g arithTDAxioms → ctxD insts ⊢ᵢ g := fun _ hg => axD' hg
   intro g hg
   simp only [arithTDAxioms, arithTAxioms, arithAxioms, List.append] at hg
@@ -1100,14 +1100,14 @@ theorem qDisjunctionPropertyD (insts : List Formula)
     (hlift : (ctxD insts).map (liftFormula 0) = ctxD insts)
     (hcon : Not (ctxD insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxD insts) (Grounded LQtd) (collapseF LQtd (substF zeroS g)))
+      Slash (ctxD insts) (Grounded zero_sym LQtd) (collapseF zero_sym LQtd (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxD insts ⊢ᵢ Formula.or A B) :
     Or (ctxD insts ⊢ᵢ A) (ctxD insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxD insts) (Grounded LQtd) LQtd
-    (fun _ hu => grounded_fix LQtd hu) (grounded_collapse_subst LQtd)
-    zeroS (fun _ => grounded_zero LQtd) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxD insts) (Grounded zero_sym LQtd) zero_sym LQtd
+    (fun _ hu => grounded_fix zero_sym LQtd hu) (grounded_collapse_subst zero_sym LQtd)
+    zeroS (fun _ => grounded_zero zero_sym LQtd) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithTDAxioms_sentence g hcore]
     exact slash_arithTDAxioms hlift hcon g hcore
@@ -1117,7 +1117,7 @@ theorem qDisjunctionPropertyD (insts : List Formula)
 theorem qDisjunctionProperty_arithTD
     (hcon : Not (ctxD [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxD [] ⊢ᵢ Formula.or A B) :
     Or (ctxD [] ⊢ᵢ A) (ctxD [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyD [] (by rfl) hcon ?_ hAB h
@@ -1147,7 +1147,7 @@ def arithTDCAxioms : List Formula := arithTDAxioms ++ [ax_L0_cons_def]
 
 /-- ⛔ **EVIDENCIA**: los 24 son sentencias del lenguaje extendido. -/
 theorem arithTDCAxioms_sentences :
-    arithTDCAxioms.map (fun g => collapseF LQtdc (substF zeroS g)) = arithTDCAxioms := by rfl
+    arithTDCAxioms.map (fun g => collapseF zero_sym LQtdc (substF zeroS g)) = arithTDCAxioms := by rfl
 
 /-- ⛔ **EVIDENCIA**: `::` **no añade dureza** — `ax_L0` es de Harrop. -/
 theorem arithTDCAxioms_hard :
@@ -1171,14 +1171,14 @@ theorem axCL0 {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ
 
 /-- `ax_L0` instanciado en términos anclados. -/
 theorem ax_L0I {Γ : List Formula} (hL0 : Γ ⊢ᵢ ax_L0_cons_def) (L : String → Nat → Bool)
-    {t u : Term} (ht : Grounded L t) (hu : Grounded L u) :
+    {t u : Term} (ht : Grounded zero_sym L t) (hu : Grounded zero_sym L u) :
     Γ ⊢ᵢ Formula.eq (cons t u) (pair t (succ u)) := by
   have h := specI (specI hL0 t) u
   simpa (config := { decide := true }) only [ax_L0_cons_def, forall_2, substFormula,
     substTerms, substTerm, ite_true, ite_false, Nat.reduceAdd, cons, pair, cantor_func,
     cantor_poly, div2, add, mul, succ, two, one, zero,
-    grounded_liftTerm L ht, grounded_liftTerm L hu,
-    grounded_substTerm L ht, grounded_substTerm L hu] using h
+    grounded_liftTerm zero_sym L ht, grounded_liftTerm zero_sym L hu,
+    grounded_substTerm zero_sym L ht, grounded_substTerm zero_sym L hu] using h
 
 /-- El numeral que `m̄ :: n̄` denota: el emparejamiento de Cantor de `m` y `n+1`. -/
 def consNat (m n : Nat) : Nat :=
@@ -1192,8 +1192,8 @@ theorem numeralI_cons {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms �
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) (ha2 : L add_sym 2 = true)
     (hsu : L succ_sym 1 = true) (hd : L div2_sym 1 = true) (m n : Nat) :
     Γ ⊢ᵢ Formula.eq (cons (numeralM m) (numeralM n)) (numeralM (consNat m n)) := by
-  have hmg : Grounded L (numeralM m) := grounded_numeralM L hsu m
-  have hng : Grounded L (numeralM n) := grounded_numeralM L hsu n
+  have hmg : Grounded zero_sym L (numeralM m) := grounded_numeralM L hsu m
+  have hng : Grounded zero_sym L (numeralM n) := grounded_numeralM L hsu n
   have e0 : Γ ⊢ᵢ Formula.eq (cons (numeralM m) (numeralM n))
       (div2 (add (mul (add (numeralM m) (numeralM (n + 1)))
                       (succ (add (numeralM m) (numeralM (n + 1)))))
@@ -1250,7 +1250,7 @@ mutual
 theorem numOfC_grounded {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ {t : Term}, Grounded LQtdc t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+    ∀ {t : Term}, Grounded zero_sym LQtdc t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
   intro t h
   cases t with
   | var n =>
@@ -1268,14 +1268,14 @@ theorem numOfC_grounded {Γ : List Formula}
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
 theorem numOfC_grounded_list {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDCAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ (ts : List Term), collapseTs LQtdc ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ (ts : List Term), collapseTs zero_sym LQtdc ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
     ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
   intro ts hc hs
   cases ts with
@@ -1303,12 +1303,12 @@ theorem axC' {insts : List Formula} {g : Formula} (h : List.Mem g arithTDCAxioms
     ctxC insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
 
 theorem arithTDCAxioms_sentence (g : Formula) (hg : List.Mem g arithTDCAxioms) :
-    collapseF LQtdc (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQtdc (substF zeroS g)) arithTDCAxioms
+    collapseF zero_sym LQtdc (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQtdc (substF zeroS g)) arithTDCAxioms
     arithTDCAxioms_sentences g hg
 
 theorem hNumC_fragment {insts : List Formula}
-    (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts) : ∀ t : Term, Grounded LQtdc t →
+    (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts) : ∀ t : Term, Grounded zero_sym LQtdc t →
     ∃ n : Nat, ctxC insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => numOfC_grounded (fun _ hg => axC' hg) hlift ht
 
@@ -1316,7 +1316,7 @@ theorem hNumC_fragment {insts : List Formula}
 theorem slash_arithTDCAxioms {insts : List Formula}
     (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts)
     (hcon : Not (ctxC insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithTDCAxioms → Slash (ctxC insts) (Grounded LQtdc) g := by
+    ∀ g, List.Mem g arithTDCAxioms → Slash (ctxC insts) (Grounded zero_sym LQtdc) g := by
   have hA : ∀ g, List.Mem g arithTDCAxioms → ctxC insts ⊢ᵢ g := fun _ hg => axC' hg
   intro g hg
   simp only [arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms, List.append] at hg
@@ -1376,14 +1376,14 @@ theorem qDisjunctionPropertyC (insts : List Formula)
     (hlift : (ctxC insts).map (liftFormula 0) = ctxC insts)
     (hcon : Not (ctxC insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxC insts) (Grounded LQtdc) (collapseF LQtdc (substF zeroS g)))
+      Slash (ctxC insts) (Grounded zero_sym LQtdc) (collapseF zero_sym LQtdc (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxC insts ⊢ᵢ Formula.or A B) :
     Or (ctxC insts ⊢ᵢ A) (ctxC insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxC insts) (Grounded LQtdc) LQtdc
-    (fun _ hu => grounded_fix LQtdc hu) (grounded_collapse_subst LQtdc)
-    zeroS (fun _ => grounded_zero LQtdc) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxC insts) (Grounded zero_sym LQtdc) zero_sym LQtdc
+    (fun _ hu => grounded_fix zero_sym LQtdc hu) (grounded_collapse_subst zero_sym LQtdc)
+    zeroS (fun _ => grounded_zero zero_sym LQtdc) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithTDCAxioms_sentence g hcore]
     exact slash_arithTDCAxioms hlift hcon g hcore
@@ -1393,7 +1393,7 @@ theorem qDisjunctionPropertyC (insts : List Formula)
 theorem qDisjunctionProperty_arithTDC
     (hcon : Not (ctxC [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxC [] ⊢ᵢ Formula.or A B) :
     Or (ctxC [] ⊢ᵢ A) (ctxC [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyC [] (by rfl) hcon ?_ hAB h
@@ -1423,7 +1423,7 @@ def arithTDCSAxioms : List Formula :=
 
 /-- ⛔ **EVIDENCIA**: los 26 son sentencias del lenguaje extendido. -/
 theorem arithTDCSAxioms_sentences :
-    arithTDCSAxioms.map (fun g => collapseF LQtdcs (substF zeroS g)) = arithTDCSAxioms := by
+    arithTDCSAxioms.map (fun g => collapseF zero_sym LQtdcs (substF zeroS g)) = arithTDCSAxioms := by
   rfl
 
 /-- ⛔ **EVIDENCIA**: `√` añade **un duro**, `ax14`, y es el primero que el fragmento mete
@@ -1479,7 +1479,7 @@ mutual
 theorem numOfS_grounded {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ {t : Term}, Grounded LQtdcs t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
+    ∀ {t : Term}, Grounded zero_sym LQtdcs t → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n)) := by
   intro t h
   cases t with
   | var n =>
@@ -1497,14 +1497,14 @@ theorem numOfS_grounded {Γ : List Formula}
           have hx := h.2 ρ; simp only [substT] at hx; injection hx)
       · exfalso
         have hall := h.1
-        rw [collapseT, if_neg hL, zero] at hall
+        rw [collapseT, if_neg hL] at hall
         injection hall with h1 h2
         exact hL (by rw [← h1, ← h2]; decide)
 
 theorem numOfS_grounded_list {Γ : List Formula}
     (hΓ : ∀ g, List.Mem g arithTDCSAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ) :
-    ∀ (ts : List Term), collapseTs LQtdcs ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
+    ∀ (ts : List Term), collapseTs zero_sym LQtdcs ts = ts → (∀ ρ : Subst, substTs ρ ts = ts) →
     ∀ u, List.Mem u ts → ∃ n : Nat, Γ ⊢ᵢ (Formula.eq u (numeralM n)) := by
   intro ts hc hs
   cases ts with
@@ -1532,12 +1532,12 @@ theorem axS' {insts : List Formula} {g : Formula} (h : List.Mem g arithTDCSAxiom
     ctxS insts ⊢ᵢ g := Derivesᵢ.hyp _ _ (List.mem_append_left _ h)
 
 theorem arithTDCSAxioms_sentence (g : Formula) (hg : List.Mem g arithTDCSAxioms) :
-    collapseF LQtdcs (substF zeroS g) = g :=
-  eq_of_map_self (f := fun g => collapseF LQtdcs (substF zeroS g)) arithTDCSAxioms
+    collapseF zero_sym LQtdcs (substF zeroS g) = g :=
+  eq_of_map_self (f := fun g => collapseF zero_sym LQtdcs (substF zeroS g)) arithTDCSAxioms
     arithTDCSAxioms_sentences g hg
 
 theorem hNumS_fragment {insts : List Formula}
-    (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts) : ∀ t : Term, Grounded LQtdcs t →
+    (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts) : ∀ t : Term, Grounded zero_sym LQtdcs t →
     ∃ n : Nat, ctxS insts ⊢ᵢ (Formula.eq t (numeralM n)) :=
   fun _ ht => numOfS_grounded (fun _ hg => axS' hg) hlift ht
 
@@ -1545,7 +1545,7 @@ theorem hNumS_fragment {insts : List Formula}
 theorem slash_arithTDCSAxioms {insts : List Formula}
     (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts)
     (hcon : Not (ctxS insts ⊢ᵢ Formula.bottom)) :
-    ∀ g, List.Mem g arithTDCSAxioms → Slash (ctxS insts) (Grounded LQtdcs) g := by
+    ∀ g, List.Mem g arithTDCSAxioms → Slash (ctxS insts) (Grounded zero_sym LQtdcs) g := by
   have hA : ∀ g, List.Mem g arithTDCSAxioms → ctxS insts ⊢ᵢ g := fun _ hg => axS' hg
   intro g hg
   simp only [arithTDCSAxioms, arithTDCAxioms, arithTDAxioms, arithTMAxioms, arithTAxioms, arithAxioms, List.append] at hg
@@ -1610,14 +1610,14 @@ theorem qDisjunctionPropertyS (insts : List Formula)
     (hlift : (ctxS insts).map (liftFormula 0) = ctxS insts)
     (hcon : Not (ctxS insts ⊢ᵢ Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctxS insts) (Grounded LQtdcs) (collapseF LQtdcs (substF zeroS g)))
+      Slash (ctxS insts) (Grounded zero_sym LQtdcs) (collapseF zero_sym LQtdcs (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxS insts ⊢ᵢ Formula.or A B) :
     Or (ctxS insts ⊢ᵢ A) (ctxS insts ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed (ctxS insts) (Grounded LQtdcs) LQtdcs
-    (fun _ hu => grounded_fix LQtdcs hu) (grounded_collapse_subst LQtdcs)
-    zeroS (fun _ => grounded_zero LQtdcs) (fun g hg => ?_) hAB h
+  refine disjunction_property_of_slashed (ctxS insts) (Grounded zero_sym LQtdcs) zero_sym LQtdcs
+    (fun _ hu => grounded_fix zero_sym LQtdcs hu) (grounded_collapse_subst zero_sym LQtdcs)
+    zeroS (fun _ => grounded_zero zero_sym LQtdcs) (fun g hg => ?_) hAB h
   rcases List.mem_append.mp hg with hcore | hind
   · rw [arithTDCSAxioms_sentence g hcore]
     exact slash_arithTDCSAxioms hlift hcon g hcore
@@ -1627,7 +1627,7 @@ theorem qDisjunctionPropertyS (insts : List Formula)
 theorem qDisjunctionProperty_arithTDCS
     (hcon : Not (ctxS [] ⊢ᵢ Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxS [] ⊢ᵢ Formula.or A B) :
     Or (ctxS [] ⊢ᵢ A) (ctxS [] ⊢ᵢ B) := by
   refine qDisjunctionPropertyS [] (by rfl) hcon ?_ hAB h

@@ -1,6 +1,6 @@
 # Decisiones de Diseño — PeanoRF
 
-**Última actualización:** 2026-09-23
+**Última actualización:** 2026-09-28
 **Autor**: Julián Calderón Almendros
 
 Registro de decisiones arquitectónicas (ADR) de este proyecto. Cada entrada documenta
@@ -2455,6 +2455,49 @@ fuera a propósito: no es un agujero de confianza.
   import no es medirlo** (lo escribieron ellos) — pero tampoco basta contar los hits: hay que
   mirar si están en el **código** o en un **comentario**, y **hacia dónde va la flecha de
   dependencia**. Seis de siete eran comentarios; el que no lo era, era un ciclo.
+
+---
+
+## PRF-050: los siete de `Calculus/` sin RPP ni Peano — la entrega a FOL, hoy
+
+**Fecha**: 2026-09-28
+**Estado**: ✅ **Aceptada por el propietario** (fecha de entrega: 2026-09-28, una sola tanda).
+**Origen**: la condición de FOL en sus cartas (3) y (4) (`../FOL/RESPUESTA-PEANORF-2026-09-26.md`,
+`doc/CARTA-DE-FOL-2026-09-27.md`): tras la entrega, en `FOL/` sólo imports `FOL.*` o del
+núcleo de Lean, ni identificadores ni `open` de RPP, Peano o PeanoRF, y sin `require`.
+
+**Contexto**: PRF-049 contó identificadores y dijo «seis de los siete dan CERO». Era falso: los
+siete importaban `PeanoRF.Prelim`, que trae RPP y Peano. Y el reemplazo de `collapseT` no puede
+ser «un término cerrado»: `collapseT_idem` pasa por `collapseT_zero`, que pide que el colapso lo
+fije para TODA `L`, y eso sólo vale para una constante (FOL, carta (3) §2).
+
+**Decisión**:
+- `Subst`, `DerivesI`: `import PeanoRF.Prelim` → `import FOL.FOL`, y fuera el `open FOL`, que
+  era vacuo (el namespace lo traía `Prelim`; `FOL.FOL` no lo abre).
+- `Eq`: `+ import FOL.Theorems.Eq` (el import de RPP llevaba una dependencia de FOL);
+  `eqI_congr_succ` pasa a `HA/Axioms.lean`.
+- `Collapse`: sin `open ROBINSON_PlusPlus.Minimal.Axioms`; parámetro de SÍMBOLO `(k : String)`
+  delante de `L`; el reemplazo es `.func k []`. No se llama `c`: los lemas de levantamiento ya
+  ligan `∀ (c : Nat)` y lo sombrean. HA instancia `k := zero_sym`.
+- `Slash`: fuera `fdepth`/`fdepth_subst`; se usa `FOL.Complexity.formulaComplexity` y
+  `complexity_substFormula`. H3bis instancia `k := ""` (con `L` total no interviene).
+
+**Medido**:
+- en una copia de FOL (`f2f7188`), los siete en `FOL/Calculus/` compilan sin `require`, sin
+  `sorry` ni avisos, titulares en `[propext, Quot.sound]`, y su cierre de imports es la
+  cadena de quince módulos de FOL;
+- aquí, `lake build` completo en verde (53 jobs) contra FOL `f2f7188`, RPP `08e76b3`, Peano
+  `5b6191f`.
+
+**Consecuencias**:
+- Los siete ya no importan RPP ni Peano; `Prelim` sigue siendo el punto de contacto de
+  `Omega/` y `Meta/`.
+- ⬜ Siguiente: FOL recibe los siete (namespace, renombres `derivesI_…`/`ᵢ`, prosa), y después
+  PeanoRF borra los suyos e importa los de FOL. `Soundness` se queda aquí.
+- ⬜ Pedido a FOL: `Slash` con `lock`, fuera de la criba de congelación hasta que cierre H3ter.
+- ⚠️ Los sondeos de `sondeos/` que usan el colapso (`collapse_probe`, `collapse_parallel_probe`,
+  `sqrt_div2_probe`, …) no están en el build y siguen con la firma antigua.
+- 📄 La respuesta completa, en `doc/RESPUESTA-FOL-2026-09-28.md`.
 
 ---
 

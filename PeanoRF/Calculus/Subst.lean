@@ -4,7 +4,7 @@ Author: Julián Calderón Almendros
 License: MIT
 -/
 
-import PeanoRF.Prelim
+import FOL.FOL
 
 /-! # Sustitución PARALELA sobre la sintaxis de FOL⁼
 
@@ -53,7 +53,6 @@ import PeanoRF.Prelim
 
 namespace PeanoRF.Calculus
 
-open FOL
 
 set_option autoImplicit false
 

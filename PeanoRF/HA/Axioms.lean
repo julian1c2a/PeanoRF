@@ -222,4 +222,35 @@ theorem induction_object {insts : List Formula} {φ : Formula} (hmem : φ ∈ in
   simp only [inductionFormula] at hind
   exact Derivesᵢ.elim_impl _ _ _ (Derivesᵢ.elim_impl _ _ _ hind base) step
 
+/-! ### Congruencia del sucesor
+
+    Vivía en `Calculus/Eq.lean`. Se trasladó aquí el 2026-09-28 porque es el único lema de
+    `Eq` que nombra un símbolo de RPP (`succ`), y los siete módulos de `Calculus/` que bajan a
+    FOL no pueden importar RPP (`doc/RESPUESTA-FOL-2026-09-28.md`). -/
+
+/-- Congruencia del sucesor. Testigo `σ(t₁↑) = σ#0`. -/
+theorem eqI_congr_succ {Γ : List Formula} {t₁ t₂ : Term} (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) :
+    Γ ⊢ᵢ (Formula.eq (ROBINSON_PlusPlus.Minimal.Axioms.succ t₁)
+                     (ROBINSON_PlusPlus.Minimal.Axioms.succ t₂)) := by
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hS1 : substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
+           = Formula.eq (succ t₁) (succ t₁) := by
+    change Formula.eq (succ (substTerm 0 t₁ (liftTerm 0 t₁))) (succ (substTerm 0 t₁ (.var 0)))
+         = Formula.eq (succ t₁) (succ t₁)
+    rw [substTerm_liftTerm t₁ 0 t₁]
+    rfl
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hS2 : substFormula 0 t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
+           = Formula.eq (succ t₁) (succ t₂) := by
+    change Formula.eq (succ (substTerm 0 t₂ (liftTerm 0 t₁))) (succ (substTerm 0 t₂ (.var 0)))
+         = Formula.eq (succ t₁) (succ t₂)
+    rw [substTerm_liftTerm t₁ 0 t₂]
+    rfl
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have hbase : Γ ⊢ᵢ substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) := by
+    rw [hS1]; exact Derivesᵢ.refl Γ _
+  open ROBINSON_PlusPlus.Minimal.Axioms in
+  have := Derivesᵢ.subst Γ t₁ t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) h hbase
+  rwa [hS2] at this
+
 end PeanoRF.HA

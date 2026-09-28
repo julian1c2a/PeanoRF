@@ -266,7 +266,7 @@ theorem hcon_fragment : Not (ctxTM [] ⊢ᵢ Formula.bottom) := by
     demuestra uno de los dos lados. Veintidós de los treinta y cuatro axiomas de
     `coreAxioms`, siete símbolos, y nada que suponer. -/
 theorem qDisjunctionProperty_arithTM_final {A B : Formula}
-    (hAB : collapseF LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtm (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxTM [] ⊢ᵢ Formula.or A B) :
     Or (ctxTM [] ⊢ᵢ A) (ctxTM [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTM hcon_fragment hAB h
@@ -342,8 +342,8 @@ theorem sub_neither (n : Nat) :
 
 /-- `5̄ − 7̄` está anclado en la signatura **completa** de Q⁺⁺: `LQpp` admite `−` con
     aridad 2, y el término es cerrado. -/
-theorem grounded_sub_5_7 : Grounded LQpp (sub (numeralM 5) (numeralM 7)) :=
-  grounded_func2 LQpp (by decide)
+theorem grounded_sub_5_7 : Grounded zero_sym LQpp (sub (numeralM 5) (numeralM 7)) :=
+  grounded_func2 zero_sym LQpp (by decide)
     (grounded_numeralM LQpp (by decide) 5) (grounded_numeralM LQpp (by decide) 7)
 
 /-- ⛔⛔ **`hNum` sobre la signatura completa es FALSA — y con testigo.**
@@ -352,7 +352,7 @@ theorem grounded_sub_5_7 : Grounded LQpp (sub (numeralM 5) (numeralM 7)) :=
     condicionado a `x ≤ y`»). Aquí está **medido**: el testigo es `5̄ − 7̄`, y lo que lo
     refuta son dos modelos y `derivesI_soundness`. -/
 theorem hNum_false_on_sub :
-    Not (∀ t : Term, Grounded LQpp t →
+    Not (∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, subAxioms ⊢ᵢ Formula.eq t (numeralM n)) := by
   intro hNum
   obtain ⟨n, hn⟩ := hNum (sub (numeralM 5) (numeralM 7)) grounded_sub_5_7
@@ -376,7 +376,7 @@ theorem hcon_fragmentD : Not (ctxD [] ⊢ᵢ Formula.bottom) := by
     ⛔ Y `/₂` entra **contra lo que ADR-037 dio por cerrado**: no hizo falta cancelación
     ninguna, sólo el orden (`PeanoRF/HA/Order.lean`). -/
 theorem qDisjunctionProperty_arithTD_final {A B : Formula}
-    (hAB : collapseF LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtd (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxD [] ⊢ᵢ Formula.or A B) :
     Or (ctxD [] ⊢ᵢ A) (ctxD [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTD hcon_fragmentD hAB h
@@ -401,7 +401,7 @@ theorem hcon_fragmentC : Not (ctxC [] ⊢ᵢ Formula.bottom) := by
     bloqueo cayó solo en cuanto `/₂` quedó determinado (ADR-042). Sin una línea de teoría
     nueva. -/
 theorem qDisjunctionProperty_arithTDC_final {A B : Formula}
-    (hAB : collapseF LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdc (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxC [] ⊢ᵢ Formula.or A B) :
     Or (ctxC [] ⊢ᵢ A) (ctxC [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTDC hcon_fragmentC hAB h
@@ -425,7 +425,7 @@ theorem hcon_fragmentS : Not (ctxS [] ⊢ᵢ Formula.bottom) := by
     Harrop —`le a b` es `a < b ∨ a = b`— y hay que barrarlo con `slash_ax14`, que para esto
     hubo que generalizar de `ctx`/`LQpp` a `{Γ}`/`L`. -/
 theorem qDisjunctionProperty_arithTDCS_final {A B : Formula}
-    (hAB : collapseF LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQtdcs (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctxS [] ⊢ᵢ Formula.or A B) :
     Or (ctxS [] ⊢ᵢ A) (ctxS [] ⊢ᵢ B) :=
   qDisjunctionProperty_arithTDCS hcon_fragmentS hAB h

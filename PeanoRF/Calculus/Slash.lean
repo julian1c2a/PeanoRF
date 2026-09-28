@@ -8,6 +8,7 @@ import PeanoRF.Calculus.Consistency
 import PeanoRF.Calculus.SubstDerives
 import PeanoRF.Calculus.Eq
 import PeanoRF.Calculus.Collapse
+import FOL.Complexity
 
 /-! # H3bis · La BARRA DE KLEENE — hacia la propiedad de disyunción
 
@@ -30,7 +31,7 @@ import PeanoRF.Calculus.Collapse
   `Slash T D f` («la teoría `T` barra `f`, con los testigos tomados de `D`») se define por
   recursión en la COMPLEJIDAD de `f`,
   no en su estructura: el caso `∀` baja a `substFormula 0 t a`, que no es subtérmino de
-  `∀a`. De ahí `fdepth` y `fdepth_subst`.
+  `∀a`. De ahí `formulaComplexity` y `complexity_substFormula`.
 
   Una vez definida, la propiedad de disyunción es inmediata de dos lemas:
 
@@ -92,50 +93,24 @@ import PeanoRF.Calculus.Collapse
   Lo que sí es nuestro, y viene después: el lema de que `⊢ᵢ` es cerrado bajo sustitución,
   y L2.
 
-  ## ⚠️ Segundo encargo a FOL, menor
+  ## ✅ Segundo encargo a FOL, menor — cumplido
 
   Bajar `formulaComplexity` y `complexity_substFormula` de `FOL/Canonical0.lean` a un
-  módulo base: hoy viven detrás de la cadena clásica de completitud
-  (`Canonical0 → Soundness0`), que M-5/ADR-019 mantiene fuera de nuestro import surface.
-  Por eso `fdepth` está **duplicado** aquí — deuda declarada, no descuido (M-4).
+  módulo base. FOL lo hizo (`FOL/Complexity.lean`, sin elección), y el 2026-09-28 se retiró
+  la copia local `fdepth`/`fdepth_subst`, que era idéntica salvo nombres
+  (`doc/RESPUESTA-FOL-2026-09-28.md`).
 -/
 
 namespace PeanoRF.Calculus
 
 open FOL
 open FOL.Eigenvariable   -- `posDepth`
+open FOL.Complexity
 
 set_option autoImplicit false
 
 /-! ## La complejidad lógica de una fórmula -/
 
-/-- Complejidad lógica: cuántos conectivos y cuantificadores hay que atravesar.
-
-    ⚠️ **Duplica `FOL.Canonical0.formulaComplexity`**, y es deuda declarada, no descuido:
-    el original vive detrás de la cadena clásica de completitud. Ver el encabezado. -/
-def fdepth : Formula → Nat
-  | .bottom    => 0
-  | .atom _ _  => 0
-  | .eq _ _    => 0
-  | .impl a b  => max (fdepth a) (fdepth b) + 1
-  | .and a b   => max (fdepth a) (fdepth b) + 1
-  | .or a b    => max (fdepth a) (fdepth b) + 1
-  | .forall a  => fdepth a + 1
-  | .ex a      => fdepth a + 1
-
-/-- 🔑 **Sustituir no cambia la complejidad.** Sin esto la barra no está bien definida: su
-    caso `∀` baja a `substFormula 0 t a`, que no es subtérmino de `∀a`. -/
-@[simp] theorem fdepth_subst (v : Nat) (t : Term) (f : Formula) :
-    fdepth (substFormula v t f) = fdepth f := by
-  induction f generalizing v t with
-  | bottom => rfl
-  | atom _ _ => rfl
-  | eq _ _ => rfl
-  | impl _ _ ih1 ih2 => simp only [fdepth, substFormula, ih1, ih2]
-  | and _ _ ih1 ih2 => simp only [fdepth, substFormula, ih1, ih2]
-  | or _ _ ih1 ih2 => simp only [fdepth, substFormula, ih1, ih2]
-  | «forall» _ ih => simp only [fdepth, substFormula, ih]
-  | ex _ ih => simp only [fdepth, substFormula, ih]
 
 /-! ## La barra -/
 
@@ -154,14 +129,14 @@ def Slash (T : List Formula) (D : Term → Prop) : Formula → Prop
   | .forall a   => (T ⊢ᵢ Formula.forall a) ∧
                      (∀ t : Term, D t → Slash T D (substFormula 0 t a))
   | .ex a       => ∃ t : Term, And (D t) (Slash T D (substFormula 0 t a))
-termination_by f => fdepth f
+termination_by f => formulaComplexity f
 decreasing_by
-  all_goals simp only [fdepth, fdepth_subst]
+  all_goals simp only [formulaComplexity, complexity_substFormula]
   all_goals omega
 
 /-! ### Las ecuaciones de la barra
 
-    `Slash T D` se define por recursión BIEN FUNDADA (en `fdepth`), así que **no reduce
+    `Slash T D` se define por recursión BIEN FUNDADA (en `formulaComplexity`), así que **no reduce
     definicionalmente**: `Slash T D (.and a b)` no es juzgacionalmente `Slash T D a ∧ Slash T D b`. Hay
     que desplegarla con sus ecuaciones, y por eso van aquí una a una. -/
 
@@ -213,9 +188,9 @@ theorem slash_derives (T : List Formula) (D : Term → Prop) : ∀ f : Formula, 
   | .ex a,     h =>
       match (slash_ex T D a).mp h with
       | ⟨t, _, ht⟩ => Derivesᵢ.intro_ex _ a t (slash_derives T D (substFormula 0 t a) ht)
-termination_by f => fdepth f
+termination_by f => formulaComplexity f
 decreasing_by
-  all_goals simp only [fdepth, fdepth_subst]
+  all_goals simp only [formulaComplexity, complexity_substFormula]
   all_goals omega
 
 /-! ## ⭐ Las fórmulas de HARROP — donde la barra COINCIDE con la derivabilidad
@@ -296,9 +271,9 @@ theorem slash_of_isHarrop (T : List Formula) (D : Term → Prop)
       exact (slash_forall T D a).mpr ⟨hd, fun t _ =>
         slash_of_isHarrop T D hcon (substFormula 0 t a) (by rw [isHarrop_subst]; exact hH)
           (Derivesᵢ.elim_forall _ a t hd)⟩
-termination_by f => fdepth f
+termination_by f => formulaComplexity f
 decreasing_by
-  all_goals simp only [fdepth, fdepth_subst]
+  all_goals simp only [formulaComplexity, complexity_substFormula]
   all_goals omega
 
 /-! ## El corte del contexto -/
@@ -331,10 +306,10 @@ theorem cut_context (T : List Formula) : ∀ (Γ : List Formula) (f : Formula),
 /-- Si cada hipótesis está barrada bajo `ρ` **y colapsada**, cada una es derivable sin
     hipótesis. La lista lleva los dos `map` porque así la deja `derivesI_collapse` aplicado
     a `derivesI_subst`. -/
-theorem slashed_ctx_derivable (T : List Formula) (D : Term → Prop) (L : String → Nat → Bool)
+theorem slashed_ctx_derivable (T : List Formula) (D : Term → Prop) (k : String) (L : String → Nat → Bool)
     {Γ : List Formula} {ρ : Subst}
-    (hall : ∀ g, g ∈ Γ → Slash T D (collapseF L (substF ρ g))) :
-    ∀ x, x ∈ (Γ.map (substF ρ)).map (collapseF L) → (T ⊢ᵢ x) := by
+    (hall : ∀ g, g ∈ Γ → Slash T D (collapseF k L (substF ρ g))) :
+    ∀ x, x ∈ (Γ.map (substF ρ)).map (collapseF k L) → (T ⊢ᵢ x) := by
   intro x hx
   rcases List.mem_map.mp hx with ⟨y, hy, rfl⟩
   rcases List.mem_map.mp hy with ⟨z, hz, rfl⟩
@@ -342,13 +317,13 @@ theorem slashed_ctx_derivable (T : List Formula) (D : Term → Prop) (L : String
 
 /-- Desde un contexto barrado, lo derivable lo es **sin contexto**: `cut_context` compuesto
     con las dos clausuras de `⊢ᵢ` — bajo sustitución **y bajo colapso**. -/
-theorem derives_empty_of_slashed (T : List Formula) (D : Term → Prop) (L : String → Nat → Bool)
+theorem derives_empty_of_slashed (T : List Formula) (D : Term → Prop) (k : String) (L : String → Nat → Bool)
     {Γ : List Formula} {f : Formula}
     (h : Γ ⊢ᵢ f) (ρ : Subst)
-    (hall : ∀ g, g ∈ Γ → Slash T D (collapseF L (substF ρ g))) :
-    T ⊢ᵢ collapseF L (substF ρ f) :=
-  cut_context T _ _ (slashed_ctx_derivable T D L hall)
-    (derivesI_collapse L (derivesI_subst h ρ))
+    (hall : ∀ g, g ∈ Γ → Slash T D (collapseF k L (substF ρ g))) :
+    T ⊢ᵢ collapseF k L (substF ρ f) :=
+  cut_context T _ _ (slashed_ctx_derivable T D k L hall)
+    (derivesI_collapse k L (derivesI_subst h ρ))
 
 /-! ### Álgebra de posiciones -/
 
@@ -665,9 +640,9 @@ theorem slash_eq_congr (T : List Formula) (D : Term → Prop) : ∀ (A : Formula
         rw [substFormula_upS]
         exact (slash_eq_congr T D a (k + 1) (consS t ρ₁) (consS t ρ₂) (hag' t) (heq' t)).mpr
           (by rw [← substFormula_upS]; exact ht)
-termination_by A => fdepth A
+termination_by A => formulaComplexity A
 decreasing_by
-  all_goals simp only [fdepth]
+  all_goals simp only [formulaComplexity]
   all_goals omega
 
 
@@ -678,19 +653,19 @@ decreasing_by
     ⚠️ El `∀ ρ` va **dentro** de la inducción, y ésa es toda la historia: en `intro_forall`
     la meta pide la hipótesis inductiva de la premisa **con otra sustitución**, y sin
     cuantificar sobre todas no hay manera. -/
-theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → Nat → Bool)
-    (hDfix : ∀ u : Term, D u → collapseT L u = u)
-    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT L (substT ρ t)))
+theorem slash_of_derives (T : List Formula) (D : Term → Prop) (k : String) (L : String → Nat → Bool)
+    (hDfix : ∀ u : Term, D u → collapseT k L u = u)
+    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT k L (substT ρ t)))
     {Γ : List Formula} {f : Formula} (h : Γ ⊢ᵢ f) :
     ∀ ρ : Subst, (∀ n, D (ρ n)) →
-      (∀ g, g ∈ Γ → Slash T D (collapseF L (substF ρ g))) →
-      Slash T D (collapseF L (substF ρ f)) := by
+      (∀ g, g ∈ Γ → Slash T D (collapseF k L (substF ρ g))) →
+      Slash T D (collapseF k L (substF ρ f)) := by
   induction h with
   | hyp Γ' f' hIn => intro ρ hρ hall; exact hall f' hIn
   | intro_impl Γ' A B d ih =>
       intro ρ hρ hall
-      refine (slash_impl T D (collapseF L (substF ρ A)) (collapseF L (substF ρ B))).mpr
-        ⟨derives_empty_of_slashed T D L (Derivesᵢ.intro_impl Γ' A B d) ρ hall, fun ha => ?_⟩
+      refine (slash_impl T D (collapseF k L (substF ρ A)) (collapseF k L (substF ρ B))).mpr
+        ⟨derives_empty_of_slashed T D k L (Derivesᵢ.intro_impl Γ' A B d) ρ hall, fun ha => ?_⟩
       refine ih ρ hρ (fun g hg => ?_)
       rcases List.mem_cons.mp hg with rfl | hg'
       · exact ha
@@ -717,8 +692,8 @@ theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → 
         · exact hall g hg'
   | intro_forall Γ' A d ih =>
       intro ρ hρ hall
-      refine (slash_forall T D (collapseF L (substF (upS ρ) A))).mpr
-        ⟨derives_empty_of_slashed T D L (Derivesᵢ.intro_forall Γ' A d) ρ hall, fun t hDt => ?_⟩
+      refine (slash_forall T D (collapseF k L (substF (upS ρ) A))).mpr
+        ⟨derives_empty_of_slashed T D k L (Derivesᵢ.intro_forall Γ' A d) ρ hall, fun t hDt => ?_⟩
       rw [← hDfix t hDt, ← collapseF_subst, substFormula_upS]
       have hρ2 : ∀ n, D (consS t ρ n) := by
         intro n
@@ -733,11 +708,11 @@ theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → 
       intro ρ hρ hall
       rw [substF_substFormula, collapseF_subst]
       exact ((slash_forall T D _).mp (ih ρ hρ hall)).2
-        (collapseT L (substT ρ t)) (hDsub ρ hρ t)
+        (collapseT k L (substT ρ t)) (hDsub ρ hρ t)
   | intro_ex Γ' A t _ ih =>
       intro ρ hρ hall
-      refine (slash_ex T D (collapseF L (substF (upS ρ) A))).mpr
-        ⟨collapseT L (substT ρ t), hDsub ρ hρ t, ?_⟩
+      refine (slash_ex T D (collapseF k L (substF (upS ρ) A))).mpr
+        ⟨collapseT k L (substT ρ t), hDsub ρ hρ t, ?_⟩
       rw [← collapseF_subst, ← substF_substFormula]
       exact ih ρ hρ hall
   | elim_ex Γ' A B _ _ ih1 ih2 =>
@@ -748,10 +723,10 @@ theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → 
         cases n with
         | zero => exact hDt
         | succ m => exact hρ m
-      have ht2 : Slash T D (collapseF L (substF (consS t ρ) A)) := by
+      have ht2 : Slash T D (collapseF k L (substF (consS t ρ) A)) := by
         rw [← substFormula_upS, collapseF_subst, hDfix t hDt]
         exact ht
-      have h2 : Slash T D (collapseF L (substF (consS t ρ) (liftFormula 0 B))) := by
+      have h2 : Slash T D (collapseF k L (substF (consS t ρ) (liftFormula 0 B))) := by
         refine ih2 (consS t ρ) hρ2 (fun g hg => ?_)
         rcases List.mem_cons.mp hg with rfl | hg'
         · exact ht2
@@ -764,26 +739,26 @@ theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → 
       intro ρ hρ hall; exact ih ρ hρ (fun g hg => hall g (hSub g hg))
   | rewrite_at Γ' f f' p sub sub' _ hget hrule heq ih =>
       intro ρ hρ hall
-      have ihc : Slash T D (substF (collapseS L ρ) (collapseF L f)) := by
+      have ihc : Slash T D (substF (collapseS k L ρ) (collapseF k L f)) := by
         rw [← collapseF_substF]; exact ih ρ hρ hall
-      have hget2 : getAt? (collapseF L f) p = some (collapseF L sub) := by
+      have hget2 : getAt? (collapseF k L f) p = some (collapseF k L sub) := by
         rw [collapse_getAt?, hget]; rfl
       rw [heq, collapseF_substF, ← collapse_replaceAt]
-      exact (slash_rewrite T D p (collapseF L sub) (collapseF L sub')
-        (collapse_localRule L hrule) (collapseF L f) (collapseS L ρ) hget2).mp ihc
+      exact (slash_rewrite T D p (collapseF k L sub) (collapseF k L sub')
+        (collapse_localRule k L hrule) (collapseF k L f) (collapseS k L ρ) hget2).mp ihc
   | refl Γ' t =>
       intro ρ hρ hall
-      exact (slash_eq T D _ _).mpr (Derivesᵢ.refl _ (collapseT L (substT ρ t)))
+      exact (slash_eq T D _ _).mpr (Derivesᵢ.refl _ (collapseT k L (substT ρ t)))
   | subst Γ' t₁ t₂ A _ _ ih1 ih2 =>
       intro ρ hρ hall
-      have heq : T ⊢ᵢ Formula.eq (collapseT L (substT ρ t₁)) (collapseT L (substT ρ t₂)) :=
+      have heq : T ⊢ᵢ Formula.eq (collapseT k L (substT ρ t₁)) (collapseT k L (substT ρ t₂)) :=
         (slash_eq T D _ _).mp (ih1 ρ hρ hall)
       have h1 := ih2 ρ hρ hall
       rw [substF_substFormula, collapseF_subst, collapseF_substF, collapseS_upS,
         substFormula_upS] at h1 ⊢
-      exact (slash_eq_congr T D (collapseF L A) 0
-        (consS (collapseT L (substT ρ t₁)) (collapseS L ρ))
-        (consS (collapseT L (substT ρ t₂)) (collapseS L ρ))
+      exact (slash_eq_congr T D (collapseF k L A) 0
+        (consS (collapseT k L (substT ρ t₁)) (collapseS k L ρ))
+        (consS (collapseT k L (substT ρ t₂)) (collapseS k L ρ))
         (fun n hn => by cases n with
                         | zero => exact absurd rfl hn
                         | succ m => rfl) heq).mp h1
@@ -869,23 +844,23 @@ theorem slash_of_derives (T : List Formula) (D : Term → Prop) (L : String → 
 /-- 🏁 **LA PROPIEDAD DE DISYUNCIÓN, relativa a una teoría barrada y a un dominio.**
 
     ⭐ **La forma (c)**: la barra se afirma de la instancia **COLAPSADA**, y por eso el
-    enunciado pide que `A ∨ B` sea **punto fijo** de `collapseF L ∘ substF ρ₀` — que es la
+    enunciado pide que `A ∨ B` sea **punto fijo** de `collapseF k L ∘ substF ρ₀` — que es la
     manera precisa de decir «cerrada y del lenguaje», en una sola hipótesis en vez de dos
     predicados. Sin ella el teorema de Kleene no es cierto: `sondeos/junk_probe.lean` da un
     contraejemplo con símbolos ajenos.
 
     ⛔ **No es la de HA**: ver la reserva de la sección. -/
 theorem disjunction_property_of_slashed (T : List Formula) (D : Term → Prop)
-    (L : String → Nat → Bool)
-    (hDfix : ∀ u : Term, D u → collapseT L u = u)
-    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT L (substT ρ t)))
+    (k : String) (L : String → Nat → Bool)
+    (hDfix : ∀ u : Term, D u → collapseT k L u = u)
+    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT k L (substT ρ t)))
     (ρ₀ : Subst) (hρ₀ : ∀ n, D (ρ₀ n))
-    (hT : ∀ g, g ∈ T → Slash T D (collapseF L (substF ρ₀ g)))
+    (hT : ∀ g, g ∈ T → Slash T D (collapseF k L (substF ρ₀ g)))
     {A B : Formula}
-    (hAB : collapseF L (substF ρ₀ (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF k L (substF ρ₀ (Formula.or A B)) = Formula.or A B)
     (h : T ⊢ᵢ Formula.or A B) :
     (T ⊢ᵢ A) ∨ (T ⊢ᵢ B) := by
-  have hs := slash_of_derives T D L hDfix hDsub h ρ₀ hρ₀ hT
+  have hs := slash_of_derives T D k L hDfix hDsub h ρ₀ hρ₀ hT
   rw [hAB] at hs
   rcases (slash_or T D A B).mp hs with ha | hb
   · exact Or.inl (slash_derives T D A ha)
@@ -899,11 +874,11 @@ theorem disjunction_property_of_slashed (T : List Formula) (D : Term → Prop)
 theorem disjunction_property {A B : Formula}
     (h : ([] : List Formula) ⊢ᵢ Formula.or A B) :
     (([] : List Formula) ⊢ᵢ A) ∨ (([] : List Formula) ⊢ᵢ B) := by
-  refine disjunction_property_of_slashed [] (fun _ => True) (fun _ _ => true)
-    (fun u _ => collapseT_trivial _ (fun _ _ => rfl) u) (fun _ _ _ => trivial)
+  refine disjunction_property_of_slashed [] (fun _ => True) "" (fun _ _ => true)
+    (fun u _ => collapseT_trivial _ _ (fun _ _ => rfl) u) (fun _ _ _ => trivial)
     Term.var (fun _ => trivial) (fun _ hg => absurd hg List.not_mem_nil) ?_ h
   rw [substF_id]
-  exact collapseF_trivial _ (fun _ _ => rfl) _
+  exact collapseF_trivial _ _ (fun _ _ => rfl) _
 
 /-- 🏁 **LA PROPIEDAD DE EXISTENCIA** — de un existencial demostrado sale un TESTIGO, **y el
     testigo está en el dominio**.
@@ -912,16 +887,16 @@ theorem disjunction_property {A B : Formula}
     el lado Peano del espejo tendría que ejecutar. Con `D = ClosedQTerm` ese testigo será,
     además, demostrablemente igual a un numeral (`closed_term_eq_numeral`). -/
 theorem existence_property_of_slashed (T : List Formula) (D : Term → Prop)
-    (L : String → Nat → Bool)
-    (hDfix : ∀ u : Term, D u → collapseT L u = u)
-    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT L (substT ρ t)))
+    (k : String) (L : String → Nat → Bool)
+    (hDfix : ∀ u : Term, D u → collapseT k L u = u)
+    (hDsub : ∀ (ρ : Subst), (∀ n, D (ρ n)) → ∀ t : Term, D (collapseT k L (substT ρ t)))
     (ρ₀ : Subst) (hρ₀ : ∀ n, D (ρ₀ n))
-    (hT : ∀ g, g ∈ T → Slash T D (collapseF L (substF ρ₀ g)))
+    (hT : ∀ g, g ∈ T → Slash T D (collapseF k L (substF ρ₀ g)))
     {A : Formula}
-    (hA : collapseF L (substF ρ₀ (Formula.ex A)) = Formula.ex A)
+    (hA : collapseF k L (substF ρ₀ (Formula.ex A)) = Formula.ex A)
     (h : T ⊢ᵢ Formula.ex A) :
     ∃ t : Term, And (D t) (T ⊢ᵢ substFormula 0 t A) := by
-  have hs := slash_of_derives T D L hDfix hDsub h ρ₀ hρ₀ hT
+  have hs := slash_of_derives T D k L hDfix hDsub h ρ₀ hρ₀ hT
   rw [hA] at hs
   rcases (slash_ex T D A).mp hs with ⟨t, hDt, ht⟩
   exact ⟨t, hDt, slash_derives T D _ ht⟩
@@ -930,11 +905,11 @@ theorem existence_property_of_slashed (T : List Formula) (D : Term → Prop)
 theorem existence_property {A : Formula}
     (h : ([] : List Formula) ⊢ᵢ Formula.ex A) :
     ∃ t : Term, ([] : List Formula) ⊢ᵢ substFormula 0 t A := by
-  have hfix : collapseF (fun _ _ => true) (substF Term.var (Formula.ex A)) = Formula.ex A := by
+  have hfix : collapseF "" (fun _ _ => true) (substF Term.var (Formula.ex A)) = Formula.ex A := by
     rw [substF_id]
-    exact collapseF_trivial _ (fun _ _ => rfl) _
-  rcases existence_property_of_slashed [] (fun _ => True) (fun _ _ => true)
-    (fun u _ => collapseT_trivial _ (fun _ _ => rfl) u) (fun _ _ _ => trivial)
+    exact collapseF_trivial _ _ (fun _ _ => rfl) _
+  rcases existence_property_of_slashed [] (fun _ => True) "" (fun _ _ => true)
+    (fun u _ => collapseT_trivial _ _ (fun _ _ => rfl) u) (fun _ _ _ => trivial)
     Term.var (fun _ => trivial) (fun _ hg => absurd hg List.not_mem_nil) hfix h
     with ⟨t, _, ht⟩
   exact ⟨t, ht⟩

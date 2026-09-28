@@ -28,7 +28,7 @@ import PeanoRF.HA.Arith
   un **numeral**, la decisión se toma sobre números y la derivación se reconstruye por
   Leibniz. Eso es `hNum`, que va como hipótesis mientras no esté demostrada:
 
-  > `hNum : ∀ t, Grounded LQpp t → ∃ n, ctx insts ⊢ᵢ (t =eq numeralM n)`
+  > `hNum : ∀ t, Grounded zero_sym LQpp t → ∃ n, ctx insts ⊢ᵢ (t =eq numeralM n)`
 
   ⚠️ **`hNum` no es gratis y no se esconde.** `closed_term_eq_numeral` la da para los cinco
   símbolos de los numerales, pero el lenguaje tiene **trece**: falta evaluar `√`, `/₂`, `%₂`,
@@ -99,16 +99,16 @@ theorem numeralI_lt {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms →
     decide **en el meta**, y `numeralI_lt` + la reescritura dentro del predicado suben la
     decisión al objeto. -/
 theorem slash_ax19 {Γ : List Formula} (L : String → Nat → Bool) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (hNum : ∀ t : Term, Grounded L t →
+    (hNum : ∀ t : Term, Grounded zero_sym L t →
       ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (Γ) (Grounded L) ax19_lt_trichotomy := by
+    Slash (Γ) (Grounded zero_sym L) ax19_lt_trichotomy := by
   have hax : Γ ⊢ᵢ ax19_lt_trichotomy := hΓ ax19_lt_trichotomy (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))))
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
-  simp only [substFormula, grounded_liftTerm L hDt] at h1 ⊢
+  simp only [substFormula, grounded_liftTerm zero_sym L hDt] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun u hDu => ?_⟩
   simp only [substFormula, substTerms, substTerm, lt, reduceIte,
-    grounded_substTerm L hDt]
+    grounded_substTerm zero_sym L hDt]
   obtain ⟨n, hn⟩ := hNum t hDt
   obtain ⟨m, hm⟩ := hNum u hDu
   rcases Nat.lt_trichotomy n m with hlt | heq | hgt
@@ -187,14 +187,14 @@ theorem slash_ax21 {Γ : List Formula} (L : String → Nat → Bool)
     (hm : L mod2_sym 1 = true)
     (haxA : Γ ⊢ᵢ ax21_mod2_range) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded L t →
+    (hNum : ∀ t : Term, Grounded zero_sym L t →
       ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (Γ) (Grounded L) ax21_mod2_range := by
+    Slash (Γ) (Grounded zero_sym L) ax21_mod2_range := by
   have hax : Γ ⊢ᵢ ax21_mod2_range := haxA
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   refine (slash_or _ _ _ _).mpr ?_
-  obtain ⟨k, hk⟩ := hNum (mod2 t) (grounded_func1 L hm hDt)
+  obtain ⟨k, hk⟩ := hNum (mod2 t) (grounded_func1 zero_sym L hm hDt)
   match k, hk with
   | 0, hk => exact Or.inl ((slash_eq _ _ _ _).mpr hk)
   | 1, hk => exact Or.inr ((slash_eq _ _ _ _).mpr hk)
@@ -230,25 +230,25 @@ theorem slash_ax21 {Γ : List Formula} (L : String → Nat → Bool)
     ⚠️ Y no hace falta la consistencia: la contradicción se usa **bajo la hipótesis `x = y`**,
     dentro de una rama de `elim_or`, no en la teoría. -/
 theorem slash_axL2 {insts : List Formula}
-    (hNum : ∀ t : Term, Grounded LQpp t →
+    (hNum : ∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (ctx insts) (Grounded LQpp) ax_L2_in_cons := by
+    Slash (ctx insts) (Grounded zero_sym LQpp) ax_L2_in_cons := by
   have hax : ctx insts ⊢ᵢ ax_L2_in_cons := ax' (by simp [coreAxioms])
   simp only [ax_L2_in_cons, forall_3, iff, lor, In, cons] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun x hDx => ?_⟩
   have h1 := specI hax x
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, grounded_liftTerm LQpp hDx] at h1 ⊢
+    ite_true, ite_false, grounded_liftTerm zero_sym LQpp hDx] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun y hDy => ?_⟩
   have h2 := specI h1 y
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm LQpp hDy,
-    grounded_substTerm LQpp hDx] at h2 ⊢
+    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm zero_sym LQpp hDy,
+    grounded_substTerm zero_sym LQpp hDx] at h2 ⊢
   refine (slash_forall _ _ _).mpr ⟨h2, fun l hDl => ?_⟩
   have h3 := specI h2 l
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, grounded_substTerm LQpp hDx,
-    grounded_substTerm LQpp hDy] at h3 ⊢
+    ite_true, ite_false, grounded_substTerm zero_sym LQpp hDx,
+    grounded_substTerm zero_sym LQpp hDy] at h3 ⊢
   refine (slash_and _ _ _ _).mpr ⟨?_, ?_⟩
   · refine (slash_impl _ _ _ _).mpr ⟨Derivesᵢ.elim_and_l _ _ _ h3, fun hA => ?_⟩
     have hdis : ctx insts ⊢ᵢ
@@ -376,11 +376,11 @@ theorem addI_assoc_num {Γ : List Formula} (hΓ : ∀ g, List.Mem g arithAxioms 
 
 /-- Los numerales están anclados: sólo llevan `0` y `σ`, y no tienen variables. -/
 theorem grounded_numeralM (L : String → Nat → Bool) (hs : L succ_sym 1 = true) :
-    ∀ n : Nat, Grounded L (numeralM n) := by
+    ∀ n : Nat, Grounded zero_sym L (numeralM n) := by
   intro n
   induction n with
-  | zero => exact grounded_zero L
-  | succ k ih => exact grounded_func1 L hs ih
+  | zero => exact grounded_zero zero_sym L
+  | succ k ih => exact grounded_func1 zero_sym L hs ih
 
 /-! ## 9 · ⭐ `¬(ā < b̄)` cuando `b ≤ a`
 
@@ -452,20 +452,20 @@ theorem slash_ax13 {Γ : List Formula} (L : String → Nat → Bool)
     (hs : L succ_sym 1 = true) (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded L t →
+    (hNum : ∀ t : Term, Grounded zero_sym L t →
       ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash (Γ) (Grounded L) ax13_lt_def := by
+    Slash (Γ) (Grounded zero_sym L) ax13_lt_def := by
   have hax : Γ ⊢ᵢ ax13_lt_def := hΓ ax13_lt_def (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.tail _ (List.Mem.head _))))))))))))
   simp only [ax13_lt_def, forall_2, iff, lt] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm L hDt] at h1 ⊢
+    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm zero_sym L hDt] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun u hDu => ?_⟩
   have h2 := specI h1 u
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
     ite_true, ite_false, Nat.reduceAdd, add, succ,
-    grounded_substTerm L hDt, grounded_liftTerm L hDu] at h2 ⊢
+    grounded_substTerm zero_sym L hDt, grounded_liftTerm zero_sym L hDu] at h2 ⊢
   refine (slash_and _ _ _ _).mpr ⟨?_, ?_⟩
   · refine (slash_impl _ _ _ _).mpr ⟨Derivesᵢ.elim_and_l _ _ _ h2, fun hA => ?_⟩
     have hlt : Γ ⊢ᵢ Formula.atom lt_sym [t, u] := (slash_atom _ _ _ _).mp hA
@@ -479,7 +479,7 @@ theorem slash_ax13 {Γ : List Formula} (L : String → Nat → Bool)
         rw [show n + (m - n - 1 + 1) = m from by omega] at h
         exact h
       simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-        ite_true, ite_false, grounded_substTerm L hDt, grounded_substTerm L hDu]
+        ite_true, ite_false, grounded_substTerm zero_sym L hDt, grounded_substTerm zero_sym L hDu]
       exact (slash_eq _ _ _ _).mpr
         (eqI_trans (eqI_trans
           (eqI_congr_fun2_l add_sym (succ (numeralM (m - n - 1))) hn) hadd) (eqI_symm hm))
@@ -503,17 +503,17 @@ theorem slash_ax14 {Γ : List Formula} (L : String → Nat → Bool)
     (hax0 : Γ ⊢ᵢ ax14_sqrt_le)
     (hlift : Γ.map (liftFormula 0) = Γ)
     (hcon : ¬ (Γ ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded L t →
+    (hNum : ∀ t : Term, Grounded zero_sym L t →
       ∃ n : Nat, Γ ⊢ᵢ (Formula.eq t (numeralM n))) :
-    Slash Γ (Grounded L) ax14_sqrt_le := by
+    Slash Γ (Grounded zero_sym L) ax14_sqrt_le := by
   have hax : Γ ⊢ᵢ ax14_sqrt_le := hax0
   simp only [ax14_sqrt_le, forall_, le, sq, lt] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun t hDt => ?_⟩
   have h1 := specI hax t
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
     ite_true, ite_false, mul, sqrt] at h1 ⊢
-  have hDs : Grounded L (mul (sqrt t) (sqrt t)) :=
-    grounded_func2 L hm (grounded_func1 L hsq hDt) (grounded_func1 L hsq hDt)
+  have hDs : Grounded zero_sym L (mul (sqrt t) (sqrt t)) :=
+    grounded_func2 zero_sym L hm (grounded_func1 zero_sym L hsq hDt) (grounded_func1 zero_sym L hsq hDt)
   obtain ⟨p, hp⟩ := hNum (mul (sqrt t) (sqrt t)) hDs
   obtain ⟨q, hq⟩ := hNum t hDt
   rcases Nat.lt_trichotomy p q with hlt | heq | hgt
@@ -556,26 +556,26 @@ theorem slash_ax14 {Γ : List Formula} (L : String → Nat → Bool)
     que todo término es `[]` o un `::`, y eso es inducción sobre listas — un esquema que
     `coreAxioms` no tiene. Queda, como `hNum`, en el enunciado y a la vista. -/
 theorem slash_axL3 {insts : List Formula}
-    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+    (hIn : ∀ x l : Term, Grounded zero_sym LQpp x → Grounded zero_sym LQpp l →
       Or (ctx insts ⊢ᵢ Formula.atom in_sym [x, l])
          (ctx insts ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom)) :
-    Slash (ctx insts) (Grounded LQpp) ax_L3_in_concat := by
+    Slash (ctx insts) (Grounded zero_sym LQpp) ax_L3_in_concat := by
   have hax : ctx insts ⊢ᵢ ax_L3_in_concat := ax' (by simp [coreAxioms])
   simp only [ax_L3_in_concat, forall_3, iff, lor, In, concat] at hax ⊢
   refine (slash_forall _ _ _).mpr ⟨hax, fun x hDx => ?_⟩
   have h1 := specI hax x
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, grounded_liftTerm LQpp hDx] at h1 ⊢
+    ite_true, ite_false, grounded_liftTerm zero_sym LQpp hDx] at h1 ⊢
   refine (slash_forall _ _ _).mpr ⟨h1, fun l hDl => ?_⟩
   have h2 := specI h1 l
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm LQpp hDl,
-    grounded_substTerm LQpp hDx] at h2 ⊢
+    ite_true, ite_false, Nat.reduceAdd, grounded_liftTerm zero_sym LQpp hDl,
+    grounded_substTerm zero_sym LQpp hDx] at h2 ⊢
   refine (slash_forall _ _ _).mpr ⟨h2, fun m hDm => ?_⟩
   have h3 := specI h2 m
   simp (config := { decide := true }) only [substFormula, substTerms, substTerm,
-    ite_true, ite_false, grounded_substTerm LQpp hDx,
-    grounded_substTerm LQpp hDl] at h3 ⊢
+    ite_true, ite_false, grounded_substTerm zero_sym LQpp hDx,
+    grounded_substTerm zero_sym LQpp hDl] at h3 ⊢
   refine (slash_and _ _ _ _).mpr ⟨?_, ?_⟩
   · refine (slash_impl _ _ _ _).mpr ⟨Derivesᵢ.elim_and_l _ _ _ h3, fun hA => ?_⟩
     have hdis : ctx insts ⊢ᵢ
@@ -615,12 +615,12 @@ theorem slash_axL3 {insts : List Formula}
 theorem slash_coreAxioms {insts : List Formula}
     (hlift : (ctx insts).map (liftFormula 0) = ctx insts)
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
+    (hNum : ∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n)))
-    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+    (hIn : ∀ x l : Term, Grounded zero_sym LQpp x → Grounded zero_sym LQpp l →
       Or (ctx insts ⊢ᵢ Formula.atom in_sym [x, l])
          (ctx insts ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom)) :
-    ∀ g, List.Mem g coreAxioms → Slash (ctx insts) (Grounded LQpp) g := by
+    ∀ g, List.Mem g coreAxioms → Slash (ctx insts) (Grounded zero_sym LQpp) g := by
   intro g hg
   simp only [coreAxioms] at hg
   rcases hg with _ | ⟨_, hg⟩
@@ -699,15 +699,15 @@ theorem slash_coreAxioms {insts : List Formula}
 theorem haDisjunctionProperty_core {insts : List Formula}
     (hlift : (ctx insts).map (liftFormula 0) = ctx insts)
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
+    (hNum : ∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n)))
-    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+    (hIn : ∀ x l : Term, Grounded zero_sym LQpp x → Grounded zero_sym LQpp l →
       Or (ctx insts ⊢ᵢ Formula.atom in_sym [x, l])
          (ctx insts ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom))
     (hInd : ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)))
+      Slash (ctx insts) (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)))
     {A B : Formula}
-    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctx insts ⊢ᵢ Formula.or A B) :
     Or (ctx insts ⊢ᵢ A) (ctx insts ⊢ᵢ B) := by
   refine haDisjunctionProperty insts hcon (fun g hcore _ => ?_) hInd hAB h
@@ -742,9 +742,9 @@ theorem slash_inductions {insts : List Formula}
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
     (hH : ∀ φ, List.Mem φ insts → isHarrop φ = true)
     (hs : ∀ φ, List.Mem φ insts →
-      collapseF LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ) :
+      collapseF zero_sym LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ) :
     ∀ g, List.Mem g (insts.map inductionFormula) →
-      Slash (ctx insts) (Grounded LQpp) (collapseF LQpp (substF zeroS g)) := by
+      Slash (ctx insts) (Grounded zero_sym LQpp) (collapseF zero_sym LQpp (substF zeroS g)) := by
   intro g hg
   obtain ⟨φ, hφ, rfl⟩ := List.mem_map.mp hg
   rw [hs φ hφ]
@@ -770,16 +770,16 @@ theorem haDisjunctionProperty_harrop (insts : List Formula)
     (hcon : ¬ (ctx insts ⊢ᵢ Formula.bottom))
     (hH : ∀ φ, List.Mem φ insts → isHarrop φ = true)
     (hs : ∀ φ, List.Mem φ insts →
-      collapseF LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ)
+      collapseF zero_sym LQpp (substF zeroS (inductionFormula φ)) = inductionFormula φ)
     (hL : ∀ φ, List.Mem φ insts →
       liftFormula 0 (inductionFormula φ) = inductionFormula φ)
-    (hNum : ∀ t : Term, Grounded LQpp t →
+    (hNum : ∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, ctx insts ⊢ᵢ (Formula.eq t (numeralM n)))
-    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+    (hIn : ∀ x l : Term, Grounded zero_sym LQpp x → Grounded zero_sym LQpp l →
       Or (ctx insts ⊢ᵢ Formula.atom in_sym [x, l])
          (ctx insts ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctx insts ⊢ᵢ Formula.or A B) :
     Or (ctx insts ⊢ᵢ A) (ctx insts ⊢ᵢ B) :=
   haDisjunctionProperty_core (ctx_lift (inductions_lift insts hL)) hcon hNum hIn
@@ -797,20 +797,20 @@ theorem phiZeroAdd_lift :
     liftFormula 0 (inductionFormula phiZeroAdd) = inductionFormula phiZeroAdd := rfl
 
 theorem phiZeroAdd_sentence :
-    collapseF LQpp (substF zeroS (inductionFormula phiZeroAdd))
+    collapseF zero_sym LQpp (substF zeroS (inductionFormula phiZeroAdd))
       = inductionFormula phiZeroAdd := rfl
 
 /-- 🏁🏁🏁 **LA DP DE HA CON UNA INSTANCIA DE INDUCCIÓN REAL.** Todo lo mecánico está
     descargado; quedan exactamente las tres de fondo: `hcon` (Gödel), `hNum` y `hIn`. -/
 theorem haDisjunctionProperty_zeroAdd
     (hcon : ¬ (ctx [phiZeroAdd] ⊢ᵢ Formula.bottom))
-    (hNum : ∀ t : Term, Grounded LQpp t →
+    (hNum : ∀ t : Term, Grounded zero_sym LQpp t →
       ∃ n : Nat, ctx [phiZeroAdd] ⊢ᵢ (Formula.eq t (numeralM n)))
-    (hIn : ∀ x l : Term, Grounded LQpp x → Grounded LQpp l →
+    (hIn : ∀ x l : Term, Grounded zero_sym LQpp x → Grounded zero_sym LQpp l →
       Or (ctx [phiZeroAdd] ⊢ᵢ Formula.atom in_sym [x, l])
          (ctx [phiZeroAdd] ⊢ᵢ Formula.impl (Formula.atom in_sym [x, l]) Formula.bottom))
     {A B : Formula}
-    (hAB : collapseF LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
+    (hAB : collapseF zero_sym LQpp (substF zeroS (Formula.or A B)) = Formula.or A B)
     (h : ctx [phiZeroAdd] ⊢ᵢ Formula.or A B) :
     Or (ctx [phiZeroAdd] ⊢ᵢ A) (ctx [phiZeroAdd] ⊢ᵢ B) := by
   refine haDisjunctionProperty_harrop [phiZeroAdd] hcon ?_ ?_ ?_ hNum hIn hAB h

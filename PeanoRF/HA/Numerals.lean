@@ -145,7 +145,7 @@ inductive ClosedQTerm : Term → Prop where
     `congruencia + homomorfismo`.
 
     🏗️ **ANDAMIO, sin uso portante desde el 2026-09-18**: su único consumidor era
-    `qExistenceProperty_numeral`, que se retiró al rehacer el dominio sobre `Grounded LQpp`
+    `qExistenceProperty_numeral`, que se retiró al rehacer el dominio sobre `Grounded zero_sym LQpp`
     — trece símbolos, y este lema sólo habla de los cinco de los numerales. Vuelve a ser
     portante el día que se ataque `hNum`, que es justo lo que le falta a H3ter. -/
 theorem closed_term_eq_numeral {Γ : List Formula}

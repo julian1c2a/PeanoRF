@@ -5,6 +5,7 @@ License: MIT
 -/
 
 import PeanoRF.Calculus.DerivesI
+import FOL.Theorems.Eq
 
 /-! # Igualdad sobre `⊢ᵢ`
 
@@ -66,31 +67,6 @@ theorem eqI_trans {t₁ t₂ t₃ : Term}
   have := Derivesᵢ.subst Γ t₂ t₃ (Formula.eq (liftTerm 0 t₁) (.var 0)) h23 hbase
   rwa [hS3] at this
 
-/-- Congruencia del sucesor. Testigo `σ(t₁↑) = σ#0`. -/
-theorem eqI_congr_succ {t₁ t₂ : Term} (h : Γ ⊢ᵢ (Formula.eq t₁ t₂)) :
-    Γ ⊢ᵢ (Formula.eq (ROBINSON_PlusPlus.Minimal.Axioms.succ t₁)
-                     (ROBINSON_PlusPlus.Minimal.Axioms.succ t₂)) := by
-  open ROBINSON_PlusPlus.Minimal.Axioms in
-  have hS1 : substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
-           = Formula.eq (succ t₁) (succ t₁) := by
-    change Formula.eq (succ (substTerm 0 t₁ (liftTerm 0 t₁))) (succ (substTerm 0 t₁ (.var 0)))
-         = Formula.eq (succ t₁) (succ t₁)
-    rw [substTerm_liftTerm t₁ 0 t₁]
-    rfl
-  open ROBINSON_PlusPlus.Minimal.Axioms in
-  have hS2 : substFormula 0 t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0)))
-           = Formula.eq (succ t₁) (succ t₂) := by
-    change Formula.eq (succ (substTerm 0 t₂ (liftTerm 0 t₁))) (succ (substTerm 0 t₂ (.var 0)))
-         = Formula.eq (succ t₁) (succ t₂)
-    rw [substTerm_liftTerm t₁ 0 t₂]
-    rfl
-  open ROBINSON_PlusPlus.Minimal.Axioms in
-  have hbase : Γ ⊢ᵢ substFormula 0 t₁ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) := by
-    rw [hS1]; exact Derivesᵢ.refl Γ _
-  open ROBINSON_PlusPlus.Minimal.Axioms in
-  have := Derivesᵢ.subst Γ t₁ t₂ (Formula.eq (succ (liftTerm 0 t₁)) (succ (.var 0))) h hbase
-  rwa [hS2] at this
-
 /-- Especialización de un `∀` con un término (alias de `elim_forall`, para leer igual que
     el `spec` de ROBINSON_PlusPlus). -/
 theorem specI {A : Formula} (h : Γ ⊢ᵢ Formula.forall A) (t : Term) :
@@ -101,7 +77,7 @@ theorem specI {A : Formula} (h : Γ ⊢ᵢ Formula.forall A) (t : Term) :
 
 /-! ## Congruencia GENÉRICA por símbolo de función
 
-    `eqI_congr_succ` está escrita a mano para `succ`. Con tres símbolos binarios en el
+    `eqI_congr_succ` (hoy en `HA/Axioms.lean`) está escrita a mano para `succ`. Con tres símbolos binarios en el
     lenguaje de Q⁺⁺ (`add`, `mul`, `pow`) repetir el patrón seis veces sería tonto: las
     operaciones son `Term.func s […]`, así que **una sola prueba por aridad** las cubre
     todas, presentes y futuras. -/

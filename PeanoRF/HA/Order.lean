@@ -87,29 +87,29 @@ theorem ax19I (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) : Γ ⊢ᵢ 
 
 /-- La dirección ⇒ de `ax13` para términos anclados. -/
 theorem exI_of_ltI (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {a b : Term} (ha : Grounded L a) (hb : Grounded L b) :
+    (L : String → Nat → Bool) {a b : Term} (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) :
     Γ ⊢ᵢ Formula.impl (lt a b)
       (Formula.ex (Formula.eq (add a (succ (Term.var 0))) b)) := by
   have hi := specI (specI (ax13I hΓ) a) b
   have h2 := Derivesᵢ.elim_and_l _ _ _ hi
   simpa [ax13_lt_def, forall_2, substFormula, substTerms, substTerm, lt, add, succ,
-    iff, grounded_liftTerm L ha, grounded_liftTerm L hb,
-    grounded_substTerm L ha, grounded_substTerm L hb] using h2
+    iff, grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb,
+    grounded_substTerm zero_sym L ha, grounded_substTerm zero_sym L hb] using h2
 
 /-- ⭐ **Nada es menor que cero.** `t + σk = 0` choca con `ax5` (que lo vuelve `σ(t+k)`) y
     `ax2` (que dice que ningún sucesor es cero). Sin inducción. -/
 theorem notI_lt_zero (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) :
+    (L : String → Nat → Bool) {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ Formula.impl (lt t zero) Formula.bottom := by
   refine Derivesᵢ.intro_impl _ (lt t zero) Formula.bottom ?_
   have hex := Derivesᵢ.elim_impl _ _ _
-    (Derivesᵢ.weakening _ _ _ (exI_of_ltI hΓ L ht (grounded_zero L))
+    (Derivesᵢ.weakening _ _ _ (exI_of_ltI hΓ L ht (grounded_zero zero_sym L))
       (fun _ hz => List.Mem.tail _ hz))
     (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_ex _ _ _ hex ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, lt, zero,
-    grounded_liftTerm L ht]
+    grounded_liftTerm zero_sym L ht]
   have hΓ1 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add t (succ (Term.var 0))) zero :: lt t zero :: Γ) ⊢ᵢ g :=
     hyps_cons (hyps_cons hΓ (lt t zero)) (Formula.eq (add t (succ (Term.var 0))) zero)
@@ -142,14 +142,14 @@ theorem zeroI_add (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t : Ter
     monotonía, que no pasa por este lema. -/
 theorem zeroI_or_succ (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) :
+    (L : String → Nat → Bool) {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ Formula.or (Formula.eq t zero)
                     (Formula.ex (Formula.eq t (succ (Term.var 0)))) := by
   have htri := specI (specI (ax19I hΓ) t) zero
   have htri' : Γ ⊢ᵢ Formula.or (lt t zero)
       (Formula.or (Formula.eq t zero) (lt zero t)) := by
     simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt, zero,
-      grounded_liftTerm L ht, grounded_substTerm L ht] using htri
+      grounded_liftTerm zero_sym L ht, grounded_substTerm zero_sym L ht] using htri
   refine Derivesᵢ.elim_or _ _ _ _ htri' ?_ ?_
   · -- `t < 0` es imposible.
     exact Derivesᵢ.bot_elim _ _ (Derivesᵢ.elim_impl _ _ _
@@ -164,15 +164,15 @@ theorem zeroI_or_succ (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     have hex := Derivesᵢ.elim_impl _ _ _
       (Derivesᵢ.weakening Γ
         (lt zero t :: Formula.or (Formula.eq t zero) (lt zero t) :: Γ) _
-        (exI_of_ltI hΓ L (grounded_zero L) ht)
+        (exI_of_ltI hΓ L (grounded_zero zero_sym L) ht)
         (fun _ hz => List.Mem.tail _ (List.Mem.tail _ hz)))
       (Derivesᵢ.hyp _ _ (List.Mem.head _))
     refine Derivesᵢ.elim_ex _ _ _ hex ?_
     simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, zero, succ,
-      grounded_liftTerm L ht]
+      grounded_liftTerm zero_sym L ht]
     refine Derivesᵢ.intro_ex _ _ (Term.var 0) ?_
     simp (config := { decide := true }) only [substFormula, substTerms, substTerm, succ,
-      Nat.reduceAdd, ite_true, ite_false, grounded_substTerm L ht]
+      Nat.reduceAdd, ite_true, ite_false, grounded_substTerm zero_sym L ht]
     have hΓ1 : ∀ g, List.Mem g arithAxioms →
         (Formula.eq (add zero (succ (Term.var 0))) t
           :: liftFormula 0 (lt zero t)
@@ -206,7 +206,7 @@ theorem addI_assoc (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t u v 
 
 /-- La dirección ⇐ de `ax13`, ya como teorema. -/
 theorem ltI_of_add (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {a b : Term} (ha : Grounded L a) (hb : Grounded L b)
+    (L : String → Nat → Bool) {a b : Term} (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b)
     (k : Term) (h : Γ ⊢ᵢ Formula.eq (add a (succ k)) b) :
     Γ ⊢ᵢ lt a b := by
   have hi := specI (specI (ax13I hΓ) a) b
@@ -214,23 +214,23 @@ theorem ltI_of_add (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
       Formula.impl (Formula.ex (Formula.eq (add a (succ (Term.var 0))) b)) (lt a b) := by
     have h2 := Derivesᵢ.elim_and_r _ _ _ hi
     simpa [ax13_lt_def, forall_2, substFormula, substTerms, substTerm, lt, add, succ,
-      iff, grounded_liftTerm L ha, grounded_liftTerm L hb,
-      grounded_substTerm L ha, grounded_substTerm L hb] using h2
+      iff, grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb,
+      grounded_substTerm zero_sym L ha, grounded_substTerm zero_sym L hb] using h2
   refine Derivesᵢ.elim_impl _ _ _ hback ?_
   refine Derivesᵢ.intro_ex _ _ k ?_
   simpa [substFormula, substTerms, substTerm, add, succ,
-    grounded_substTerm L ha, grounded_substTerm L hb] using h
+    grounded_substTerm zero_sym L ha, grounded_substTerm zero_sym L hb] using h
 
 /-- El anclaje sobrevive a la suma, si la signatura admite `+`. -/
 theorem grounded_add {L : String → Nat → Bool} (hs : L add_sym 2 = true)
-    {t u : Term} (ht : Grounded L t) (hu : Grounded L u) : Grounded L (add t u) :=
-  grounded_func2 L hs ht hu
+    {t u : Term} (ht : Grounded zero_sym L t) (hu : Grounded zero_sym L u) : Grounded zero_sym L (add t u) :=
+  grounded_func2 zero_sym L hs ht hu
 
 /-- ⭐ **Monotonía estricta de la suma por la derecha.** -/
 theorem ltI_add_right (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hs : L add_sym 2 = true) {a b c : Term}
-    (ha : Grounded L a) (hb : Grounded L b) (hc : Grounded L c) :
+    (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) (hc : Grounded zero_sym L c) :
     Γ ⊢ᵢ Formula.impl (lt a b) (lt (add a c) (add b c)) := by
   refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
   have hex := Derivesᵢ.elim_impl _ _ _
@@ -239,7 +239,7 @@ theorem ltI_add_right (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_ex _ _ _ hex ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, add,
-    grounded_liftTerm L ha, grounded_liftTerm L hb, grounded_liftTerm L hc]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb, grounded_liftTerm zero_sym L hc]
   have hΓ1 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ g :=
     hyps_cons (hyps_cons hΓ (lt a b)) (Formula.eq (add a (succ (Term.var 0))) b)
@@ -308,9 +308,9 @@ theorem mulI_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g) (t : Term
 theorem ltI_mul_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) (hsu : L succ_sym 1 = true)
-    {y k : Term} (hy : Grounded L y) (hk : Grounded L k) :
+    {y k : Term} (hy : Grounded zero_sym L y) (hk : Grounded zero_sym L k) :
     Γ ⊢ᵢ Formula.impl (lt y k) (lt (mul y (numeralM 2)) (mul k (numeralM 2))) := by
-  have h2g : Grounded L (numeralM 2) := grounded_numeralM L hsu 2
+  have h2g : Grounded zero_sym L (numeralM 2) := grounded_numeralM L hsu 2
   refine Derivesᵢ.intro_impl _ (lt y k) _ ?_
   have hex := Derivesᵢ.elim_impl _ _ _
     (Derivesᵢ.weakening _ _ _ (exI_of_ltI hΓ L hy hk)
@@ -318,7 +318,7 @@ theorem ltI_mul_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_ex _ _ _ hex ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, mul,
-    grounded_liftTerm L hy, grounded_liftTerm L hk, grounded_liftTerm L h2g]
+    grounded_liftTerm zero_sym L hy, grounded_liftTerm zero_sym L hk, grounded_liftTerm zero_sym L h2g]
   have hΓ1 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add y (succ (Term.var 0))) k :: lt y k :: Γ) ⊢ᵢ g :=
     hyps_cons (hyps_cons hΓ (lt y k)) (Formula.eq (add y (succ (Term.var 0))) k)
@@ -353,7 +353,7 @@ theorem ltI_mul_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
                  (mul k (numeralM 2)) :=
     eqI_symm (eqI_trans e1 (eqI_trans e2 (eqI_trans e3
       (eqI_trans e4 (eqI_congr_fun2_r add_sym (mul y (numeralM 2)) e5)))))
-  exact ltI_of_add hΓ1 L (grounded_func2 L hm hy h2g) (grounded_func2 L hm hk h2g)
+  exact ltI_of_add hΓ1 L (grounded_func2 zero_sym L hm hy h2g) (grounded_func2 zero_sym L hm hk h2g)
     (add (succ (Term.var 0)) (Term.var 0)) efin
 
 /-! ## 7 · Irreflexividad, discreción y transitividad
@@ -363,7 +363,7 @@ theorem ltI_mul_two (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 
 /-- `ax18` instanciado: nada es menor que sí mismo. -/
 theorem ltI_irrefl (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {t : Term} (ht : Grounded L t) :
+    (L : String → Nat → Bool) {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ Formula.impl (lt t t) Formula.bottom := by
   have h := specI (ax18I hΓ) t
   simpa (config := { decide := true }) only [ax18_lt_irrefl, forall_, neg, substFormula,
@@ -376,7 +376,7 @@ theorem ltI_irrefl (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     ✅ Y desde el 2026-09-22 tiene uso portante: es lo que refuta la tercera rama de
     `notI_lt_succ_of_lt`, o sea lo que hace DISCRETO el orden. -/
 theorem notI_add_succ_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
-    (L : String → Nat → Bool) {x : Term} (hx : Grounded L x) (y : Term) :
+    (L : String → Nat → Bool) {x : Term} (hx : Grounded zero_sym L x) (y : Term) :
     Γ ⊢ᵢ Formula.impl (Formula.eq (add x (succ y)) x) Formula.bottom := by
   refine Derivesᵢ.intro_impl _ (Formula.eq (add x (succ y)) x) Formula.bottom ?_
   have hΓ1 : ∀ g, List.Mem g arithAxioms →
@@ -392,7 +392,7 @@ theorem notI_add_succ_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} {a b c : Term}
-    (ha : Grounded L a) (hb : Grounded L b) (hc : Grounded L c) :
+    (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) (hc : Grounded zero_sym L c) :
     Γ ⊢ᵢ Formula.impl (lt a b) (Formula.impl (lt b c) (lt a c)) := by
   refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
   refine Derivesᵢ.intro_impl _ (lt b c) _ ?_
@@ -402,7 +402,7 @@ theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
   refine Derivesᵢ.elim_ex _ _ _ hex1 ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt,
-    grounded_liftTerm L ha, grounded_liftTerm L hb, grounded_liftTerm L hc]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb, grounded_liftTerm zero_sym L hc]
   have hex2 := Derivesᵢ.elim_impl _ _ _
     (Derivesᵢ.weakening Γ
       (Formula.eq (add a (succ (Term.var 0))) b :: lt b c :: lt a b :: Γ) _
@@ -412,7 +412,7 @@ theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   refine Derivesᵢ.elim_ex _ _ _ hex2 ?_
   simp (config := { decide := true }) only [List.map_cons, hlift, liftFormula, liftTerms,
     liftTerm, lt, add, succ, Nat.reduceAdd, ite_true, ite_false,
-    grounded_liftTerm L ha, grounded_liftTerm L hb, grounded_liftTerm L hc]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb, grounded_liftTerm zero_sym L hc]
   have hΓ2 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add b (succ (Term.var 0))) c
         :: Formula.eq (add a (succ (Term.var 1))) b
@@ -443,9 +443,9 @@ theorem ltI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hs : L succ_sym 1 = true) {a b : Term}
-    (ha : Grounded L a) (hb : Grounded L b) :
+    (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) :
     Γ ⊢ᵢ Formula.impl (lt a b) (Formula.impl (lt b (succ a)) Formula.bottom) := by
-  have hsa : Grounded L (succ a) := grounded_func1 L hs ha
+  have hsa : Grounded zero_sym L (succ a) := grounded_func1 zero_sym L hs ha
   refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
   refine Derivesᵢ.intro_impl _ (lt b (succ a)) _ ?_
   have hex1 := Derivesᵢ.elim_impl _ _ _
@@ -454,7 +454,7 @@ theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (Derivesᵢ.hyp _ _ (List.Mem.tail _ (List.Mem.head _)))
   refine Derivesᵢ.elim_ex _ _ _ hex1 ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, succ,
-    grounded_liftTerm L ha, grounded_liftTerm L hb]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb]
   have hex2 := Derivesᵢ.elim_impl _ _ _
     (Derivesᵢ.weakening Γ
       (Formula.eq (add a (succ (Term.var 0))) b :: lt b (succ a) :: lt a b :: Γ) _
@@ -464,7 +464,7 @@ theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
   refine Derivesᵢ.elim_ex _ _ _ hex2 ?_
   simp (config := { decide := true }) only [List.map_cons, hlift, liftFormula, liftTerms,
     liftTerm, lt, add, succ, Nat.reduceAdd, ite_true, ite_false,
-    grounded_liftTerm L ha, grounded_liftTerm L hb]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb]
   have hΓ2 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add b (succ (Term.var 0))) (succ a)
         :: Formula.eq (add a (succ (Term.var 1))) b
@@ -518,18 +518,18 @@ theorem notI_lt_succ_of_lt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem ltI_succ_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hs : L succ_sym 1 = true) {a b : Term}
-    (ha : Grounded L a) (hb : Grounded L b) :
+    (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) :
     Γ ⊢ᵢ Formula.impl (lt a b)
       (Formula.or (lt (succ a) b) (Formula.eq (succ a) b)) := by
-  have hsa : Grounded L (succ a) := grounded_func1 L hs ha
+  have hsa : Grounded zero_sym L (succ a) := grounded_func1 zero_sym L hs ha
   refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
   have hΓ1 : ∀ g, List.Mem g arithAxioms → (lt a b :: Γ) ⊢ᵢ g := hyps_cons hΓ (lt a b)
   have htri := specI (specI (ax19I hΓ1) (succ a)) b
   have htri' : (lt a b :: Γ) ⊢ᵢ Formula.or (lt (succ a) b)
       (Formula.or (Formula.eq (succ a) b) (lt b (succ a))) := by
     simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt,
-      grounded_liftTerm L hsa, grounded_liftTerm L hb,
-      grounded_substTerm L hsa, grounded_substTerm L hb] using htri
+      grounded_liftTerm zero_sym L hsa, grounded_liftTerm zero_sym L hb,
+      grounded_substTerm zero_sym L hsa, grounded_substTerm zero_sym L hb] using htri
   refine Derivesᵢ.elim_or _ _ _ _ htri' ?_ ?_
   · exact Derivesᵢ.intro_or_l _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_or _ _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _)) ?_ ?_
@@ -563,7 +563,7 @@ theorem ltI_succ_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) {a b : Term}
-    (ha : Grounded L a) (hb : Grounded L b) :
+    (ha : Grounded zero_sym L a) (hb : Grounded zero_sym L b) :
     Γ ⊢ᵢ Formula.impl (lt a b) (lt (mul a a) (mul b b)) := by
   refine Derivesᵢ.intro_impl _ (lt a b) _ ?_
   have hex := Derivesᵢ.elim_impl _ _ _
@@ -572,7 +572,7 @@ theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (Derivesᵢ.hyp _ _ (List.Mem.head _))
   refine Derivesᵢ.elim_ex _ _ _ hex ?_
   simp only [List.map_cons, hlift, liftFormula, liftTerms, liftTerm, lt, mul,
-    grounded_liftTerm L ha, grounded_liftTerm L hb]
+    grounded_liftTerm zero_sym L ha, grounded_liftTerm zero_sym L hb]
   have hΓ1 : ∀ g, List.Mem g arithAxioms →
       (Formula.eq (add a (succ (Term.var 0))) b :: lt a b :: Γ) ⊢ᵢ g :=
     hyps_cons (hyps_cons hΓ (lt a b)) (Formula.eq (add a (succ (Term.var 0))) b)
@@ -613,7 +613,7 @@ theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
           (eqI_trans (addI_assoc hΓ1 (mul a a) (mul a (succ (Term.var 0)))
                        (mul b (succ (Term.var 0))))
             (eqI_congr_fun2_r add_sym (mul a a) hbr))))
-  exact ltI_of_add hΓ1 L (grounded_func2 L hm ha ha) (grounded_func2 L hm hb hb)
+  exact ltI_of_add hΓ1 L (grounded_func2 zero_sym L hm ha ha) (grounded_func2 zero_sym L hm hb hb)
     (add (add (mul a (succ (Term.var 0))) (add (mul b (Term.var 0)) a)) (Term.var 0))
     (eqI_symm hfin)
 
@@ -626,7 +626,7 @@ theorem ltI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 /-- `p ≤ q` y `q < p` se contradicen. -/
 theorem notI_lt_of_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
-    {L : String → Nat → Bool} {p q : Term} (hp : Grounded L p) (hq : Grounded L q)
+    {L : String → Nat → Bool} {p q : Term} (hp : Grounded zero_sym L p) (hq : Grounded zero_sym L q)
     (hle : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q))
     (hlt : Γ ⊢ᵢ lt q p) : Γ ⊢ᵢ Formula.bottom := by
   refine Derivesᵢ.elim_or _ _ _ _ hle ?_ ?_
@@ -653,7 +653,7 @@ theorem notI_lt_of_le (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem leI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} (hm : L mul_sym 2 = true) {p q : Term}
-    (hp : Grounded L p) (hq : Grounded L q)
+    (hp : Grounded zero_sym L p) (hq : Grounded zero_sym L q)
     (hle : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q)) :
     Γ ⊢ᵢ Formula.or (lt (mul p p) (mul q q)) (Formula.eq (mul p p) (mul q q)) := by
   refine Derivesᵢ.elim_or _ _ _ _ hle ?_ ?_
@@ -671,7 +671,7 @@ theorem leI_mul_self (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
 theorem leI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hlift : Γ.map (liftFormula 0) = Γ)
     {L : String → Nat → Bool} {p q r : Term}
-    (hp : Grounded L p) (hq : Grounded L q) (hr : Grounded L r)
+    (hp : Grounded zero_sym L p) (hq : Grounded zero_sym L q) (hr : Grounded zero_sym L r)
     (h1 : Γ ⊢ᵢ Formula.or (lt p q) (Formula.eq p q))
     (h2 : Γ ⊢ᵢ Formula.or (lt q r) (Formula.eq q r)) :
     Γ ⊢ᵢ Formula.or (lt p r) (Formula.eq p r) := by
@@ -714,21 +714,21 @@ theorem leI_trans (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     malas, cada una con una cadena de `≤` y `ax18` al final. -/
 
 theorem ax14I (h14 : Γ ⊢ᵢ ax14_sqrt_le) (L : String → Nat → Bool)
-    {t : Term} (ht : Grounded L t) :
+    {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ Formula.or (lt (mul (sqrt t) (sqrt t)) t)
                     (Formula.eq (mul (sqrt t) (sqrt t)) t) := by
   have h := specI h14 t
   simpa (config := { decide := true }) only [ax14_sqrt_le, forall_, le, sq, substFormula,
     substTerms, substTerm, ite_true, ite_false, lt, mul, sqrt,
-    grounded_substTerm L ht] using h
+    grounded_substTerm zero_sym L ht] using h
 
 theorem ax15I (h15 : Γ ⊢ᵢ ax15_lt_succ_sqrt) (L : String → Nat → Bool)
-    {t : Term} (ht : Grounded L t) :
+    {t : Term} (ht : Grounded zero_sym L t) :
     Γ ⊢ᵢ lt t (mul (succ (sqrt t)) (succ (sqrt t))) := by
   have h := specI h15 t
   simpa (config := { decide := true }) only [ax15_lt_succ_sqrt, forall_, sq, substFormula,
     substTerms, substTerm, ite_true, ite_false, lt, mul, sqrt, succ,
-    grounded_substTerm L ht] using h
+    grounded_substTerm zero_sym L ht] using h
 
 /-! ## 🏁 `numeralI_sqrt` — con `k` como PARÁMETRO y sus dos cotas
 
@@ -748,11 +748,11 @@ theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     (hsq : L sqrt_sym 1 = true)
     (n k : Nat) (hk1 : k * k ≤ n) (hk2 : n < (k + 1) * (k + 1)) :
     Γ ⊢ᵢ Formula.eq (sqrt (numeralM n)) (numeralM k) := by
-  have hng : Grounded L (numeralM n) := grounded_numeralM L hsu n
-  have hkg : Grounded L (numeralM k) := grounded_numeralM L hsu k
-  have hsg : Grounded L (sqrt (numeralM n)) := grounded_func1 L hsq hng
-  have hssg : Grounded L (succ (sqrt (numeralM n))) := grounded_func1 L hsu hsg
-  have hskg : Grounded L (numeralM (k + 1)) := grounded_numeralM L hsu (k + 1)
+  have hng : Grounded zero_sym L (numeralM n) := grounded_numeralM L hsu n
+  have hkg : Grounded zero_sym L (numeralM k) := grounded_numeralM L hsu k
+  have hsg : Grounded zero_sym L (sqrt (numeralM n)) := grounded_func1 zero_sym L hsq hng
+  have hssg : Grounded zero_sym L (succ (sqrt (numeralM n))) := grounded_func1 zero_sym L hsu hsg
+  have hskg : Grounded zero_sym L (numeralM (k + 1)) := grounded_numeralM L hsu (k + 1)
   -- `k̄·k̄ ≤ n̄`
   have hkn : Γ ⊢ᵢ Formula.or (lt (mul (numeralM k) (numeralM k)) (numeralM n))
       (Formula.eq (mul (numeralM k) (numeralM k)) (numeralM n)) := by
@@ -772,8 +772,8 @@ theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
       (Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
                   (lt (numeralM k) (sqrt (numeralM n)))) := by
     simpa [ax19_lt_trichotomy, forall_2, substFormula, substTerms, substTerm, lt,
-      grounded_liftTerm L hsg, grounded_liftTerm L hkg,
-      grounded_substTerm L hsg, grounded_substTerm L hkg] using htri
+      grounded_liftTerm zero_sym L hsg, grounded_liftTerm zero_sym L hkg,
+      grounded_substTerm zero_sym L hsg, grounded_substTerm zero_sym L hkg] using htri
   refine Derivesᵢ.elim_or _ _ _ _ htri' ?_ ?_
   · -- `√n̄ < k̄` ⇒ `σ√n̄ ≤ k̄` ⇒ `(σ√n̄)² ≤ k̄² ≤ n̄`, contra `ax15`
     refine Derivesᵢ.bot_elim _ _ ?_
@@ -785,13 +785,13 @@ theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
     have hlift1 : (lt (sqrt (numeralM n)) (numeralM k) :: Γ).map (liftFormula 0)
         = lt (sqrt (numeralM n)) (numeralM k) :: Γ := by
       simp only [List.map_cons, hlift, liftFormula, liftTerms, lt,
-        grounded_liftTerm L hsg, grounded_liftTerm L hkg]
+        grounded_liftTerm zero_sym L hsg, grounded_liftTerm zero_sym L hkg]
     have hsucc := Derivesᵢ.elim_impl _ _ _
       (hW (ltI_succ_le hΓ hlift hsu hsg hkg)) (Derivesᵢ.hyp _ _ (List.Mem.head _))
     have hsq1 := leI_mul_self hΓ1 hlift1 hm hssg hkg hsucc
-    have hle := leI_trans hΓ1 hlift1 (grounded_func2 L hm hssg hssg)
-      (grounded_func2 L hm hkg hkg) hng hsq1 (hW hkn)
-    exact notI_lt_of_le hΓ1 hlift1 (grounded_func2 L hm hssg hssg) hng
+    have hle := leI_trans hΓ1 hlift1 (grounded_func2 zero_sym L hm hssg hssg)
+      (grounded_func2 zero_sym L hm hkg hkg) hng hsq1 (hW hkn)
+    exact notI_lt_of_le hΓ1 hlift1 (grounded_func2 zero_sym L hm hssg hssg) hng
       hle (hW (ax15I h15 L hng))
   refine Derivesᵢ.elim_or _ _ _ _ (Derivesᵢ.hyp _ _ (List.Mem.head _)) ?_ ?_
   · exact Derivesᵢ.hyp _ _ (List.Mem.head _)
@@ -815,13 +815,13 @@ theorem numeralI_sqrt (hΓ : ∀ g, List.Mem g arithAxioms → Γ ⊢ᵢ g)
           :: Formula.or (Formula.eq (sqrt (numeralM n)) (numeralM k))
                (lt (numeralM k) (sqrt (numeralM n))) :: Γ := by
       simp only [List.map_cons, hlift, liftFormula, liftTerms, lt,
-        grounded_liftTerm L hsg, grounded_liftTerm L hkg]
+        grounded_liftTerm zero_sym L hsg, grounded_liftTerm zero_sym L hkg]
     have hsucc := Derivesᵢ.elim_impl _ _ _
       (hW3 (ltI_succ_le hΓ hlift hsu hkg hsg)) (Derivesᵢ.hyp _ _ (List.Mem.head _))
     have hsq3 := leI_mul_self hΓ3 hlift3 hm hskg hsg hsucc
-    have hle := leI_trans hΓ3 hlift3 (grounded_func2 L hm hskg hskg)
-      (grounded_func2 L hm hsg hsg) hng hsq3 (hW3 (ax14I h14 L hng))
-    exact notI_lt_of_le hΓ3 hlift3 (grounded_func2 L hm hskg hskg) hng hle (hW3 hnk)
+    have hle := leI_trans hΓ3 hlift3 (grounded_func2 zero_sym L hm hskg hskg)
+      (grounded_func2 zero_sym L hm hsg hsg) hng hsq3 (hW3 (ax14I h14 L hng))
+    exact notI_lt_of_le hΓ3 hlift3 (grounded_func2 zero_sym L hm hskg hskg) hng hle (hW3 hnk)
 
 
 

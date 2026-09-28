@@ -1,6 +1,6 @@
 # REFERENCE · HA — la Aritmética de Heyting, el fragmento y el modelo
 
-**Last updated:** 2026-09-22
+**Last updated:** 2026-09-28
 **Autor**: Julián Calderón Almendros
 
 > **Nodo temático del sistema REFERENCE** (AI-GUIDE §0.5).
@@ -31,7 +31,7 @@ modelo estándar sobre `ℕ` que descarga la consistencia.
 
 ⛔ **Lo primero que hay que saber de este nodo**: el enunciado ingenuo de H3ter —«HA tiene
 la propiedad de disyunción»— es **falso** sobre la sintaxis genérica de FOL, y está medido.
-Por eso el **dominio** (`Grounded L`) y el **colapso** (`collapseF L`) están en el enunciado
+Por eso el **dominio** (`Grounded zero_sym L`) y el **colapso** (`collapseF zero_sym L`) están en el enunciado
 de los teoremas y no en la letra pequeña. El detalle, en §2.1 y en el índice raíz.
 
 ---
@@ -50,23 +50,23 @@ de los teoremas y no en la letra pequeña. El detalle, en §2.1 y en el índice 
 
 | nombre | enunciado | footprint |
 |---|---|---|
-| 🏗️ `LQ` y su capa (§1–§2) | los cinco símbolos de los NUMERALES, con aridad. ⚠️ **Sin uso portante desde el rediseño a `Grounded LQpp`**: se conserva como EVIDENCIA (`not_closed_add_unary`, ADR-028) y ANDAMIO para `hNum` | — |
-| `collapse_fix_closed` | `ClosedQTerm u → collapseT LQ u = u` | `propext` |
+| 🏗️ `LQ` y su capa (§1–§2) | los cinco símbolos de los NUMERALES, con aridad. ⚠️ **Sin uso portante desde el rediseño a `Grounded zero_sym LQpp`**: se conserva como EVIDENCIA (`not_closed_add_unary`, ADR-028) y ANDAMIO para `hNum` | — |
+| `collapse_fix_closed` | `ClosedQTerm u → collapseT zero_sym LQ u = u` | `propext` |
 | ⛔ `not_closed_add_unary` | `¬ ClosedQTerm (func add_sym [zero])` | `propext` |
 | `closed_of_LQ` | símbolo admitido + argumentos en el dominio ⟹ dominio | `propext, Quot.sound` |
-| ⭐⭐ `closed_collapse_subst` | `(∀n, D (ρ n)) → ∀ t, D (collapseT LQ (substT ρ t))` | `propext, Quot.sound` |
+| ⭐⭐ `closed_collapse_subst` | `(∀n, D (ρ n)) → ∀ t, D (collapseT zero_sym LQ (substT ρ t))` | `propext, Quot.sound` |
 | `LQpp` | la signatura COMPLETA de Q⁺⁺: **trece** símbolos, medidos sobre `coreAxioms` | — |
 | `zeroS` / `zeroS_grounded` | la sustitución que cierra, todo índice a `zero` | — |
 | 🏗️ `closed_grounded` | `ClosedQTerm t → Grounded LQpp t` — ANDAMIO para `hNum`, sin uso hoy | `propext` |
 | 🏁 **`qDisjunctionProperty`** | la DP para **cualquier teoría de Q⁺⁺** con los axiomas barrados | `propext, Quot.sound` |
-| 🏁 **`qExistenceProperty`** | la EP, con el testigo **anclado** (`Grounded LQpp`) | `propext, Quot.sound` |
+| 🏁 **`qExistenceProperty`** | la EP, con el testigo **anclado** (`Grounded zero_sym LQpp`) | `propext, Quot.sound` |
 | `eq_of_map_self` | de `l.map f = l` a `∀ g ∈ l, f g = g` | `propext` |
 | ⭐ `coreAxioms_sentence` | **los 34 axiomas son sentencias del lenguaje**, por `rfl` | `propext` |
 | ⭐⭐ `slash_coreAxioms_harrop` | los 28 de Harrop caen solos, sólo con la consistencia | `propext, Quot.sound` |
 | 🏁🏁 **`haDisjunctionProperty`** | la DP de HA reducida a TRES obligaciones | `propext, Quot.sound` |
 
 ⚠️ **`qExistenceProperty_numeral` y `closed_zeroS` NO EXISTEN.** Se anunciaron aquí el
-2026-09-18 y se retiraron del código el mismo día al rehacer §3 sobre `Grounded LQpp`; la
+2026-09-18 y se retiraron del código el mismo día al rehacer §3 sobre `Grounded zero_sym LQpp`; la
 tabla se quedó con las filas. Lo destapó el control `[B]` en su primera ejecución
 (2026-09-21), tres días después, y es exactamente lo que `[B]` existe para cazar.
 
@@ -245,7 +245,7 @@ fragmento necesita:
 | nombre | qué mide |
 |---|---|
 | `arithAxioms_length` | son **17** |
-| `arithAxioms_sentences` / `arithTAxioms_sentences` / `arithTMAxioms_sentences` | cada lista es **invariante bajo `collapseF L ∘ substF zeroS`**: son sentencias de SU lenguaje |
+| `arithAxioms_sentences` / `arithTAxioms_sentences` / `arithTMAxioms_sentences` | cada lista es **invariante bajo `collapseF zero_sym L ∘ substF zeroS`**: son sentencias de SU lenguaje |
 | `arithAxioms_hard` | de los 17, sólo `ax13_lt_def` y `ax19_lt_trichotomy` no son de Harrop |
 | `arithTAxioms_hard` | ⭐ **`τ` no añade dureza**: la lista dura no cambia |
 | `arithTMAxioms_hard` | `%₂` añade **uno**, `ax21`, **y ya estaba barrado** |
@@ -254,7 +254,7 @@ fragmento necesita:
 
 | nombre | enunciado | footprint |
 |---|---|---|
-| ⭐ `closed_of_grounded` (+ `_list`) | `Grounded LQ t → ClosedQTerm t` — el puente entre las dos descripciones del dominio, **por clausuras** y **por constructores** | `propext, Quot.sound` |
+| ⭐ `closed_of_grounded` (+ `_list`) | `Grounded zero_sym LQ t → ClosedQTerm t` — el puente entre las dos descripciones del dominio, **por clausuras** y **por constructores** | `propext, Quot.sound` |
 | `ctxA` / `ctxT` / `ctxTM` | `arith*Axioms ++ insts.map inductionFormula` | — |
 | `axA'` / `axT'` / `axTM'` | todo axioma del fragmento es hipótesis del contexto | — |
 | `hNum_fragment` / `hNumT_fragment` / `hNumTM_fragment` | 🏁 **`hNum` deja de ser hipótesis**: es un teorema sobre el fragmento | `propext, Quot.sound` |
@@ -359,7 +359,7 @@ valor de `t`**, no exhibiendo dos modelos sueltos. Un parámetro es más fuerte 
 **Fichero**: [`PeanoRF/HA/Axioms.lean`](../PeanoRF/HA/Axioms.lean)
 
 **Namespace**: `PeanoRF.HA`
-**Last updated**: 2026-09-06 21:00
+**Last updated**: 2026-09-28
 **Status**: ✅ Completo
 **@axiom_system**: HA finitaria (Q⁺⁺ + esquema de inducción **en el contexto**)
 **@importance**: high
@@ -377,6 +377,9 @@ def ctx (insts : List Formula) : List Formula :=
 `insts` es la lista de fórmulas cuyas instancias de inducción entran en el contexto. Es
 finita por construcción — eso es lo que hace de HA una teoría r.e. y no ω-lógica — y queda
 **en el tipo de cada teorema**: se lee del enunciado qué inducción hizo falta.
+
+⚠️ **2026-09-28**: aquí vive también `eqI_congr_succ` (`Γ ⊢ᵢ t₁ = t₂ → Γ ⊢ᵢ σt₁ = σt₂`),
+trasladado desde `Calculus/Eq.lean` porque nombra `succ` de RPP y `Calculus/` baja a FOL.
 
 **Teoremas** (todos genéricos en `insts`):
 
@@ -498,7 +501,7 @@ heredada de la codificación `String` de RPP.
 
 ```lean
 -- PeanoRF.HA
-ctx  ax'  ind  mono  induction_object  gen_closed  Closed   -- HA/Axioms.lean
+ctx  ax'  ind  mono  induction_object  gen_closed  Closed  eqI_congr_succ   -- HA/Axioms.lean
 arithAxioms  arithAxioms_sub                                -- el fragmento vive aquí
 numeralI_add  numeralI_mul  numeralI_pow                    -- HA/Numerals.lean
 closed_term_eq_numeral                                      -- hNum sobre los numerales
